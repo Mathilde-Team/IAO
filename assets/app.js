@@ -369,15 +369,17 @@
     }
 
     // Lecture JSON sûre : ne throw JAMAIS. Renvoie un statut pour distinguer
-    // « vide » (première utilisation) de « corrompu » (backup à proposer).
+    // « vide » (première utilisation), « corrompu » (backup à proposer) et
+    // « erreur » (accès au stockage impossible — issues #52/#186 : le renderer
+    // continue, l'ordonnanceur proposera la restauration depuis son instantané).
+    // La logique vient de lib/local-storage-json.js (testée par `node --test`).
     function readJSON(key) {
-      const raw = localStorage.getItem(key);
-      if (raw == null) return { status: 'empty', data: null };
-      try { return { status: 'ok', data: JSON.parse(raw) }; }
-      catch (e) {
-        console.error('[storage] JSON corrompu pour « ' + key + ' » :', e);
-        return { status: 'corrupt', data: null, error: e };
+      const r = lireStockageJSON(localStorage, key);
+      if (r.status === 'corrupt' || r.status === 'erreur') {
+        console.error('[storage] ' + (r.status === 'corrupt' ? 'JSON corrompu' : 'accès impossible') +
+          ' pour « ' + key + ' » :', r.error);
       }
+      return r;
     }
 
     // Sauvegarde la liste de comptes. Avant d'écraser, on copie l'ancienne valeur
