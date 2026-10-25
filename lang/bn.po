@@ -518,6 +518,10 @@ msgid "Restaurer les onglets ouverts au démarrage"
 msgstr "চালুর সময় খোলা ট্যাব পুনরুদ্ধার করুন"
 
 #: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
 msgid "Préfixe des adresses e-mail"
 msgstr "ইমেল ঠিকানার উপসর্গ"
 

@@ -1,5 +1,32 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
+
+### Ajouté
+- **`lib/har.js`** : module pur d'enregistrement HAR 1.2 à partir des événements CDP
+  `Network.*` (`requestWillBeSent`, `responseReceived`, `loadingFinished`,
+  `loadingFailed`). Fenêtre de capture de 15 minutes (horloge injectée), quota de
+  2 000 entrées, corps de réponses relus à la finalisation via une dépendance
+  injectée (un corps illisible n'empêche pas le reste), corps tronqués au-delà de
+  512 Ko, redirections = une entrée par `requestWillBeSent`, sauvegarde dans
+  `<dossier de données>/har/<hôte>-<horodatage>.har`. Toutes les dépendances sont
+  injectées (horloge, lecture de corps, écriture, journal) : testé par `node --test` à
+  100 % de couverture lignes/branches/fonctions.
+- **`main.js`** : câblage minimal sur `did-attach-webview` — si le réglage
+  « harCapture » est actif, le débogueur CDP est attaché au `guestContents`
+  (`Network.enable`), les événements sont transmis au module, et la capture est
+  finalisée à la fermeture de l'onglet, au détachement du débogueur ou à l'expiration
+  des 15 minutes. Échecs d'attachement (outils de développement déjà ouverts,
+  par exemple) journalisés en avertissement, sans interrompre l'onglet.
+- **Réglage « harCapture »** (désactivé par défaut) : case à cocher dans le modal
+  Réglages (« Enregistrer en HAR les 15 premières minutes de chaque connexion »),
+  normalisée par `lib/settings.js`, persistée dans `settings.json`, chaîne ajoutée à
+  `lang/messages.pot`. Un HAR contient cookies et jetons : le réglage est volontairement
+  opt-in.
+- **README** (section données, reprise dans `docs/donnees-et-depannage.md`) :
+  emplacement des fichiers, limites, arrêts automatiques et avertissement de
+  confidentialité.
+
 ## Issue #291 — nom de l'organisation GitHub (24/10/2026)
 
 ### Corrigé

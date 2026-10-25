@@ -518,6 +518,10 @@ msgid "Restaurer les onglets ouverts au démarrage"
 msgstr "Khôi phục các tab đang mở khi khởi động"
 
 #: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
 msgid "Préfixe des adresses e-mail"
 msgstr "Tiền tố địa chỉ email"
 

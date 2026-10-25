@@ -518,6 +518,10 @@ msgid "Restaurer les onglets ouverts au démarrage"
 msgstr "Ripristina le schede aperte all'avvio"
 
 #: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
 msgid "Préfixe des adresses e-mail"
 msgstr "Prefisso degli indirizzi e-mail"
 
