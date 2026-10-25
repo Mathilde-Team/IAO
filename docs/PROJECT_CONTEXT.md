@@ -451,6 +451,22 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 
 ## 13. Dernières évolutions
 
+### Harnais : correction de la course C13.1/C14.4 sur les temps de réponse (25/10/2026)
+
+Échec intermittent de **C14.4** en CI (« reponses.jsonl doit être vidé : 102
+caractères » — une ligne livrée après la remise à zéro). Double cause dans le
+harnais, pas dans l'app :
+
+- **C13.1** cherchait « une » réponse profil_1/claude dans `reponses.jsonl`,
+  or **C11.5 en a déjà semé** : le test passait sans attendre la livraison
+  réelle de la mesure. Il exige désormais une ligne enregistrée **après**
+  l'envoi (`fin >= envoi13`).
+- Le renderer vide la file de mesures de chaque page toutes les **3 s**
+  (`lib/mesure-reponse.js`), et une webview ralentie en arrière-plan retarde
+  encore la détection de fin : **C14.4** attend désormais un cycle complet
+  (3,5 s) avant de purger, pour qu'aucune mesure en retard ne soit écrite
+  après la remise à zéro.
+
 ### Statistiques : vérification avec un « vrai historique » (issue #206, 25/10/2026)
 
 Nouvelle section **C14** du harnais `test-electron/ui-flows.js` (4 tests, 56 au
