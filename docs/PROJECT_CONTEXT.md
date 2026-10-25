@@ -451,6 +451,26 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 
 ## 13. Dernières évolutions
 
+### Stockage : un localStorage cassé ne tue plus le renderer (issues #52/#186, 25/10/2026)
+
+Défaut démontré par analyse des captures de #52 : si l'accès au localStorage
+lève (LevelDB « Database IO error »), `readJSON` laissait remonter l'exception
+— **toute l'initialisation du renderer mourait** : app vide (0 comptes),
+aucune erreur affichée, aucune proposition de restauration.
+
+- Nouvelle lib pure `lib/local-storage-json.js` (`lireStockageJSON`, injectable,
+  testée par `node --test`) : `readJSON` délègue et renvoie un statut
+  **« erreur »** au lieu de laisser lever. Le renderer continue ; la restauration
+  des comptes passe par la modale existante « Comptes retrouvés »
+  (instantané de l'ordonnanceur, issue #186).
+- `startupAccountsReport` (lib/accounts-recovery.js) connaît le statut
+  « erreur » : la ligne iao.log distingue « accès impossible » de « vide », et
+  la restauration depuis l'instantané est proposée (c'est le cas le plus
+  utile).
+- 6 tests unitaires (lecture qui lève / JSON corrompu / première utilisation /
+  null / restauration « erreur » + instantané) ; harnais inchangé (C8.1 couvre
+  la restauration).
+
 ### Harnais : faux positif de C13.1 et marge de sécurité pour C14.4 (25/10/2026)
 
 Échec de **C14.4** en CI (« reponses.jsonl doit être vidé : 102 caractères » —
