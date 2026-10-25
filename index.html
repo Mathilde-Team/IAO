@@ -45,6 +45,10 @@
      deserializeStarredTabs : issue #154 « Onglets étoilés » — extraites vers
      lib/ dès l'écriture (invariant 11) pour être testables par `node --test`. -->
 <script src="lib/starred-tabs.js"></script>
+<!-- lireStockageJSON : lecture localStorage qui ne lève jamais (issues #52/#186).
+     Statut « erreur » si l'accès au stockage lève — le renderer survit et
+     l'ordonnanceur peut proposer la restauration depuis son instantané. -->
+<script src="lib/local-storage-json.js"></script>
 <script src="lib/comptes-serie.js"></script>
 <script src="lib/taches-runner.js"></script>
 <!-- Helpers purs de l'interface des tâches programmables (issue #199, lot 4).

@@ -62,6 +62,14 @@ test('startupAccountsReport : stockage corrompu -> pas de seconde proposition (b
   assert.equal(r.startupAccountsReport({ status: 'corrupt', count: 0 }, 5).offerRestore, false);
 });
 
+test('startupAccountsReport : accès au stockage impossible (« erreur », #52/#186) -> restauration depuis l\'instantané proposée', () => {
+  const rep = r.startupAccountsReport({ status: 'erreur', count: 0 }, 70);
+  assert.equal(rep.offerRestore, true);
+  assert.equal(rep.level, 'warning');
+  assert.match(rep.message, /stockage de l'interface : erreur/);
+  assert.match(rep.message, /instantané de l'ordonnanceur : 70 compte\(s\)/);
+});
+
 test('startupAccountsReport : entrées invalides -> statut « inconnu », compteurs à 0', () => {
   for (const loaded of [undefined, null, 'x', { status: 'bizarre', count: -2 }, { count: 1.5 }]) {
     const rep = r.startupAccountsReport(loaded, 'x');
