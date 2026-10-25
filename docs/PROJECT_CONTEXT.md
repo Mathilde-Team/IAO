@@ -451,6 +451,33 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 
 ## 13. Dernières évolutions
 
+### Statistiques : vérification avec un « vrai historique » (issue #206, 25/10/2026)
+
+Nouvelle section **C14** du harnais `test-electron/ui-flows.js` (4 tests, 56 au
+total) : elle sème dans `<userData>/stats/` **60 jours d'historique réaliste et
+déterministe** (PRNG mulberry32 graine 206 : ~600 sessions sur 4 profils et
+6 services, ~420 temps de réponse, ~35 quotas, sessions garanties aujourd'hui
+et hier pour la série en cours), puis vérifie la page Statistiques sur ce
+volumétrique :
+
+- **C14.1** : totaux exacts (sessions = lignes du fichier + onglets ouverts,
+  réponses = lignes du fichier), médiane non vide, série en cours ≥ 2,
+  6 cartes ; lignes « Par compte »/« Par service » retrouvées par la **clé**
+  (attribut `title`, le nom affiché pouvant être « 3 »/« 4 » — comptes créés
+  en série par C9.1 sur ces mêmes profils) avec comptes exacts pour
+  profil_3/profil_4/suno ; carte de chaleur 7 × 24 avec ≥ 50 cases allumées ;
+  histogrammes d'évolution ≥ 30 barres ; aucun compte inutilisé (les 4 ont
+  servi) ; profil_1 surchargé ; ni débordement ni `<script>` injecté.
+- **C14.2** : la période « semaine » ne compte que les 7 derniers jours.
+- **C14.3** : export JSON complet (format `iao-stats-1`, sessions + réponses
+  au complet, nom de compte joint).
+- **C14.4** : la remise à zéro vide les trois fichiers (sessions, réponses,
+  quotas) et la carte retombe sur les seuls onglets ouverts.
+
+Le semis s'**ajoute** aux fichiers existants (les tests précédents y ont écrit)
+et les valeurs attendues se calculent depuis les fichiers (vérité terrain) et
+le jeu de données semé. Aucun changement de code applicatif — test seul.
+
 ### Internationalisation gettext — lot 1 (issue #51, 08/10/2026)
 
 - Langue source : français (`msgid`). Catalogues dans `lang/` (`LINGUAS`, `messages.pot`,

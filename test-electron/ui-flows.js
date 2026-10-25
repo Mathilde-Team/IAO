@@ -1349,6 +1349,288 @@ async function run() {
   });
 
   // =========================================================================
+  // C14 — Statistiques avec un vrai historique (issue #206)
+  // =========================================================================
+  // Demande de #206 : « vérifier la page Statistiques avec un vrai
+  // historique ». C11 couvre les lots 1 à 4 avec quelques sessions créées
+  // par le harnais ; ici on sème 60 jours d'historique réaliste (sessions,
+  // temps de réponse, quotas) dans <userData>/stats/ avant d'ouvrir la
+  // modale, puis on vérifie que totaux, tableaux, cartes, histogrammes et
+  // export rendent exactement ces données.
+  // profil_3 et profil_4 n'ont AUCUNE session créée par les tests précédents
+  // (qui n'utilisent que profil_1/profil_2) : leurs valeurs attendues sont
+  // donc exactes, calculées depuis le jeu de données semé.
+  console.log('\n--- C14 : Statistiques avec un vrai historique (#206) ---');
+
+  // PRNG déterministe (mulberry32) : le jeu de données est reproductible.
+  function prng14(graine) {
+    let a = graine >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const JOUR_MS = 24 * 60 * 60 * 1000;
+  const maintenant14 = Date.now();
+  const alea14 = prng14(206);
+  const sessions14 = []; // { id, profil, service, debut, fin, actifMs }
+  const reponses14 = []; // { id, profil, service, debut, fin }
+  const quotas14 = [];  // { id, profil, service, date }
+  let seq14 = 0;
+  const id14 = (p) => p + '-' + (++seq14);
+  const debutJour14 = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+
+  // 60 jours : profil_1 gros utilisateur (5 services), profil_3 régulier,
+  // profil_4 rare ; profil_2 (compte existant) volontairement absent →
+  // « comptes inutilisés ». Aujourd'hui et hier : sessions garanties
+  // (série en cours ≥ 2), la dernière à 45 min de maintenant.
+  const plans14 = [
+    { profil: 'profil_1', services: ['claude', 'chatgpt', 'gemini', 'perplexity', 'grok'], min: 3, max: 7 },
+    { profil: 'profil_3', services: ['claude', 'chatgpt'], min: 1, max: 3 },
+    { profil: 'profil_4', services: ['suno'], min: 0, max: 1 }
+  ];
+  for (let jours = 59; jours >= 0; jours--) {
+    const base = debutJour14(maintenant14 - jours * JOUR_MS);
+    for (const plan of plans14) {
+      const n = plan.min + Math.floor(alea14() * (plan.max - plan.min + 1));
+      for (let k = 0; k < n; k++) {
+        const service = plan.services[Math.floor(alea14() * plan.services.length)];
+        const heureMax = jours === 0 ? new Date(maintenant14).getHours() : 22;
+        const debut = base + Math.floor(alea14() * (heureMax + 1)) * 3600000;
+        const duree = (5 + Math.floor(alea14() * 115)) * 60000; // 5 min - 2 h
+        const actif = Math.round(duree * (0.3 + alea14() * 0.5));
+        sessions14.push({ id: id14('s'), profil: plan.profil, service, debut, fin: debut + duree, actifMs: actif });
+      }
+    }
+  }
+  // Sessions garanties aujourd'hui et hier (série en cours), peu importe
+  // l'heure d'exécution du harnais.
+  sessions14.push({ id: id14('s'), profil: 'profil_1', service: 'claude',
+    debut: maintenant14 - 45 * 60000, fin: maintenant14 - 10 * 60000, actifMs: 20 * 60000 });
+  sessions14.push({ id: id14('s'), profil: 'profil_3', service: 'claude',
+    debut: debutJour14(maintenant14 - JOUR_MS) + 10 * 3600000,
+    fin: debutJour14(maintenant14 - JOUR_MS) + 11 * 3600000, actifMs: 40 * 60000 });
+
+  // Temps de réponse : 3 à 6 par jour pour profil_1 (claude, chatgpt),
+  // 8 s à 4 min — réaliste pour une génération d'IA.
+  for (let jours = 59; jours >= 0; jours--) {
+    const base = debutJour14(maintenant14 - jours * JOUR_MS);
+    for (const service of ['claude', 'chatgpt']) {
+      const n = 3 + Math.floor(alea14() * 4);
+      for (let k = 0; k < n; k++) {
+        const heureMax = jours === 0 ? new Date(maintenant14).getHours() : 22;
+        const debut = base + Math.floor(alea14() * (heureMax + 1)) * 3600000;
+        const duree = (8 + Math.floor(alea14() * 232)) * 1000;
+        reponses14.push({ id: id14('r'), profil: 'profil_1', service, debut, fin: debut + duree });
+      }
+    }
+  }
+
+  // Quotas atteints : profil_1+claude un jour sur deux (~30 sur la période,
+  // très au-dessus du seuil « surchargé » de 3), profil_3+claude tous les
+  // 10 jours. Fenêtre de déduplication d'une heure : espacés de jours.
+  for (let jours = 58; jours >= 0; jours -= 2) {
+    quotas14.push({ id: id14('q'), profil: 'profil_1', service: 'claude',
+      date: debutJour14(maintenant14 - jours * JOUR_MS) + (2 + Math.floor(alea14() * 18)) * 3600000 });
+  }
+  for (let jours = 50; jours >= 0; jours -= 10) {
+    quotas14.push({ id: id14('q'), profil: 'profil_3', service: 'claude',
+      date: maintenant14 - jours * JOUR_MS - Math.floor(alea14() * 12) * 3600000 });
+  }
+
+  // Semis dans <userData>/stats/ : AJOUT aux fichiers existants (les tests
+  // précédents y ont écrit des sessions/réponses, on ne les écrase pas).
+  fs.mkdirSync(statsDir, { recursive: true });
+  const ajouterJsonl = (fichier, lignes) => {
+    let existant = '';
+    try { existant = fs.readFileSync(fichier, 'utf-8'); } catch (e) { /* absent */ }
+    const contenu = (existant && !existant.endsWith('\n') ? existant + '\n' : existant)
+      + lignes.map(l => JSON.stringify(l)).join('\n') + '\n';
+    fs.writeFileSync(fichier, contenu, 'utf-8');
+    return contenu.split('\n').filter(Boolean).length; // lignes totales après ajout
+  };
+  const fichierSessions14 = path.join(statsDir, 'sessions.jsonl');
+  const fichierReponses14 = path.join(statsDir, 'reponses.jsonl');
+  const fichierQuotas14 = path.join(statsDir, 'quotas.jsonl');
+  const lignesSessions14 = ajouterJsonl(fichierSessions14, sessions14);
+  const lignesReponses14 = ajouterJsonl(fichierReponses14, reponses14);
+  const lignesQuotas14 = ajouterJsonl(fichierQuotas14, quotas14);
+
+  // Valeurs attendues, calculées depuis les fichiers (vérité terrain) : les
+  // tests précédents n'ont PAS de session profil_3/profil_4 → leurs comptes
+  // exacts viennent du semis seul.
+  const attenduSesProfil3 = sessions14.filter(s => s.profil === 'profil_3').length;
+  const attenduSesProfil4 = sessions14.filter(s => s.profil === 'profil_4').length;
+  const attenduSesSuno = sessions14.filter(s => s.service === 'suno').length;
+  const attenduSesSemaine = sessions14.filter(s => s.fin >= maintenant14 - 7 * JOUR_MS).length;
+  const ongletsOuverts = await exec('document.querySelectorAll(\'#tabsBar .tab\').length');
+
+  await test('C14.1 La page Statistiques rend un historique de 60 jours : totaux, tableaux, cartes (#206)', async () => {
+    const r = await exec(`(async () => {
+      document.querySelector('[data-action="ui-openStatsModal"]').click();
+      await new Promise(res => setTimeout(res, 500));
+      document.querySelector('#statsPeriodes [data-periode="tout"]').click();
+      await new Promise(res => setTimeout(res, 300));
+      const body = document.getElementById('statsBody');
+      const cartes = [...body.querySelectorAll('.stats-carte')];
+      const valeur = (libelle) => {
+        const c = cartes.find(x => x.querySelector('.stats-carte__libelle').textContent.includes(libelle));
+        return c ? c.querySelector('.stats-carte__valeur').textContent.trim() : null;
+      };
+      // Tableau « Par compte » : lignes de cellules { texte, titre }.
+      // Le titre de la première cellule est la clé (profil) : le NOM affiché
+      // peut être celui d'un compte créé par C9.1 (« 3 », « 4 »).
+      const cellule = (td) => ({
+        texte: td.textContent.trim(),
+        titre: td.querySelector('.stats-nom span') ? td.querySelector('.stats-nom span').getAttribute('title') : null
+      });
+      const tableCompte = [...body.querySelectorAll('.stats-table')][0];
+      const lignesCompte = [...tableCompte.querySelectorAll('tbody tr')].map(tr =>
+        [...tr.querySelectorAll('td')].map(cellule));
+      const tableService = [...body.querySelectorAll('.stats-table')][1];
+      const lignesService = [...tableService.querySelectorAll('tbody tr')].map(tr =>
+        [...tr.querySelectorAll('td')].map(cellule));
+      return {
+        sessions: valeur('Sessions'),
+        reponses: valeur('Réponses'),
+        mediane: valeur('Temps de réponse médian'),
+        serie: valeur('Série en cours'),
+        cartes: cartes.length,
+        lignesCompte,
+        lignesService,
+        chaleur: body.querySelectorAll('.stats-chaleur__case').length,
+        chaleurAllumees: [...body.querySelectorAll('.stats-chaleur__case')].filter(c => parseFloat(c.style.getPropertyValue('--niveau')) > 0).length,
+        barres: body.querySelectorAll('#statsEvolution rect.stats-evolution__barre').length,
+        barresReponses: body.querySelectorAll('#statsEvolutionReponses rect.stats-evolution__barre').length,
+        inutilises: [...document.querySelectorAll('#statsInutilises li')].map(li => ({
+          texte: li.textContent, titre: li.querySelector('span') ? li.querySelector('span').getAttribute('title') : null
+        })),
+        surcharges: [...document.querySelectorAll('#statsSurcharges li')].map(li => ({
+          texte: li.textContent, titre: li.querySelector('span') ? li.querySelector('span').getAttribute('title') : null
+        })),
+        deborde: body.scrollWidth > body.clientWidth + 1,
+        scripts: body.querySelectorAll('script').length
+      };
+    })()`);
+    // Totaux : historique du fichier + onglets ouverts (instantané du suivi).
+    assert(r.sessions === String(lignesSessions14 + ongletsOuverts),
+      'total sessions attendu ' + (lignesSessions14 + ongletsOuverts) + ' (fichier + onglets ouverts), obtenu ' + r.sessions);
+    assert(r.reponses === String(lignesReponses14),
+      'total réponses attendu ' + lignesReponses14 + ', obtenu ' + r.reponses);
+    assert(r.mediane && r.mediane !== '—', 'temps de réponse médian vide : ' + JSON.stringify(r.mediane));
+    assert(r.serie && /[0-9]/.test(r.serie) && !r.serie.startsWith('0'), 'série en cours nulle : ' + JSON.stringify(r.serie));
+    assert(r.cartes === 6, '6 cartes attendues : ' + r.cartes);
+    // Tableaux : profil_3 et profil_4 ne viennent que du semis → valeurs exactes.
+    // La clé (titre de la cellule) est le profil ; le nom affiché peut être
+    // « 3 »/« 4 » (comptes créés en série par C9.1, profils profil_3/profil_4).
+    // Colonnes : nom | temps actif | durée ouverte | sessions | dernier.
+    const ligneP3 = r.lignesCompte.find(l => l[0].titre === 'profil_3');
+    const ligneP4 = r.lignesCompte.find(l => l[0].titre === 'profil_4');
+    assert(ligneP3 && ligneP3[3].texte === String(attenduSesProfil3),
+      'profil_3 : ' + attenduSesProfil3 + ' sessions attendues : ' + JSON.stringify(ligneP3));
+    assert(ligneP4 && ligneP4[3].texte === String(attenduSesProfil4),
+      'profil_4 : ' + attenduSesProfil4 + ' sessions attendues : ' + JSON.stringify(ligneP4));
+    const ligneSuno = r.lignesService.find(l => l[0].texte === 'Suno' || l[0].titre === 'suno');
+    assert(ligneSuno && ligneSuno[3].texte === String(attenduSesSuno),
+      'suno : ' + attenduSesSuno + ' sessions attendues : ' + JSON.stringify(ligneSuno));
+    // Cartes de chaleur et histogrammes : 60 jours de données réparties sur
+    // les heures de la journée → nombreuses cases et barres allumées.
+    assert(r.chaleur === 7 * 24 && r.chaleurAllumees >= 50,
+      'carte de chaleur : ' + r.chaleurAllumees + ' cases allumées sur ' + r.chaleur);
+    assert(r.barres >= 30, 'évolution du temps actif : ' + r.barres + ' barres');
+    assert(r.barresReponses >= 30, 'évolution du temps de réponse : ' + r.barresReponses + ' barres');
+    // Comptes inutilisés : aucun — les 4 comptes du harnais ont tous des
+    // sessions (profil_2 : onglet fermé en C11.1 ; profil_3/profil_4 : semis).
+    // La liste ne doit donc rien afficher, et surtout aucun profil servi.
+    assert(r.inutilises.length === 0,
+      'aucun compte inutilisé attendu (tous ont servi) : ' + JSON.stringify(r.inutilises));
+    // Comptes surchargés : profil_1 dépasse largement le seuil (3 quotas).
+    assert(r.surcharges.length >= 1 && r.surcharges.some(t => t.titre === 'profil_1'),
+      'profil_1 attendu dans les surchargés : ' + JSON.stringify(r.surcharges));
+    assert(!r.deborde, 'débordement horizontal du contenu');
+    assert(r.scripts === 0, 'aucun <script> injecté');
+  });
+
+  await test('C14.2 Période « semaine » : seules les sessions des 7 derniers jours comptent (#206)', async () => {
+    const r = await exec(`(async () => {
+      document.querySelector('[data-action="ui-openStatsModal"]').click();
+      await new Promise(res => setTimeout(res, 300));
+      document.querySelector('#statsPeriodes [data-periode="semaine"]').click();
+      await new Promise(res => setTimeout(res, 300));
+      const body = document.getElementById('statsBody');
+      const cartes = [...body.querySelectorAll('.stats-carte')];
+      const c = cartes.find(x => x.querySelector('.stats-carte__libelle').textContent.includes('Sessions'));
+      return { sessions: c.querySelector('.stats-carte__valeur').textContent.trim(),
+        active: document.querySelector('#statsPeriodes .stats-periode--active').dataset.periode };
+    })()`);
+    // Le semis est volontairement dense sur la période : le total « semaine »
+    // est au moins les sessions semées sur 7 jours (les onglets ouverts et
+    // les sessions des tests précédents, tous récents, s'y ajoutent).
+    assert(Number(r.sessions) >= attenduSesSemaine,
+      'sessions « semaine » ≥ ' + attenduSesSemaine + ' attendues, obtenu ' + r.sessions);
+    assert(r.active === 'semaine', 'période active : ' + r.active);
+    assert(Number(r.sessions) < lignesSessions14 + ongletsOuverts,
+      'la période « semaine » doit exclure l\'historique ancien');
+  });
+
+  await test('C14.3 Export JSON avec un vrai historique : contenu complet et cohérent (#206)', async () => {
+    const { dialog } = require('electron');
+    const origine = dialog.showSaveDialog;
+    const cible = path.join(statsDir, '..', 'export-c14.json');
+    dialog.showSaveDialog = async (_w, opts) => { return { canceled: false, filePath: cible }; };
+    try {
+      await exec(`window.exportStatsJson(); 'ok'`);
+      let brut = null;
+      for (let i = 0; i < 30 && brut === null; i++) {
+        await sleep(200);
+        try { brut = fs.readFileSync(cible, 'utf-8'); } catch (e) { /* pas encore écrit */ }
+      }
+      assert(brut, 'fichier exporté absent');
+      const j = JSON.parse(brut);
+      assert(j.format === 'iao-stats-1', 'format : ' + j.format);
+      assert(Array.isArray(j.sessions) && j.sessions.length === lignesSessions14 + ongletsOuverts,
+        'export : ' + (lignesSessions14 + ongletsOuverts) + ' sessions attendues, obtenu ' + (j.sessions && j.sessions.length));
+      assert(Array.isArray(j.reponses) && j.reponses.length === lignesReponses14,
+        'export : ' + lignesReponses14 + ' réponses attendues, obtenu ' + (j.reponses && j.reponses.length));
+      // Le nom de compte est joint (pas le brut du profil).
+      assert(j.sessions.some(s => s.compte === 'Compte Test Un'),
+        'nom de compte joint aux sessions : ' + JSON.stringify(j.sessions[0]));
+    } finally {
+      dialog.showSaveDialog = origine;
+    }
+  });
+
+  await test('C14.4 Remise à zéro efface le vrai historique puis la page se reconstruit (#206)', async () => {
+    // La remise à zéro est couverte par C11.4 sur un petit historique ; ici
+    // on vérifie qu'elle vide bien ~600 sessions et ~400 réponses. Les
+    // onglets restés ouverts repartent de maintenant : la carte « Sessions »
+    // retombe exactement sur leur nombre.
+    const r = await exec(`(async () => {
+      window.resetStats();
+      await new Promise(res => setTimeout(res, 300));
+      const oui = document.getElementById('confirmModalYes');
+      if (oui && oui.offsetParent !== null) oui.click();
+      await new Promise(res => setTimeout(res, 800));
+      const body = document.getElementById('statsBody');
+      const cartes = [...body.querySelectorAll('.stats-carte')];
+      const c = cartes.find(x => x.querySelector('.stats-carte__libelle').textContent.includes('Sessions'));
+      return { sessions: c ? c.querySelector('.stats-carte__valeur').textContent.trim() : null,
+        cartes: cartes.length };
+    })()`);
+    assert(r.sessions === String(ongletsOuverts),
+      'après remise à zéro, seuls les ' + ongletsOuverts + ' onglets ouverts comptent : ' + r.sessions);
+    const apres = fs.readFileSync(fichierSessions14, 'utf-8');
+    assert(apres.trim() === '', 'sessions.jsonl doit être vidé : ' + apres.length + ' caractères');
+    const apresRep = fs.readFileSync(fichierReponses14, 'utf-8');
+    assert(apresRep.trim() === '', 'reponses.jsonl doit être vidé : ' + apresRep.length + ' caractères');
+    const apresQuo = fs.readFileSync(fichierQuotas14, 'utf-8');
+    assert(apresQuo.trim() === '', 'quotas.jsonl doit être vidé : ' + apresQuo.length + ' caractères');
+  });
+
+  // =========================================================================
   // Nettoyage
   // =========================================================================
   etapeCourante = 'résumé et nettoyage';
