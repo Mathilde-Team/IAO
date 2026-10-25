@@ -451,23 +451,24 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 
 ## 13. Dernières évolutions
 
-### Harnais : correction de la course C13.1/C14.4 sur les temps de réponse (25/10/2026)
+### Harnais : faux positif de C13.1 et marge de sécurité pour C14.4 (25/10/2026)
 
-Échec intermittent de **C14.4** en CI (« reponses.jsonl doit être vidé : 102
-caractères » — une ligne livrée après la remise à zéro). Double cause dans le
-harnais, pas dans l'app :
+Échec de **C14.4** en CI (« reponses.jsonl doit être vidé : 102 caractères » —
+une ligne livrée après la remise à zéro). Analyse :
 
-- **C13.1** cherchait « une » réponse profil_1/claude dans `reponses.jsonl`,
-  or **C11.5 en a déjà semé** : le test passait sans attendre la livraison
-  réelle de la mesure. Il exige désormais une ligne enregistrée **après**
-  l'envoi (`fin >= envoi13`).
-- Le renderer vide la file de mesures de chaque page toutes les **3 s**
-  (`lib/mesure-reponse.js`), et une webview ralentie en arrière-plan retarde
-  encore la détection de fin : **C14.4** attend désormais un cycle complet
-  (3,5 s) avant de purger, pour qu'aucune mesure en retard ne soit écrite
-  après la remise à zéro.
+- **Démontré** : **C13.1** cherchait « une » réponse profil_1/claude dans
+  `reponses.jsonl`, or **C11.5 en a déjà semé** — le test pouvait passer sans
+  attendre la livraison réelle de sa mesure (faux positif). Il exige
+  désormais une ligne enregistrée **après** l'envoi (`fin >= envoi13`).
+- **Explication probable** (non reproduite) : la ligne restante serait la
+  mesure C13.1 livrée en retard — le renderer vide la file de mesures de
+  chaque page toutes les **3 s** (`lib/mesure-reponse.js`) et une webview
+  ralentie en arrière-plan retarde la détection de fin.
+- **C14.4** attend désormais **3,5 s** avant de purger : une marge de
+  sécurité couvrant un cycle de lecture, **pas une garantie** (un intervalle
+  de 3 s ne borne pas le délai d'exécution d'une livraison).
 
-### Statistiques : vérification avec un « vrai historique » (issue #206, 25/10/2026)
+### Statistiques : vérification avec un historique synthétique de 60 jours (issue #206, 25/10/2026)
 
 Nouvelle section **C14** du harnais `test-electron/ui-flows.js` (4 tests, 56 au
 total) : elle sème dans `<userData>/stats/` **60 jours d'historique réaliste et
