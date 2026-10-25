@@ -1322,6 +1322,14 @@ async function run() {
       pret = await exec(`window.__c13.executeJavaScript('window.__iaoMesureReponse === true && !!document.getElementById("q")').catch(() => false)`);
     }
     assert(pret, 'script de mesure non injecté après le chargement de la page');
+    // La mesure ne compte que si elle est NOUVELLE : C11.5 a déjà semé des
+    // réponses profil_1/claude dans reponses.jsonl. Chercher une ligne
+    // enregistrée APRÈS cet instant (fin >= envoi13) — sinon le test
+    // passerait sans que la mesure ait été livrée (le renderer vide la file
+    // de la page toutes les 3 s, et la webview ralentie en arrière-plan
+    // retarde encore la détection de fin) et C14.4 pourrait purger avant
+    // l'arrivée de la ligne.
+    const envoi13 = Date.now();
     await exec(`window.__c13.executeJavaScript(\`(function () {
       var q = document.getElementById('q'); q.focus();
       q.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
@@ -1338,10 +1346,10 @@ async function run() {
       await sleep(200);
       try {
         ligne = fs.readFileSync(fichier, 'utf-8').split('\n').filter(Boolean)
-          .map(l => JSON.parse(l)).find(r => r.profil === 'profil_1' && r.service === 'claude') || null;
+          .map(l => JSON.parse(l)).find(r => r.profil === 'profil_1' && r.service === 'claude' && r.fin >= envoi13) || null;
       } catch (e) { /* pas encore écrit */ }
     }
-    assert(ligne, 'aucune mesure enregistrée dans reponses.jsonl');
+    assert(ligne, 'aucune mesure enregistrée dans reponses.jsonl après l\'envoi');
     const duree = ligne.fin - ligne.debut;
     assert(duree >= 1500 && duree < 5000, 'durée incohérente : ' + duree + ' ms');
     const brut = fs.readFileSync(fichier, 'utf-8');
@@ -1608,6 +1616,13 @@ async function run() {
     // on vérifie qu'elle vide bien ~600 sessions et ~400 réponses. Les
     // onglets restés ouverts repartent de maintenant : la carte « Sessions »
     // retombe exactement sur leur nombre.
+    // Stabilisation avant la purge : le renderer vide la file de mesures de
+    // chaque page toutes les 3 s (lib/mesure-reponse.js) — attendre un
+    // cycle complet pour qu'aucune mesure en retard (webview ralentie en
+    // arrière-plan) ne soit écrite APRÈS la remise à zéro, ce qui ferait
+    // échouer l'assertion « reponses.jsonl doit être vidé » (course
+    // observée une fois en CI : « 102 caractères » = une ligne livrée tard).
+    await sleep(3500);
     const r = await exec(`(async () => {
       window.resetStats();
       await new Promise(res => setTimeout(res, 300));
