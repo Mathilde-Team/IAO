@@ -173,7 +173,10 @@ async function demarrerCaptureHAR(guestContents) {
   } catch (_) {
     return; // réglages illisibles : pas de capture
   }
-  const hote = hostOf(guestContents.getURL()) || 'inconnu';
+  // webContents.getURL() lève si l'invité est déjà détruit (course async avec
+  // la lecture des réglages) : hôte « inconnu » plutôt que un rejet non géré.
+  let hote = 'inconnu';
+  try { hote = hostOf(guestContents.getURL()) || 'inconnu'; } catch (_) { /* webview parti */ }
   const dossier = path.join(app.getPath('userData'), 'har');
   const enregistreur = har.creerEnregistreurHAR({
     maintenant: Date.now,
@@ -277,8 +280,9 @@ function createWindow() {
     // avertissements/erreurs console de chaque onglet IA (hôte seulement).
     debug('webview', 'onglet attaché : ' + hostOf(guestContents.getURL()));
     // Issue #305 : capture HAR des 15 premières minutes si le réglage est actif.
-    // La fonction ne rejette jamais (chaque étape est gardée en interne).
-    demarrerCaptureHAR(guestContents);
+    // La fonction ne rejette presque jamais (chaque étape est gardée en
+    // interne) ; le filet est journalisé pour ne rien perdre en silence.
+    demarrerCaptureHAR(guestContents).catch((e) => log('har', 'error', 'capture interrompue : ' + (e && e.message ? e.message : '?')));
     guestContents.on('did-navigate', (_e, url) => debug('webview', 'navigation → ' + hostOf(url)));
     guestContents.on('did-fail-load', (_e, code, description, url) => {
       debug('webview', 'échec de chargement ' + hostOf(url) + ' : ' + description + ' (' + code + ')');

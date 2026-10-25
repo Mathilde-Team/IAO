@@ -16,14 +16,21 @@ const EventEmitter = require('node:events');
 const ROOT = path.join(__dirname, '..');
 const MAIN_PATH = path.join(ROOT, 'main.js');
 
-function createElectronMock(appDataDir) {
+function createElectronMock(appDataDir, { rejeterUserData } = {}) {
   const appListeners = new Map();
   const windows = [];
   const ipcHandlers = new Map();
   const calls = { readyCallbacks: [] };
+  // Drapeau activable APRÈS ready() : getPath('userData') sert aussi à la
+  // chaîne de démarrage (journal, diagnostics) — seul l'appel runtime de la
+  // capture HAR doit rejeter.
+  const etat = { rejeterMaintenant: false };
 
   const app = {
-    getPath: (name) => (name === 'appData' ? appDataDir : path.join(appDataDir, name)),
+    getPath: (name) => {
+      if (name === 'userData' && etat.rejeterMaintenant) throw rejeterUserData;
+      return name === 'appData' ? appDataDir : path.join(appDataDir, name);
+    },
     setPath() {},
     getVersion: () => '0.0.0-test',
     isPackaged: false,
@@ -59,12 +66,12 @@ function createElectronMock(appDataDir) {
   const dialog = { showOpenDialog: async () => ({ canceled: true, filePaths: [] }) };
   const shell = { openExternal() {} };
 
-  return { app, BrowserWindow, ipcMain, dialog, shell, session, appListeners, windows, ipcHandlers, calls };
+  return { app, BrowserWindow, ipcMain, dialog, shell, session, appListeners, windows, ipcHandlers, calls, etat };
 }
 
 // Charge main.js avec un réglage harCapture optionnel (settings.json écrit AVANT
 // le require : le chemin du fichier est résolu au chargement du module).
-function loadMain({ harCapture, murHar } = {}) {
+function loadMain({ harCapture, murHar, rejeterUserData } = {}) {
   const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-main-har-'));
   fs.mkdirSync(path.join(appDataDir, 'userData'), { recursive: true });
   if (harCapture !== undefined) {
@@ -75,7 +82,7 @@ function loadMain({ harCapture, murHar } = {}) {
   }
   // « mur » : un FICHIER à la place du dossier har fait échouer la sauvegarde.
   if (murHar) fs.writeFileSync(path.join(appDataDir, 'userData', 'har'), 'pas un dossier');
-  const electron = createElectronMock(appDataDir);
+  const electron = createElectronMock(appDataDir, { rejeterUserData });
   const output = [];
   const original = { warn: console.warn, log: console.log, error: console.error };
   const capture = () => {
@@ -116,21 +123,34 @@ function loadMain({ harCapture, murHar } = {}) {
 
 // Attache une fausse <webview> avec débogueur CDP simulé et renvoie le tout.
 // (la capture démarre après une lecture asynchrone des réglages : on attend un peu)
-async function attacherWebview(h, { url = 'https://exemple.fr/parametrage', echecAttach, echecEnable, echecDetach } = {}) {
+async function attacherWebview(h, { url = 'https://exemple.fr/parametrage', echecAttach, echecEnable, echecDetach, attachBrut, enableBrut, corpsAbsent, corpsRejete, urlSecondeEchec } = {}) {
   const guest = new EventEmitter();
-  guest.getURL = () => url;
+  let appelsGetURL = 0;
+  guest.getURL = () => {
+    appelsGetURL++;
+    // La trace d'attachement appelle getURL une première fois : c'est l'appel
+    // de la capture (le second) qui échoue (webview déjà détruite).
+    if (urlSecondeEchec && appelsGetURL > 1) throw new Error('webview parti');
+    return url;
+  };
   guest.setWindowOpenHandler = () => {};
   guest.session = {};
   const dbg = new EventEmitter();
   const appels = { attach: [], commandes: [], detach: 0 };
   dbg.attach = (version, libelle) => {
     if (echecAttach) throw new Error('Another debugger is already attached');
+    if (attachBrut) throw 'débogueur occupé'; // rejet sans message -> repli « ? »
     appels.attach.push([version, libelle]);
   };
   dbg.sendCommand = async (commande, params) => {
     appels.commandes.push([commande, params]);
     if (echecEnable && commande === 'Network.enable') throw new Error('Command not found');
-    if (commande === 'Network.getResponseBody') return { body: '{"ok": true}' };
+    if (enableBrut && commande === 'Network.enable') throw 'domaine refusé'; // sans message
+    if (commande === 'Network.getResponseBody') {
+      if (corpsRejete) throw new Error('session fermée'); // corps parti -> HAR sans ce corps
+      if (corpsAbsent) return null; // réponse sans corps relisible
+      return { body: '{"ok": true}' };
+    }
     return {};
   };
   dbg.detach = () => {
@@ -253,4 +273,102 @@ test('HAR : quota d\'entrées -> finalisation automatique, échec d\'écriture j
     assert.equal(appels.detach, 1); // un seul appel retenu, le second lève (ignoré)
     guest.emit('destroyed'); // finalisation déjà faite : rien de nouveau
   } finally { h.cleanup(); }
+});
+
+test('HAR : échecs sans message (rejets non-Error) -> repli « ? » dans les warnings', async () => {
+  const h = loadMain({ harCapture: true });
+  try {
+    await h.ready();
+    // attach lève une chaîne (pas une Error) -> repli « ? ».
+    const a1 = await attacherWebview(h, { attachBrut: true });
+    assert.equal(a1.appels.attach.length, 0);
+    assert.match(h.readLog(), /débogueur non attaché \(\?\)/);
+  } finally { h.cleanup(); }
+
+  const h2 = loadMain({ harCapture: true });
+  try {
+    await h2.ready();
+    // Network.enable rejette une chaîne -> repli « ? ».
+    const a2 = await attacherWebview(h2, { enableBrut: true });
+    assert.equal(a2.appels.detach, 1);
+    assert.match(h2.readLog(), /Network.enable refusé : \?/);
+  } finally { h2.cleanup(); }
+});
+
+test('HAR : corps de réponse illisible -> HAR écrit sans ce corps', async () => {
+  const h = loadMain({ harCapture: true });
+  try {
+    await h.ready();
+    const { guest, dbg } = await attacherWebview(h, { corpsAbsent: true });
+    dbg.emit('message', 'event', 'Network.requestWillBeSent', evenementRequete('r1', 'https://exemple.fr/a').params);
+    dbg.emit('message', 'event', 'Network.loadingFinished', { requestId: 'r1', encodedDataLength: 100 });
+    guest.emit('destroyed');
+    await new Promise((r) => setTimeout(r, 50));
+    const dossierHar = path.join(h.appDataDir, 'userData', 'har');
+    const fichiers = fs.readdirSync(dossierHar);
+    assert.equal(fichiers.length, 1);
+    const har = JSON.parse(fs.readFileSync(path.join(dossierHar, fichiers[0]), 'utf-8'));
+    assert.equal(har.log.entries.length, 1);
+    assert.equal(har.log.entries[0].response.content.text, undefined); // corps absent, métadonnées conservées
+  } finally { h.cleanup(); }
+
+  // Même scénario avec une relecture du corps qui rejette (session fermée).
+  const h2 = loadMain({ harCapture: true });
+  try {
+    await h2.ready();
+    const { guest, dbg } = await attacherWebview(h2, { corpsRejete: true });
+    dbg.emit('message', 'event', 'Network.requestWillBeSent', evenementRequete('r1', 'https://exemple.fr/a').params);
+    dbg.emit('message', 'event', 'Network.loadingFinished', { requestId: 'r1', encodedDataLength: 100 });
+    guest.emit('destroyed');
+    await new Promise((r) => setTimeout(r, 50));
+    const dossierHar = path.join(h2.appDataDir, 'userData', 'har');
+    const fichiers = fs.readdirSync(dossierHar);
+    assert.equal(fichiers.length, 1);
+    const har = JSON.parse(fs.readFileSync(path.join(dossierHar, fichiers[0]), 'utf-8'));
+    assert.equal(har.log.entries[0].response.content.text, undefined); // échec de relecture absorbé
+  } finally { h2.cleanup(); }
+});
+
+test('HAR : Network.enable refusé et détachement impossible -> double échec absorbé', async () => {
+  const h = loadMain({ harCapture: true });
+  try {
+    await h.ready();
+    const { appels } = await attacherWebview(h, { echecEnable: true, echecDetach: true });
+    assert.equal(appels.detach, 1); // le détachement raté du chemin d'échec est absorbé
+    assert.match(h.readLog(), /Network.enable refusé/);
+    assert.equal(fs.existsSync(path.join(h.appDataDir, 'userData', 'har')), false);
+  } finally { h.cleanup(); }
+});
+
+test('HAR : webview détruite avant la capture (getURL en échec) -> hôte « inconnu »', async () => {
+  const h = loadMain({ harCapture: true });
+  try {
+    await h.ready();
+    const { guest } = await attacherWebview(h, { urlSecondeEchec: true });
+    guest.emit('destroyed');
+    await new Promise((r) => setTimeout(r, 50));
+    const dossierHar = path.join(h.appDataDir, 'userData', 'har');
+    const fichiers = fs.readdirSync(dossierHar);
+    assert.equal(fichiers.length, 1);
+    assert.ok(fichiers[0].startsWith('inconnu-'));
+  } finally { h.cleanup(); }
+});
+
+test('HAR : rejet runtime de getPath -> « capture interrompue » journalisé (avec et sans message)', async () => {
+  const h = loadMain({ harCapture: true, rejeterUserData: new Error('userData cassé') });
+  try {
+    await h.ready();
+    h.electron.etat.rejeterMaintenant = true; // l'appel runtime de la capture rejettera
+    const { appels } = await attacherWebview(h);
+    assert.equal(appels.attach.length, 0);
+    assert.match(h.readLog(), /capture interrompue : userData cassé/);
+  } finally { h.cleanup(); }
+
+  const h2 = loadMain({ harCapture: true, rejeterUserData: 'panne de disque' });
+  try {
+    await h2.ready();
+    h2.electron.etat.rejeterMaintenant = true;
+    await attacherWebview(h2);
+    assert.match(h2.readLog(), /capture interrompue : \?/); // rejet sans message -> repli « ? »
+  } finally { h2.cleanup(); }
 });
