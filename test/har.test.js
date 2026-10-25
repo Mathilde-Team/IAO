@@ -356,8 +356,10 @@ test('événements dégénérés : champs manquants, replis, erreur non-Error', 
   assert.equal(rec.notifier({ methode: 'Network.loadingFailed', params: { requestId: 'absent', type: 'XHR' } }), 'ignore');
   // requestWillBeSent sans champ request : entrée vide mais valide.
   rec.notifier({ methode: 'Network.requestWillBeSent', params: { requestId: 'd4', type: 'Other' } });
+  // responseReceived sans response (repli {}), puis avec redirectURL, puis
   // loadingFailed sans errorText mais avec type (après les responseReceived
   // pour ne pas être écrasé par le statusText vide du dernier).
+  rec.notifier({ methode: 'Network.responseReceived', params: { requestId: 'd3' } });
   rec.notifier({
     methode: 'Network.responseReceived',
     params: { requestId: 'd3', response: { status: 301, redirectURL: 'https://x.fr/suivant' } }
