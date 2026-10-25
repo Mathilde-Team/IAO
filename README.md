@@ -169,6 +169,14 @@ Les statistiques d'utilisation (issue #206, bouton « graphique » de la barre d
 
 Ce dossier n'est **pas** supprimé par la désinstallation — effacez-le manuellement pour repartir de zéro.
 
+## Capture HAR des 15 premières minutes (issue #305)
+
+Le réglage « Enregistrer en HAR les 15 premières minutes de chaque connexion » (Réglages, désactivé par défaut) enregistre le trafic réseau de chaque onglet IA pendant les 15 premières minutes après son ouverture : requêtes, en-têtes, corps des requêtes POST et corps des réponses. But : rejouer la configuration des skills et connecteurs d'un compte (importer le fichier `.har` dans un outil comme Playwright ou Chrome DevTools).
+
+- Les fichiers sont écrits dans `<dossier de données>/har/<hôte>-<horodatage>.har` (HAR 1.2, 2 000 entrées maximum, un corps de réponse conservé jusqu'à 512 Ko).
+- La capture s'arrête d'elle-même : 15 minutes écoulées, quota d'entrées atteint, onglet fermé.
+- **Confidentialité** : un HAR contient cookies et jetons de session en clair — n'activez le réglage que pour capturer, désactivez-le ensuite, et ne partagez un `.har` qu'avec une personne de confiance. La capture s'arrête aussi si le débogueur ne peut pas être attaché (outils de développement ouverts sur cet onglet, par exemple) : un avertissement est alors journalisé dans `iao.log`.
+
 ## Dépannage au démarrage
 
 - Si un problème empêche l'interface de fonctionner, un **bandeau rouge avec une icône

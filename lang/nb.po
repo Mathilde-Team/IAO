@@ -518,6 +518,10 @@ msgid "Restaurer les onglets ouverts au démarrage"
 msgstr "Gjenopprett åpne faner ved oppstart"
 
 #: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
 msgid "Préfixe des adresses e-mail"
 msgstr "Prefiks for e-postadresser"
 
