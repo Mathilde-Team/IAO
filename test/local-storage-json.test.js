@@ -49,3 +49,25 @@ test('lireStockageJSON : valeur null (présente mais null) -> empty, pas d\'exce
   const r = lireStockageJSON({ getItem: () => null }, 'cle');
   assert.deepEqual(r, { status: 'empty', data: null });
 });
+
+// Branche navigateur (patron activity-status.test.js) : exposer sur window
+// et NE PAS exporter en CommonJS — couvre la ligne `typeof window` à 100 %.
+const MODULE_PATH = require.resolve('../lib/local-storage-json.js');
+
+test('en contexte navigateur, lireStockageJSON est exposée sur window, sans export CommonJS', () => {
+  const hadWindow = Object.prototype.hasOwnProperty.call(globalThis, 'window');
+  const previous = globalThis.window;
+  const fakeWindow = {};
+  globalThis.window = fakeWindow;
+  delete require.cache[MODULE_PATH];
+  try {
+    const exported = require(MODULE_PATH);
+    assert.equal(typeof fakeWindow.lireStockageJSON, 'function',
+      'lireStockageJSON doit être sur window');
+    assert.deepEqual(Object.keys(exported), []);
+  } finally {
+    if (hadWindow) globalThis.window = previous; else delete globalThis.window;
+    delete require.cache[MODULE_PATH];
+    require(MODULE_PATH);
+  }
+});
