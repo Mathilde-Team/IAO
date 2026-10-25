@@ -2916,6 +2916,8 @@
         document.getElementById('settingsConfirmBeforeClose').checked = settings.confirmBeforeClose;
         document.getElementById('settingsShowAutomationWindows').checked = settings.showAutomationWindows;
         document.getElementById('settingsStartWithLastSession').checked = settings.startWithLastSession;
+        // Issue #305 : capture HAR des 15 premières minutes d'une connexion.
+        document.getElementById('settingsHarCapture').checked = settings.harCapture === true;
         document.getElementById('settingsMailPrefix').value = settings.mailPrefix || '';
         document.getElementById('settingsMailDomain').value = settings.mailDomain || '';
         document.getElementById('settingsWebmailUrl').value = settings.webmailUrl || '';
@@ -2939,6 +2941,7 @@
         confirmBeforeClose: document.getElementById('settingsConfirmBeforeClose').checked,
         showAutomationWindows: document.getElementById('settingsShowAutomationWindows').checked,
         startWithLastSession: document.getElementById('settingsStartWithLastSession').checked,
+        harCapture: document.getElementById('settingsHarCapture').checked,
         language: (document.getElementById('settingsLanguage') || { value: loadedLanguage }).value,
         mailPrefix: document.getElementById('settingsMailPrefix').value,
         mailDomain: document.getElementById('settingsMailDomain').value,

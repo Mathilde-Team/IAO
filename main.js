@@ -36,6 +36,7 @@ const { IdentifiantsPartages, registerIdentifiantsIPC } = require('./lib/identif
 const focusIdentifiants = require('./lib/identifiants-focus');
 const startupStorage = require('./lib/startup-storage');
 const stats = require('./lib/stats');
+const har = require('./lib/har');
 const LOG_DIR = path.join(app.getPath('userData'), 'logs');
 const LOG_FILE = path.join(LOG_DIR, 'iao.log');
 const LOG_MAX_BYTES = 1024 * 1024;
@@ -157,6 +158,68 @@ let mainWindow = null;
 // possible du menu des identifiants — sinon, c'est la fenêtre principale.
 const fenetresFilles = new Map();
 
+// --- Issue #305 : capture HAR des 15 premières minutes d'une connexion --------
+// Si le réglage « harCapture » est actif, chaque <webview> attaché se voit
+// brancher le débogueur CDP (domaine Network) : requêtes, en-têtes, corps des
+// réponses et corps des requêtes POST sont journalisés dans un fichier HAR 1.2
+// pendant 15 minutes (fenêtre gérée par lib/har.js). But : rejouer la
+// configuration des skills et connecteurs d'un compte. Les fichiers vivent
+// dans <userData>/har/<hôte>-<horodatage>.har — un HAR contient cookies et
+// jetons de session, le réglage est donc désactivé par défaut.
+async function demarrerCaptureHAR(guestContents) {
+  try {
+    const raw = await fsPromises.readFile(settingsPath, 'utf-8');
+    if (!normalizeSettings(JSON.parse(raw)).harCapture) return;
+  } catch (_) {
+    return; // réglages illisibles : pas de capture
+  }
+  let hote = 'inconnu';
+  try { hote = hostOf(guestContents.getURL()) || 'inconnu'; } catch (_) { /* webview déjà parti */ }
+  const dossier = path.join(app.getPath('userData'), 'har');
+  const enregistreur = har.creerEnregistreurHAR({
+    maintenant: Date.now,
+    construireChemin: (h, ms) => path.join(dossier, har.nomFichier(h, ms)),
+    creerDossier: () => fsPromises.mkdir(dossier, { recursive: true }),
+    ecrireFichier: (chemin, contenu) => fsPromises.writeFile(chemin, contenu, 'utf-8'),
+    lireCorps: async (idRequete) => {
+      try {
+        const res = await guestContents.debugger.sendCommand('Network.getResponseBody', { requestId: idRequete });
+        return res && typeof res.body === 'string' ? res : null;
+      } catch (_) { return null; } // corps parti (session fermée) : HAR sans ce corps
+    },
+    journal: log.bind(null, 'har')
+  });
+  try {
+    guestContents.debugger.attach('1.3', 'IAO-HAR');
+  } catch (e) {
+    log('har', 'warning', 'débogueur non attaché (' + (e && e.message ? e.message : '?') + '), capture ignorée');
+    return;
+  }
+  try {
+    await guestContents.debugger.sendCommand('Network.enable');
+  } catch (e) {
+    log('har', 'warning', 'Network.enable refusé : ' + (e && e.message ? e.message : '?'));
+    try { guestContents.debugger.detach(); } catch (_) { /* déjà détaché */ }
+    return;
+  }
+  enregistreur.demarrer({ hote: hote });
+  let finalise = false;
+  const finaliser = async (raison) => {
+    if (finalise) return;
+    finalise = true;
+    const resultat = await enregistreur.arreter();
+    log('har', resultat.ecrit ? 'info' : 'warning',
+      'capture ' + (resultat.ecrit ? 'écrite : ' + resultat.fichier : 'échouée (' + resultat.erreur + ')') +
+      ' (' + raison + ')');
+    try { guestContents.debugger.detach(); } catch (_) { /* déjà détaché */ }
+  };
+  guestContents.debugger.on('message', (_event, methode, params) => {
+    if (enregistreur.notifier({ methode: methode, params: params }) === 'termine') finaliser('fenêtre de 15 min écoulée');
+  });
+  guestContents.debugger.on('detach', () => finaliser('débogueur détaché'));
+  guestContents.on('destroyed', () => finaliser('webview fermé'));
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
@@ -214,6 +277,8 @@ function createWindow() {
     // Issue #162 : en mode debug, navigations, échecs de chargement et
     // avertissements/erreurs console de chaque onglet IA (hôte seulement).
     debug('webview', 'onglet attaché : ' + hostOf(guestContents.getURL()));
+    // Issue #305 : capture HAR des 15 premières minutes si le réglage est actif.
+    demarrerCaptureHAR(guestContents).catch((e) => log('har', 'error', 'capture interrompue : ' + (e && e.message ? e.message : '?')));
     guestContents.on('did-navigate', (_e, url) => debug('webview', 'navigation → ' + hostOf(url)));
     guestContents.on('did-fail-load', (_e, code, description, url) => {
       debug('webview', 'échec de chargement ' + hostOf(url) + ' : ' + description + ' (' + code + ')');

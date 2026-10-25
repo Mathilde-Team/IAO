@@ -12,7 +12,7 @@ var settings = require('../lib/settings');
 
 test('DEFAULT_SETTINGS contient toutes les cles attendues', function() {
   var keys = Object.keys(settings.DEFAULT_SETTINGS);
-  var expected = ['editorFontSize', 'editorWordWrap', 'theme', 'confirmBeforeClose', 'showAutomationWindows', 'startWithLastSession', 'language', 'mailPrefix', 'mailDomain', 'webmailUrl'];
+  var expected = ['editorFontSize', 'editorWordWrap', 'theme', 'confirmBeforeClose', 'showAutomationWindows', 'startWithLastSession', 'harCapture', 'language', 'mailPrefix', 'mailDomain', 'webmailUrl'];
   assert.deepStrictEqual(keys.sort(), expected.sort());
 });
 
@@ -204,4 +204,16 @@ test('#201 normalizeMailPrefix / normalizeMailDomain / normalizeWebmailUrl', fun
   assert.strictEqual(settings.normalizeWebmailUrl('pas une url'), '');
   var n = settings.normalizeSettings({ mailPrefix: 'docker', mailDomain: 'dmathilde.fr', webmailUrl: 'https://m.fr' });
   assert.deepStrictEqual([n.mailPrefix, n.mailDomain, n.webmailUrl], ['docker', 'dmathilde.fr', 'https://m.fr/']);
+});
+
+// --- Issue #305 : capture HAR ------------------------------------------------
+
+test('#305 normalizeSettings : réglage harCapture (booléen, défaut false)', function() {
+  assert.strictEqual(settings.DEFAULT_SETTINGS.harCapture, false);
+  assert.strictEqual(settings.normalizeSettings({}).harCapture, false);
+  assert.strictEqual(settings.normalizeSettings({ harCapture: true }).harCapture, true);
+  assert.strictEqual(settings.normalizeSettings({ harCapture: 'true' }).harCapture, true);
+  assert.strictEqual(settings.normalizeSettings({ harCapture: 'faux' }).harCapture, false);
+  assert.strictEqual(settings.normalizeSettings({ harCapture: 1 }).harCapture, true);
+  assert.strictEqual(settings.normalizeSettings({ harCapture: null }).harCapture, false);
 });
