@@ -712,7 +712,9 @@ async function run() {
     assert(JSON.stringify(after.stored) === JSON.stringify(seedAccounts.map((a) => a.profile)), 'profils enregistrés : ' + after.stored.join(','));
     // Issue #311 : l'adresse revient avec le compte, à sa place sur la carte.
     assert(JSON.stringify(after.emails) === JSON.stringify(seedAccounts.map((a) => a.email)), 'e-mails restaurés : ' + after.emails.join(','));
-    assert(after.lignes[0] === seedAccounts[0].email + ' • ' + seedAccounts[0].profile, 'ligne e-mail de la carte : ' + after.lignes[0]);
+    // Ordre d'affichage propre à la liste : comparaison sans ordre.
+    const attendues = seedAccounts.map((a) => a.email + ' • ' + a.profile).sort();
+    assert(JSON.stringify([...after.lignes].sort()) === JSON.stringify(attendues), 'lignes e-mail des cartes : ' + after.lignes.join(' | '));
   });
 
   await test('C8.2 comptes présents : aucune modale de restauration', async () => {
