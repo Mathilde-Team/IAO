@@ -730,7 +730,7 @@
               <div class="account-avatar" data-avatar-color="${color}">${initials}</div>
               <div class="account-info">
                 <div class="account-name">${escapeHtml(acc.name)} ${isActive ? '<span class="active-dot"></span>' : ''}</div>
-                <div class="account-email"><span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span> • ${escapeHtml(acc.profile)}</div>
+                <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span> • ` : ''}${escapeHtml(acc.profile)}</div>
               </div>
               <div class="account-actions">
                 ${currentSettings && currentSettings.webmailUrl ? `<button class="btn btn--icon" data-action="open-webmail" data-acc="${id}" title="${escapeHtml(_('Ouvrir le webmail (adresse copiée)'))}"><span class="ic" data-icon="envelope"></span></button>` : ''}
@@ -3408,7 +3408,7 @@
       title.textContent = _('Comptes retrouvés');
       const desc = document.createElement('div');
       desc.className = 'modal__desc';
-      desc.textContent = _("Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte ».", { count: restored.length });
+      desc.textContent = _("Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services et les adresses e-mail sont conservées ; une adresse manquante se complète depuis « Modifier le compte ».", { count: restored.length });
       const actions = document.createElement('div');
       actions.className = 'modal__actions';
       const close = () => overlay.remove();

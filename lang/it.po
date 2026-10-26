@@ -1886,8 +1886,8 @@ msgid "Comptes retrouvés"
 msgstr "Account ritrovati"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "All'avvio non è stato letto nessun account, ma il pianificatore ne conosce {count}. Ripristinarli? Le sessioni dei servizi sono conservate; gli indirizzi e-mail vanno completati da «Modifica l'account»."
+msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services et les adresses e-mail sont conservées ; une adresse manquante se complète depuis « Modifier le compte »."
+msgstr "Nessun account letto all'avvio, ma lo scheduler ne conosce {count}. Ripristinarli? Le sessioni dei servizi e gli indirizzi e-mail vengono conservati; un indirizzo mancante si completa da «Modifica account»."
 
 #: assets/app.js
 msgid "Ignorer"

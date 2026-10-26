@@ -17,6 +17,15 @@ test('accountsFromSnapshot reconstruit id, nom, profil et automatisation ; e-mai
   }]);
 });
 
+test('accountsFromSnapshot : e-mail de l\'instantané restauré (issue #311)', () => {
+  const out = r.accountsFromSnapshot([
+    { id: 'a1', name: '239', email: ' docker239@dmathilde.fr ', profile: 'profil_239' },
+    { id: 'a2', name: '240', email: 42, profile: 'profil_240' }
+  ]);
+  assert.deepEqual(out.map((a) => [a.name, a.email, a.profile]),
+    [['239', 'docker239@dmathilde.fr', 'profil_239'], ['240', '', 'profil_240']]);
+});
+
 test('accountsFromSnapshot : nom absent -> profil ; automatisation absente -> valeurs par défaut', () => {
   const out = r.accountsFromSnapshot([{ id: 'a1', profile: 'p1' }, { id: 'a2', name: '   ', profile: 'p2', automation: 'x' }]);
   assert.equal(out[0].name, 'p1');

@@ -1,5 +1,20 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #311 — restauration des comptes : adresse e-mail perdue (26/10/2026)
+
+### Corrigé
+- L'instantané de l'ordonnanceur (`accounts-snapshot.json`) ne gardait que nom, profil et
+  automatisation : les comptes restaurés au démarrage (« Comptes retrouvés », #186) n'avaient
+  plus d'adresse et la carte affichait « • <profil> » à la place de l'adresse.
+  **`scheduler/index.js`** (`syncAccounts`) garde désormais l'adresse, et
+  **`lib/accounts-recovery.js`** (`accountsFromSnapshot`) la restaure ; un ancien instantané
+  donne toujours une adresse vide.
+- **`assets/app.js`** : sans adresse, la carte n'affiche plus que le profil (plus de
+  séparateur orphelin) ; texte de la modale de restauration ajusté (catalogues mis à jour,
+  traductions en, de, es, it revues, les autres langues en « fuzzy »).
+- Tests : `test/accounts-recovery.test.js`, `test/scheduler-state-config.test.js`, scénario
+  Electron C8.1 (adresses restaurées et ligne de la carte).
+
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté

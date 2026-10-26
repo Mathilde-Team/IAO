@@ -1870,7 +1870,9 @@ msgid "Comptes retrouvés"
 msgstr "Akun ditemukan kembali"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
+#, fuzzy
+#| msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
+msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services et les adresses e-mail sont conservées ; une adresse manquante se complète depuis « Modifier le compte »."
 msgstr "Tidak ada akun yang terbaca saat mulai, tetapi penjadwal mengetahui {count}. Pulihkan? Sesi layanan tetap disimpan; alamat email perlu dilengkapi melalui «Ubah akun»."
 
 #: assets/app.js

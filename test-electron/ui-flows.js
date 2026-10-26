@@ -702,12 +702,17 @@ async function run() {
       setTimeout(() => resolve({
         modal: document.getElementById('snapshotRestore') !== null,
         cards: document.querySelectorAll('#accountsList .account-card').length,
-        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile)
+        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile),
+        emails: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.email),
+        lignes: [...document.querySelectorAll('#accountsList .account-email')].map((e) => e.textContent.trim())
       }), 200);
     })`);
     assert(!after.modal, 'modale toujours ouverte après restauration');
     assert(after.cards === seedAccounts.length, 'cartes après restauration : ' + after.cards);
     assert(JSON.stringify(after.stored) === JSON.stringify(seedAccounts.map((a) => a.profile)), 'profils enregistrés : ' + after.stored.join(','));
+    // Issue #311 : l'adresse revient avec le compte, à sa place sur la carte.
+    assert(JSON.stringify(after.emails) === JSON.stringify(seedAccounts.map((a) => a.email)), 'e-mails restaurés : ' + after.emails.join(','));
+    assert(after.lignes[0] === seedAccounts[0].email + ' • ' + seedAccounts[0].profile, 'ligne e-mail de la carte : ' + after.lignes[0]);
   });
 
   await test('C8.2 comptes présents : aucune modale de restauration', async () => {

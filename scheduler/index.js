@@ -251,6 +251,8 @@ class Scheduler {
       return {
         id: a.id,
         name: a.name,
+        // Issue #311 : l'adresse sert à la restauration (accountsFromSnapshot).
+        email: typeof a.email === 'string' ? a.email : '',
         profile: a.profile,
         automation: {
           enabled: incomingAuto.enabled !== false,

@@ -1950,7 +1950,9 @@ msgid "Comptes retrouvés"
 msgstr "تم العثور على الحسابات"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
+#, fuzzy
+#| msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
+msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services et les adresses e-mail sont conservées ; une adresse manquante se complète depuis « Modifier le compte »."
 msgstr "لم يُقرأ أي حساب عند التشغيل، لكن المجدول يعرف {count}. هل تريد استعادتها؟ تُحفظ جلسات الخدمات؛ ويجب إكمال عناوين البريد من «تعديل الحساب»."
 
 #: assets/app.js

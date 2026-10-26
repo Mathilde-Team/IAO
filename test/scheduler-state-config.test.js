@@ -152,15 +152,15 @@ test('syncAccounts : ajout de comptes, valeurs par défaut et surveillance des p
   try {
     ctx.scheduler.setEnabled(true); // #181 : surveillance seulement ordonnanceur démarré
     ctx.scheduler.syncAccounts([
-      { id: 'a1', name: 'Alice', profile: 'profil_1' },
-      { id: 'a2', name: 'Bob', profile: 'profil_2', automation: { enabled: false, lastUsedAt: '1700', lastAutomationAt: 900 } },
+      { id: 'a1', name: 'Alice', email: 'alice@m.fr', profile: 'profil_1' },
+      { id: 'a2', name: 'Bob', email: 7, profile: 'profil_2', automation: { enabled: false, lastUsedAt: '1700', lastAutomationAt: 900 } },
       // automation non objet -> ignoré
       { id: 'a3', name: 'Carol', profile: 'profil_3', automation: 'oops' }
     ]);
     assert.deepStrictEqual(ctx.scheduler.accountsSnapshot, [
-      { id: 'a1', name: 'Alice', profile: 'profil_1', automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 } },
-      { id: 'a2', name: 'Bob', profile: 'profil_2', automation: { enabled: false, lastUsedAt: 1700, lastAutomationAt: 900 } },
-      { id: 'a3', name: 'Carol', profile: 'profil_3', automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 } }
+      { id: 'a1', name: 'Alice', email: 'alice@m.fr', profile: 'profil_1', automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 } },
+      { id: 'a2', name: 'Bob', email: '', profile: 'profil_2', automation: { enabled: false, lastUsedAt: 1700, lastAutomationAt: 900 } },
+      { id: 'a3', name: 'Carol', email: '', profile: 'profil_3', automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 } }
     ]);
     assert.deepStrictEqual(readJSON(ctx.scheduler.accountsPath), ctx.scheduler.accountsSnapshot);
     assert.deepStrictEqual(ctx.session.partitions, ['persist:profil_1', 'persist:profil_2', 'persist:profil_3']);
