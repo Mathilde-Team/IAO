@@ -1709,10 +1709,14 @@
     };
 
     // Issue #201 : webmail (URL des réglages, ouverte par le process principal) ;
-    // l'adresse du compte est copiée pour la saisir dans Roundcube.
+    // l'adresse du compte est copiée. Issue #310 : le process principal ouvre le
+    // webmail dans la partition du compte et s'y connecte avec l'adresse et le
+    // mot de passe du coffre (le renderer ne transmet que profil et adresse).
     function openWebmail(accId) {
       copyAccountEmail(accId);
-      ipcRenderer.invoke('app:open-webmail').then((ok) => {
+      const acc = accounts.find(a => a.id === accId);
+      const compte = acc ? { profil: acc.profile, email: acc.email || '' } : null;
+      ipcRenderer.invoke('app:open-webmail', compte).then((ok) => {
         if (ok !== true) showToast(_('Adresse du webmail non configurée dans les réglages'), 'warning');
       }).catch(() => showToast(_('Ouverture du webmail impossible'), 'error'));
     }

@@ -1,5 +1,23 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #310 — webmail ouvert connecté au compte (26/10/2026)
+
+### Corrigé
+- L'enveloppe d'un compte ouvrait le webmail dans le navigateur système, sans compte ni
+  mot de passe. **`lib/webmail-connexion.js`** l'ouvre désormais dans une fenêtre IAO sans
+  privilèges (sandbox, contextIsolation, partition `persist:<profil>` du compte : une session
+  Roundcube par compte, une fenêtre par profil ramenée au premier plan au second clic). Au
+  premier chargement d'une page de l'hôte des réglages, le formulaire Roundcube
+  (`#rcmloginuser`, `#rcmloginpwd`, `#rcmloginsubmit`) est rempli avec l'adresse du compte et
+  le mot de passe du coffre (#201), puis validé ; une seule tentative par fenêtre (un refus
+  ne boucle pas). Sans mot de passe enregistré, l'adresse seule est remplie.
+- **`lib/coffre-secrets.js`** : `app:open-webmail` reçoit le compte `{ profil, email }` ;
+  l'URL reste celle des réglages, le mot de passe est lu dans le coffre par le process
+  principal et n'est jamais journalisé. Compte illisible : ouverture dans le navigateur,
+  comme avant.
+- Tests : `test/webmail-connexion.test.js` (script exécuté dans une page Roundcube simulée,
+  fenêtre simulée), `test/coffre-secrets.test.js` ; couverture 100 %.
+
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté

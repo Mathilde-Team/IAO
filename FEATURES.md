@@ -128,6 +128,13 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
   quand le bureau change. `resolveTheme()` pure dans `lib/settings.js`. Les réglages déjà
   enregistrés (`iao`, `light`, `dark`) sont conservés. Tests : `test/theme-system.test.js`.
 
+- **Webmail connecté au compte (issue #310, 26/10/2026)**
+  `lib/webmail-connexion.js` : l'enveloppe ouvre l'URL des réglages dans une fenêtre sans
+  privilèges (sandbox, contextIsolation, partition `persist:<profil>` du compte, une fenêtre
+  par profil) ; au premier chargement sur l'hôte du webmail, `#rcmloginuser`/`#rcmloginpwd`
+  reçoivent l'adresse et le mot de passe du coffre, puis le formulaire est validé (une seule
+  tentative, mot de passe jamais journalisé). Le renderer ne transmet que `{ profil, email }`.
+
 - **Comptes en série, mot de passe de messagerie, webmail (issue #201, 18/10/2026)**
   `lib/comptes-serie.js` (numéros suivants, adresses, mot de passe aléatoire sans biais),
   `lib/coffre-secrets.js` (coffre chiffré `safeStorage`, `secrets.json` en 0600, refus sans

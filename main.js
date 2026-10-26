@@ -32,6 +32,7 @@ const diag = require('./lib/startup-diagnostics');
 const DEBUG = diag.isDebugEnabled(process.argv, process.env);
 const debugTrace = require('./lib/debug-trace');
 const { CoffreSecrets, registerComptesIPC } = require('./lib/coffre-secrets');
+const { creerOuvreurWebmail } = require('./lib/webmail-connexion');
 const { IdentifiantsPartages, registerIdentifiantsIPC } = require('./lib/identifiants');
 const focusIdentifiants = require('./lib/identifiants-focus');
 const startupStorage = require('./lib/startup-storage');
@@ -566,7 +567,11 @@ registerComptesIPC(ipc, {
   fichierReglages: settingsPath,
   normaliser: normalizeSettings,
   fsPromises,
-  ouvrirExterne: shell.openExternal.bind(shell)
+  ouvrirExterne: shell.openExternal.bind(shell),
+  // Issue #310 : webmail connecté au compte, dans une fenêtre sans privilèges.
+  ouvrirWebmail: creerOuvreurWebmail({
+    BrowserWindow, journal: log.bind(null, 'webmail'), debug: debug.bind(null, 'webmail')
+  })
 });
 
 // --- Identifiants partagés entre profils (issue #278) ---
