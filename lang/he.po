@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "הפעלה מחדש במצב ניפוי באגים (יומן מפורט)"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes 9 IA à portée de main"
 msgstr "בחירת 9 הבינות המלאכותיות שלי בהישג יד"
 
@@ -740,6 +744,14 @@ msgstr "חלופה חינמית לצ׳אט, לקוד ולניתוח תמונות
 #: assets/app.js
 msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "לא ניתן לשמור את החשבונות (האחסון מלא?)"
+
+#: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
 
 #: assets/app.js
 msgid "Ctrl+S pour sauvegarder."

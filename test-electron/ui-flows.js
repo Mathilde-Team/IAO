@@ -532,6 +532,14 @@ async function run() {
     assert(r.action === 'ui-relaunchDebug', 'data-action : ' + r.action);
     assert(r.hidden === false, 'bouton masqué hors mode debug');
     assert(r.fn === 'function', 'window.relaunchDebug absente');
+    // Issue #317 : « Redémarrer IAO » (mode normal), toujours visible.
+    const n = await exec(`(() => {
+      const b = document.getElementById('btnRelaunch');
+      return { exists: !!b, action: b && b.getAttribute('data-action'), hidden: b ? b.classList.contains('hidden') : null,
+        fn: typeof window.relaunchNormal };
+    })()`);
+    assert(n.exists && n.action === 'ui-relaunch' && n.hidden === false, 'bouton Redémarrer IAO : ' + JSON.stringify(n));
+    assert(n.fn === 'function', 'window.relaunchNormal absente');
     const logPath = await ipc('app:log-path');
     assert(typeof logPath === 'string' && /logs[\\/]iao\.log$/.test(logPath), 'chemin du journal : ' + logPath);
   });
@@ -716,6 +724,31 @@ async function run() {
     await waitLoaded();
     await sleep(300);
     assert(await exec(`document.getElementById('snapshotRestore') === null`), 'modale affichée alors que les comptes sont présents');
+  });
+
+  await test('C8.3 onglets de la session précédente proposés au démarrage (#317, #318)', async () => {
+    await exec(`localStorage.setItem('ai_open_tabs', JSON.stringify([{ accId: 'acc_test_1', svcId: 'claude' }, { accId: 'inconnu', svcId: 'claude' }])); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    await sleep(500);
+    const r = await exec(`(() => {
+      const m = document.getElementById('confirmModal');
+      return { open: m.classList.contains('open'), title: m.querySelector('.confirm-title').textContent,
+        msg: m.querySelector('.confirm-msg').textContent };
+    })()`);
+    assert(r.open, 'proposition de réouverture absente');
+    assert(r.title === 'Rouvrir les onglets précédents ?', 'titre : ' + r.title);
+    assert(/^Onglets ouverts à la fermeture d'IAO : 1\./.test(r.msg), 'onglet d\'un compte inconnu compté : ' + r.msg);
+    // Réglages rouverts : pas de seconde proposition. Refus : rien n'est ouvert.
+    const apres = await exec(`(async () => {
+      document.getElementById('confirmModalNo').click();
+      openSettingsModal();
+      await new Promise((r) => setTimeout(r, 300));
+      closeSettingsModal();
+      return { open: document.getElementById('confirmModal').classList.contains('open') };
+    })()`);
+    assert(!apres.open, 'proposition réaffichée à l\'ouverture des réglages');
   });
 
   // =========================================================================
