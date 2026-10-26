@@ -177,6 +177,23 @@ Le réglage « Enregistrer en HAR les 15 premières minutes de chaque connexion 
 - La capture s'arrête d'elle-même : 15 minutes écoulées, quota d'entrées atteint, onglet fermé.
 - **Confidentialité** : un HAR contient cookies et jetons de session en clair — n'activez le réglage que pour capturer, désactivez-le ensuite, et ne partagez un `.har` qu'avec une personne de confiance. La capture s'arrête aussi si le débogueur ne peut pas être attaché (outils de développement ouverts sur cet onglet, par exemple) : un avertissement est alors journalisé dans `iao.log`.
 
+### Capture HAR manuelle (issue #315)
+
+Pour enregistrer un HAR à la main, au moment choisi et sans limite de 15 minutes :
+
+1. Lancer IAO en **mode debug** (voir plus bas) et ouvrir l'onglet IA voulu.
+2. Cliquer sur **Outils de développement de l'onglet** (icône insecte de la barre de l'onglet).
+   Les outils de la fenêtre principale (Ctrl+Maj+I) ne voient pas le trafic des onglets IA.
+3. Onglet **Network** (Réseau) : cocher **Preserve log** (Conserver le journal), puis faire les
+   manipulations à enregistrer dans la page.
+4. Icône de téléchargement (flèche vers le bas) de la barre Network, ou clic droit dans la liste
+   des requêtes : **Export HAR (sanitized)** enregistre sans cookies ni en-têtes d'authentification ;
+   **Export HAR (with sensitive data)** les garde (option à autoriser dans les réglages des outils,
+   Preferences > Network). Choisir l'emplacement du fichier `.har`.
+
+Tant que ces outils sont ouverts sur un onglet, la capture automatique ci-dessus ne peut pas
+s'attacher à cet onglet. Les mêmes règles de confidentialité s'appliquent.
+
 ## Dépannage au démarrage
 
 - Si un problème empêche l'interface de fonctionner, un **bandeau rouge avec une icône
