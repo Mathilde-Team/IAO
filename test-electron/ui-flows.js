@@ -349,6 +349,55 @@ async function run() {
     assert(/COMPTES ACTIFS\s*2/i.test(txt), 'compteur « comptes actifs » ≠ 2 : ' + txt.slice(0, 120));
   });
 
+  // Issue #319 : la sélection « mes 9 IA » remplace les services des cartes,
+  // sans cumul au redémarrage, et un compte créé ne reçoit qu'elle.
+  await test('C1.6 Choix des 9 : remplacement immédiat, sans cumul au rechargement, appliqué aux nouveaux comptes (#319)', async () => {
+    const lire = () => exec(`(() => {
+      const cartes = [...document.querySelectorAll('#accountsList .account-card')];
+      return cartes.map(c => [...c.querySelectorAll('[data-action="open-service"]')].map(b => b.dataset.svc).join(','));
+    })()`);
+    const avant = await lire();
+    await exec(`(() => {
+      openServicesModal();
+      const cb = (id) => document.querySelector('#servicesList [data-svc-id="' + id + '"]');
+      const list = document.getElementById('servicesList');
+      cb('meshy').checked = false; list.onchange({ target: cb('meshy') });
+      cb('deepseek').checked = true; list.onchange({ target: cb('deepseek') });
+      saveServicesModal();
+      return 'ok';
+    })()`);
+    const attendu = 'claude,chatgpt,gemini,zeta,perplexity,grok,leonardo,suno,deepseek';
+    const apres = await lire();
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const recharge = await lire();
+    const nouveau = await exec(`(() => {
+      openModal();
+      document.getElementById('inputName').value = 'Compte 319';
+      document.getElementById('inputEmail').value = 'c319@example.com';
+      document.getElementById('inputProfile').value = 'profil_319';
+      saveAccount();
+      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const c = comptes.find(a => a.profile === 'profil_319');
+      const services = c ? c.services.join(',') : null;
+      if (c) {
+        localStorage.setItem('ai_accounts', JSON.stringify(comptes.filter(a => a.profile !== 'profil_319')));
+      }
+      localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
+      return services;
+    })()`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const final = await lire();
+    assert(avant.every(l => l.split(',').length === 9 && l.includes('meshy')), 'avant : ' + JSON.stringify(avant));
+    assert(apres.length === 2 && apres.every(l => l === attendu), 'après enregistrement : ' + JSON.stringify(apres));
+    assert(recharge.every(l => l === attendu), 'au rechargement (anciens + nouveaux ?) : ' + JSON.stringify(recharge));
+    assert(nouveau === attendu, 'nouveau compte : ' + nouveau);
+    assert(final.length === 2 && final.every(l => l === avant[0]), 'retour à la sélection par défaut : ' + JSON.stringify(final));
+  });
+
   // =========================================================================
   // C2 — Réglages et thème
   // =========================================================================

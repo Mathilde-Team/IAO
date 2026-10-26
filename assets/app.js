@@ -517,23 +517,18 @@
     let editorMode = 'none'; // 'monaco' | 'textarea' | 'none'
     let currentOpenFilePath = null;
 
-    // Migration : convertit les anciens comptes et garantit que chaque compte
-    // possède TOUS les services + un cooldown pour chacun (répare aussi les
-    // comptes enregistrés qui n'avaient pas encore Perplexity/Zeta).
+    // Migration : convertit les anciens comptes et aligne leurs services sur
+    // la sélection « mes 9 IA » (issue #42), un cooldown pour chacun.
+    // Issue #319 : la liste d'un compte EST la sélection active (aucun écran ne
+    // la choisit compte par compte). Avant, les services actifs étaient ajoutés
+    // à ceux du compte : après un changement de sélection, on retrouvait au
+    // redémarrage les 9 anciens plus les nouveaux.
     function migrateOldAccounts() {
       let needsUpdate = false;
-    // Issue #42 : ALL_SERVICES utilise les services actifs (9 sélectionnés)
-    // au lieu de tous les SERVICES. Les comptes existants gardent leurs services
-    // assignés ; les nouveaux comptes obtiennent les 9 services actifs.
-    const ALL_SERVICES = getActiveServices();
+      const ALL_SERVICES = getActiveServices();
       accounts.forEach(acc => {
-        if (!Array.isArray(acc.services)) { acc.services = [...ALL_SERVICES]; needsUpdate = true; }
         if (acc.quotas && !acc.cooldowns) { delete acc.quotas; needsUpdate = true; }
-        if (!acc.cooldowns) { acc.cooldowns = {}; needsUpdate = true; }
-        ALL_SERVICES.forEach(sid => {
-          if (!acc.services.includes(sid)) { acc.services.push(sid); needsUpdate = true; }
-          if (acc.cooldowns[sid] === undefined) { acc.cooldowns[sid] = 0; needsUpdate = true; }
-        });
+        if (window.iaoServicesActifs.alignerServices(acc, ALL_SERVICES)) needsUpdate = true;
         // Ordonnanceur (chantier E, proposition externe intégrée au backlog) :
         // chaque compte porte désormais son état d'automatisation, indépendant
         // des cooldowns par service. lastUsedAt = dernière ouverture manuelle ;
@@ -1533,6 +1528,11 @@
       const ids = Array.from(pendingServices);
       if (ids.length === 0) { showToast(_('Sélectionnez au moins 1 service'), 'error'); return; }
       saveActiveServices(ids);
+      // Issue #319 : les cartes reprennent tout de suite la nouvelle sélection
+      // (avant, rien n'était appliqué aux comptes avant le redémarrage).
+      const modifies = window.iaoServicesActifs.alignerTous(accounts, getActiveServices());
+      if (modifies > 0) saveAccounts(accounts);
+      dbg('services', 'sélection enregistrée', ids.length, 'services,', modifies, 'compte(s) alignés');
       closeServicesModal();
       // Mettre à jour ALL_SERVICES et re-rendre les comptes
       showToast(_('Services mis à jour ({count}/{max})', { count: ids.length, max: MAX_ACTIVE_SERVICES }));
@@ -1648,8 +1648,9 @@
         accounts.push({
           id: 'acc_' + Date.now(), name, email, profile,
           color: COLORS[accounts.length % COLORS.length],
-          services: SERVICES.map(s => s.id),
-          cooldowns: Object.fromEntries(SERVICES.map(s => [s.id, 0])),
+          // Issue #319 : la sélection active, pas tout le catalogue.
+          services: getActiveServices(),
+          cooldowns: Object.fromEntries(getActiveServices().map(sid => [sid, 0])),
           automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 }
         });
         showToast(_('Compte ajouté'));
@@ -1680,7 +1681,7 @@
       const s = currentSettings || {};
       const r = window.iaoComptesSerie.comptesEnSerie({
         comptes: accounts, nombre: Number(document.getElementById('serieNombre').value),
-        prefixe: s.mailPrefix, domaine: s.mailDomain, services: SERVICES.map(x => x.id), maintenant: Date.now()
+        prefixe: s.mailPrefix, domaine: s.mailDomain, services: getActiveServices(), maintenant: Date.now()
       });
       if (!r.ok) {
         return showToast(r.erreur === 'nombre'
@@ -1690,7 +1691,7 @@
       r.comptes.forEach((c) => {
         accounts.push(Object.assign(c, {
           color: COLORS[accounts.length % COLORS.length],
-          cooldowns: Object.fromEntries(SERVICES.map(x => [x.id, 0])),
+          cooldowns: Object.fromEntries(c.services.map(sid => [sid, 0])),
           automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 }
         }));
       });
