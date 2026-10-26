@@ -193,6 +193,9 @@ Le réglage « Enregistrer en HAR les 15 premières minutes de chaque connexion 
     du workspace, ou bouton **Relancer en mode debug** du bandeau rouge, qui affiche aussi le
     chemin du journal.
   - Un badge **DEBUG** s'affiche alors à côté du nom de l'application.
+  - Chaque onglet IA gagne un bouton **Outils de développement de l'onglet** (insecte, barre
+    de l'onglet) : inspecteur de la page de l'IA elle-même (champ qui a le focus, sélecteurs),
+    que les outils de la fenêtre principale n'atteignent pas (issue #320).
   - Sont ajoutés au journal : versions (Electron, Chrome, Node) et options de lancement ;
     chaque appel IPC (canal, durée, succès ou erreur) ; tous les messages de l'interface
     (ouverture, activation et fermeture d'onglets, enregistrement des comptes) ; pour chaque

@@ -804,6 +804,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Vissza a(z) {service} kezdőlapjára"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Kijelentkezés a(z) „{profile}” profilból"
 

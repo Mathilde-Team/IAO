@@ -802,6 +802,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Back to the {service} home page"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr "Tab developer tools (debug mode)"
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Sign out of profile \"{profile}\""
 

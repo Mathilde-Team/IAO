@@ -402,6 +402,9 @@
   .tab-toolbar__btn { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--radius-sm); color: var(--fg-muted); background: transparent; border: none; cursor: pointer; font-size: 13px; transition: background 0.15s, color 0.15s; }
   .tab-toolbar__btn:hover { background: var(--bg-card-hover); color: var(--fg); }
   .tab-toolbar__btn--danger:hover { background: var(--danger-dim); color: var(--danger); }
+  /* Issue #320 : outils de développement de l'onglet, en mode debug seulement. */
+  .tab-toolbar__btn--debug { display: none; }
+  body.iao-debug .tab-toolbar__btn--debug { display: flex; }
   .tabs-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--fg-dim); gap: 16px; pointer-events: none; }
   .tabs-empty .ic { font-size: 32px; color: var(--border-active); }
   /* État de chargement d'un onglet (retiré à dom-ready : l'animation ne tourne

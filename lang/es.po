@@ -804,6 +804,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Volver a la página principal de {service}"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr "Herramientas de desarrollo de la pestaña (modo depuración)"
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Desconectar el perfil «{profile}»"
 

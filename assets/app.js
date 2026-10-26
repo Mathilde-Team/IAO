@@ -105,6 +105,7 @@
       if (badge) badge.classList.remove('hidden');
       const relaunch = document.getElementById('btnRelaunchDebug');
       if (relaunch) relaunch.classList.add('hidden'); // #187 : déjà en mode debug
+      document.body.classList.add('iao-debug'); // #320 : outils de dev des onglets IA
       dbg('demarrage', 'mode debug actif dans l\'interface');
     }).catch(() => { /* canal absent (ancienne version de main.js) : mode normal */ });
 
@@ -889,6 +890,7 @@
       toolbar.innerHTML = `
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
+        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.profile }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
       `;
       pane.appendChild(toolbar);
@@ -1182,6 +1184,24 @@
       if (webview) webview.reload();
     }
 
+    // Issue #320 : en mode debug, outils de développement de la page de l'IA
+    // (champ qui a le focus, sélecteurs) ; ceux de la fenêtre principale
+    // n'inspectent pas l'intérieur des <webview>.
+    function toggleTabDevTools(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      const webview = tab && tab.paneEl.querySelector('webview');
+      if (!webview || !debugMode) return false;
+      try {
+        if (webview.isDevToolsOpened()) webview.closeDevTools();
+        else webview.openDevTools();
+        dbg('onglet', 'outils de développement basculés', tab.accId, tab.svcId);
+        return true;
+      } catch (e) {
+        console.warn('[onglet] outils de développement indisponibles :', e.message);
+        return false;
+      }
+    }
+
     function tabGoHome(tabId) {
       const tab = tabs.find(t => t.id === tabId);
       if (!tab) return;
@@ -1240,6 +1260,7 @@
       const action = el.getAttribute('data-action');
       if (action === 'tab-reload') reloadTab(tabId);
       else if (action === 'tab-home') tabGoHome(tabId);
+      else if (action === 'tab-devtools') toggleTabDevTools(tabId);
       else if (action === 'tab-disconnect') openDisconnectModal(tabId);
     });
 

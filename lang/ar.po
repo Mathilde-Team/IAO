@@ -808,6 +808,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "العودة إلى الصفحة الرئيسية لـ {service}"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "تسجيل الخروج من الملف الشخصي «{profile}»"
 

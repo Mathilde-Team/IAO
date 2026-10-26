@@ -326,9 +326,11 @@ function createWindow() {
     try {
       const profile = scheduler.resolveProfileFromSession(guestContents.session);
       if (profile) {
-        scheduler.registerWebview(profile, guestContents);
+        // Issue #320 : chargement suivi (écriture une fois la page prête) ;
+        // la fermeture n'oublie que CET onglet, pas les autres du compte.
+        scheduler.registerWebview(profile, guestContents, { suivreChargement: true });
         guestContents.on('destroyed', () => {
-          try { scheduler.unregisterWebview(profile); } catch (_) {}
+          try { scheduler.unregisterWebview(profile, guestContents); } catch (_) {}
         });
       }
     } catch (e) {

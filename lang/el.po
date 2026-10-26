@@ -804,6 +804,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Επιστροφή στην αρχική του {service}"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Αποσύνδεση από το προφίλ «{profile}»"
 
