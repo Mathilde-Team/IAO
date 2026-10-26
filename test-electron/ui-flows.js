@@ -1357,14 +1357,15 @@ async function run() {
   });
 
   // Issue #320 : le script d'écriture de l'ordonnanceur, exécuté dans une
-  // vraie page qui imite ProseMirror : le bouton d'envoi ne s'active que sur
-  // un « beforeinput » natif (un textContent posé de l'extérieur, l'ancienne
-  // méthode, le laissait grisé : rien n'était envoyé).
+  // vraie page qui imite l'éditeur : le bouton d'envoi ne s'active que sur un
+  // événement « input » natif (isTrusted, comme une frappe ou insertText) ;
+  // l'ancienne méthode (textContent + événement synthétique) le laissait
+  // grisé : rien n'était envoyé.
   await test('C13.2 Ordonnanceur : prompt écrit dans un éditeur type ProseMirror puis envoyé (#320)', async () => {
     const page = '<div contenteditable="true" class="ProseMirror" id="e"></div>' +
       '<button data-testid="send-button" id="b" disabled>Send</button><script>' +
       'var e=document.getElementById("e"),b=document.getElementById("b");window.envoye="";' +
-      'e.addEventListener("beforeinput",function(){setTimeout(function(){b.disabled=!e.innerText.trim();},50);});' +
+      'e.addEventListener("input",function(ev){if(ev.isTrusted)b.disabled=!e.innerText.trim();});' +
       'b.addEventListener("click",function(){window.envoye=e.innerText;});</' + 'script>';
     await exec(`window.__c13.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(${JSON.stringify(page)})); 'ok'`);
     let pret = false;
