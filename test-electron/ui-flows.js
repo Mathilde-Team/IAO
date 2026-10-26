@@ -727,28 +727,43 @@ async function run() {
   });
 
   await test('C8.3 onglets de la session précédente proposés au démarrage (#317, #318)', async () => {
-    await exec(`localStorage.setItem('ai_open_tabs', JSON.stringify([{ accId: 'acc_test_1', svcId: 'claude' }, { accId: 'inconnu', svcId: 'claude' }])); 'ok'`);
-    win.webContents.reload();
-    await sleep(300);
-    await waitLoaded();
-    await sleep(500);
-    const r = await exec(`(() => {
-      const m = document.getElementById('confirmModal');
-      return { open: m.classList.contains('open'), title: m.querySelector('.confirm-title').textContent,
-        msg: m.querySelector('.confirm-msg').textContent };
-    })()`);
-    assert(r.open, 'proposition de réouverture absente');
-    assert(r.title === 'Rouvrir les onglets précédents ?', 'titre : ' + r.title);
-    assert(/^Onglets ouverts à la fermeture d'IAO : 1\./.test(r.msg), 'onglet d\'un compte inconnu compté : ' + r.msg);
-    // Réglages rouverts : pas de seconde proposition. Refus : rien n'est ouvert.
-    const apres = await exec(`(async () => {
-      document.getElementById('confirmModalNo').click();
-      openSettingsModal();
-      await new Promise((r) => setTimeout(r, 300));
-      closeSettingsModal();
-      return { open: document.getElementById('confirmModal').classList.contains('open') };
-    })()`);
-    assert(!apres.open, 'proposition réaffichée à l\'ouverture des réglages');
+    // Le harnais démarre avec « Restaurer les onglets » coché : la proposition
+    // n'a lieu que décoché. Réglage et onglets mémorisés remis à la fin du test
+    // (sinon l'onglet Claude rouvert plus tard perturbe C10 et C12).
+    const reglages = await ipc('settings:load');
+    const ongletsAvant = await exec(`localStorage.getItem('ai_open_tabs')`);
+    try {
+      const sansRestauration = await ipc('settings:save', Object.assign({}, reglages, { startWithLastSession: false }));
+      assert(sansRestauration && sansRestauration.ok, 'settings:save : ' + JSON.stringify(sansRestauration));
+      await exec(`localStorage.setItem('ai_open_tabs', JSON.stringify([{ accId: 'acc_test_1', svcId: 'claude' }, { accId: 'inconnu', svcId: 'claude' }])); 'ok'`);
+      win.webContents.reload();
+      await sleep(300);
+      await waitLoaded();
+      await sleep(500);
+      const r = await exec(`(() => {
+        const m = document.getElementById('confirmModal');
+        return { open: m.classList.contains('open'), title: m.querySelector('.confirm-title').textContent,
+          msg: m.querySelector('.confirm-msg').textContent };
+      })()`);
+      assert(r.open, 'proposition de réouverture absente');
+      assert(r.title === 'Rouvrir les onglets précédents ?', 'titre : ' + r.title);
+      assert(/^Onglets ouverts à la fermeture d'IAO : 1\./.test(r.msg), 'onglet d\'un compte inconnu compté : ' + r.msg);
+      // Réglages rouverts : pas de seconde proposition. Refus : rien n'est ouvert.
+      const apres = await exec(`(async () => {
+        document.getElementById('confirmModalNo').click();
+        openSettingsModal();
+        await new Promise((r) => setTimeout(r, 300));
+        closeSettingsModal();
+        return { open: document.getElementById('confirmModal').classList.contains('open'),
+          onglets: document.querySelectorAll('#tabsBar .tab').length };
+      })()`);
+      assert(!apres.open, 'proposition réaffichée à l\'ouverture des réglages');
+      assert(apres.onglets === 0, 'refus : aucun onglet attendu, trouvé ' + apres.onglets);
+    } finally {
+      await ipc('settings:save', reglages);
+      await exec(ongletsAvant === null ? `localStorage.removeItem('ai_open_tabs'); 'ok'`
+        : `localStorage.setItem('ai_open_tabs', ${JSON.stringify(ongletsAvant)}); 'ok'`);
+    }
   });
 
   // =========================================================================
