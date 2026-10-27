@@ -1,5 +1,14 @@
 # CLAUDE.md — règles de travail sur ce dépôt
 
+
+## Mission
+
+Avant toute intervention autonome sur ce dépôt : lire et appliquer la
+mission d'équipe :
+https://github.com/Mathilde-Team/.github/blob/dev/MISSION.md
+(le socle qualité, SOCLE.md, prime sur la mission en cas de conflit ; si
+le fichier est absent sur `dev`, le chercher sur `main`).
+
 Instructions destinées à Claude (ou à toute IA) travaillant sur **IAO**.
 Contexte complet et historique : `docs/PROJECT_CONTEXT.md`. Backlog : `FEATURES.md`.
 
