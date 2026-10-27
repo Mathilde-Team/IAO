@@ -81,6 +81,14 @@ class Scheduler {
     // Référence aux webviews ouvertes (pour l'automatisation Claude) :
     // Map<profile, webContents> mise à jour par le renderer via IPC.
     this._openWebviews = new Map();
+    // Issue #320 : toutes les webviews d'un profil (un compte peut avoir des
+    // onglets Claude, ChatGPT... ouverts) et l'état de chargement des pages
+    // ouvertes par IAO (WeakMap<webContents, état>).
+    this._webviewsProfil = new Map();
+    this._chargements = new WeakMap();
+    // Attente injectable (tests) et horloge.
+    this._attendre = function(ms) { return new Promise(function(r) { setTimeout(r, ms); }); };
+    this._maintenant = function() { return Date.now(); };
 
     // Heures calmes injectables (lot 18/09/2026, correctif suite au test
     // Electron réel) : par défaut les fonctions pures de core.js, mais
@@ -912,11 +920,92 @@ class Scheduler {
 
   // Enregistre la référence à une <webview> ouverte pour un profil donné.
   // Appelé par le renderer quand un onglet Claude est ouvert.
-  registerWebview(profile, webContents) {
-    if (profile && webContents) this._openWebviews.set(profile, webContents);
+  // Issue #320 : `opts.suivreChargement` (main.js, did-attach-webview) mémorise
+  // l'heure d'ouverture et suit le chargement de la page, pour n'écrire le
+  // prompt qu'une fois la page prête (_attendrePagePrete).
+  registerWebview(profile, webContents, opts) {
+    if (!profile || !webContents) return;
+    this._openWebviews.set(profile, webContents);
+    var liste = this._webviewsProfil.get(profile) || [];
+    if (liste.indexOf(webContents) === -1) liste.push(webContents);
+    this._webviewsProfil.set(profile, liste);
+    if (opts && opts.suivreChargement && typeof webContents.on === 'function') {
+      var etat = { ouvertLe: this._maintenant(), enChargement: true, chargeLe: 0 };
+      var self = this;
+      this._chargements.set(webContents, etat);
+      webContents.on('did-start-loading', function() { etat.enChargement = true; });
+      webContents.on('did-stop-loading', function() {
+        etat.enChargement = false;
+        etat.chargeLe = self._maintenant();
+      });
+      this._debug('webview suivie pour « ' + profile + ' » (' + liste.length + ' onglet(s))');
+    }
   }
-  unregisterWebview(profile) {
-    this._openWebviews.delete(profile);
+  // Sans `webContents` : oublie toutes les webviews du profil. Avec : seulement
+  // celle-ci (fermer l'onglet ChatGPT ne doit pas oublier l'onglet Claude).
+  unregisterWebview(profile, webContents) {
+    if (!webContents) {
+      this._openWebviews.delete(profile);
+      this._webviewsProfil.delete(profile);
+      return;
+    }
+    var reste = (this._webviewsProfil.get(profile) || []).filter(function(w) { return w !== webContents; });
+    if (reste.length) this._webviewsProfil.set(profile, reste);
+    else this._webviewsProfil.delete(profile);
+    if (this._openWebviews.get(profile) === webContents) {
+      if (reste.length) this._openWebviews.set(profile, reste[reste.length - 1]);
+      else this._openWebviews.delete(profile);
+    }
+  }
+
+  // Issue #320 : webview à piloter pour Claude — celle du profil dont la page
+  // est sur claude.ai ; à défaut la dernière enregistrée (comportement
+  // historique). Avant, un onglet ChatGPT ouvert après l'onglet Claude du même
+  // compte recevait le script.
+  _webviewClaude(profile) {
+    var liste = this._webviewsProfil.get(profile) || [];
+    for (var i = liste.length - 1; i >= 0; i--) {
+      var url = '';
+      try { url = typeof liste[i].getURL === 'function' ? String(liste[i].getURL() || '') : ''; } catch (e) {
+        this._debug('getURL impossible : ' + e.message);
+      }
+      if (/^https:\/\/claude\.ai\//.test(url)) return liste[i];
+    }
+    return this._openWebviews.get(profile);
+  }
+
+  // Issue #320 : « laisser le compte s'ouvrir » avant d'écrire. Pour une page
+  // suivie (ouverte par IAO), attend la fin du chargement, au moins
+  // `config.pageOuvertureMs` (30 s) depuis l'ouverture de l'onglet et
+  // `config.pageStabiliteMs` (3 s) depuis la fin du dernier chargement ;
+  // au plus `config.pageAttenteMaxMs` (90 s), puis tente quand même.
+  async _attendrePagePrete(profile, webContents) {
+    var etat = this._chargements.get(webContents);
+    if (!etat) return { attenteMs: 0 };
+    var ouverture = this.config.pageOuvertureMs ?? 30000;
+    var stabilite = this.config.pageStabiliteMs ?? 3000;
+    var maxi = this.config.pageAttenteMaxMs ?? 90000;
+    var debut = this._maintenant();
+    var annonce = false;
+    for (;;) {
+      var maintenant = this._maintenant();
+      var pret = !etat.enChargement &&
+        maintenant - etat.ouvertLe >= ouverture &&
+        maintenant - etat.chargeLe >= stabilite;
+      if (pret) break;
+      if (maintenant - debut >= maxi) {
+        this._logActivity('Page Claude toujours en chargement après ' + Math.round(maxi / 1000) + ' s : écriture tentée (« ' + profile + ' »).');
+        break;
+      }
+      if (!annonce) {
+        this._logActivity('Attente du chargement de la page Claude avant d\'écrire (« ' + profile + ' »).');
+        annonce = true;
+      }
+      await this._attendre(500);
+    }
+    var attenteMs = this._maintenant() - debut;
+    this._debug('page prête pour « ' + profile + ' » après ' + attenteMs + ' ms');
+    return { attenteMs: attenteMs };
   }
 
   // Résout le profil d'une <webview> attachée à partir de sa session Electron.
@@ -968,7 +1057,7 @@ class Scheduler {
   // Télécharger, Nouveau, zone de chat, upload, message de quota, popups.
   // Exécute le script de détection dans la <webview> du profil donné.
   async diagnoseClaudePage(profile) {
-    var webContents = this._openWebviews.get(profile);
+    var webContents = this._webviewClaude(profile);
     if (!webContents) return { error: 'Aucune webview ouverte pour le profil « ' + profile + ' ».' };
     try {
       var script = claudeAdapter.buildClaudeDetectionScript();
@@ -990,9 +1079,11 @@ class Scheduler {
   // Utilise planClaudeAutomationStep() (lot 18/09/2026 suite) pour décider
   // de l'action à entreprendre à partir du résultat de détection.
   async runClaudeJob(profile, prompt, sourceZipPath) {
-    var webContents = this._openWebviews.get(profile);
+    var webContents = this._webviewClaude(profile);
     if (!webContents) return { error: 'Aucune webview ouverte pour le profil « ' + profile + ' ».' };
     try {
+      // 0. Issue #320 : page chargée avant toute détection.
+      await this._attendrePagePrete(profile, webContents);
       // 1. Détecter les éléments de la page
       var diag = await this.diagnoseClaudePage(profile);
       if (diag && diag.error) return diag;
@@ -1033,6 +1124,19 @@ class Scheduler {
           minDelayMs: this.config.minDelayMs ?? 30000,
           maxDelayMs: this.config.maxDelayMs ?? 300000
         });
+        // Issue #320 : popups toujours « détectées » (la détection est large :
+        // toute classe contenant modal/popup). Avant, le script de fermeture
+        // était exécuté à la place du prompt et le job rapporté réussi sans
+        // rien écrire. On tente l'envoi en ignorant ces popups.
+        if (plan.action === 'dismiss_popups') {
+          this._logActivity('Popups Claude toujours présentes : écriture du prompt tentée (« ' + profile + ' »).');
+          plan = claudeAdapter.planClaudeAutomationStep(Object.assign({}, diag, { popups: { count: 0 } }), {
+            requestedAction: 'send_prompt',
+            prompt: prompt,
+            minDelayMs: this.config.minDelayMs ?? 30000,
+            maxDelayMs: this.config.maxDelayMs ?? 300000
+          });
+        }
       }
 
       // Si l'action est bloquée, rapporter
@@ -1080,6 +1184,8 @@ class Scheduler {
         var injectParsed = typeof injectResult === 'string' ? JSON.parse(injectResult) : injectResult;
         if (injectParsed && injectParsed.ok) {
           this._logActivity('Prompt injecté dans Claude (« ' + profile + ' ») via ' + injectParsed.method + '.');
+        } else {
+          this._logActivity('Prompt non envoyé dans Claude (« ' + profile + ' ») : ' + (injectParsed && injectParsed.error || 'unknown') + '.');
         }
         return injectParsed || { ok: false, error: 'unknown' };
       }
@@ -1118,7 +1224,7 @@ class Scheduler {
 
   // Collecte la dernière réponse de Claude pour analyse (point 13).
   async collectClaudeResponse(profile) {
-    var webContents = this._openWebviews.get(profile);
+    var webContents = this._webviewClaude(profile);
     if (!webContents) return { error: 'Aucune webview ouverte pour le profil « ' + profile + ' ».' };
     try {
       var script = claudeAdapter.buildResponseCollectionScript();

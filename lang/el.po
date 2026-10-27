@@ -816,6 +816,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Επιστροφή στην αρχική του {service}"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Αποσύνδεση από το προφίλ «{profile}»"
 
@@ -850,6 +854,14 @@ msgstr "Προστέθηκε αστέρι στην καρτέλα"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "Το αστέρι αφαιρέθηκε"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"

@@ -171,6 +171,37 @@
   64 Mo avec les logos (3 crashs sur 3). `test-electron/ui-flows.js` active
   `disable-dev-shm-usage` (option Chromium pour les conteneurs) : 0 crash, 57/57.
 
+## Issue #320 — ordonnanceur IA : le prompt est écrit et envoyé (26/10/2026)
+
+### Corrigé
+- Le texte était posé dans l'éditeur de Claude (ProseMirror) par `textContent`, que
+  l'éditeur ignore : champ vide côté Claude, bouton d'envoi grisé, et pourtant « succès ».
+  `buildPromptInjectionScript()` écrit maintenant par `document.execCommand('insertText')`
+  (événements natifs, comme au clavier), garde l'ancienne méthode en repli, attend que le
+  bouton d'envoi soit actif (5 s) et renvoie un échec explicite (`prompt_not_written`,
+  `send_button_disabled`) au lieu d'un faux succès ; l'échec est écrit dans le journal.
+- Écriture trop tôt : `runClaudeJob()` attend que la page de l'onglet ouvert par IAO soit
+  chargée, au moins 30 s après l'ouverture et 3 s après la fin du chargement (au plus 90 s ;
+  `pageOuvertureMs`, `pageStabiliteMs`, `pageAttenteMaxMs`).
+- Popups « toujours présentes » après fermeture (détection large) : le script de fermeture
+  était exécuté à la place du prompt ; l'écriture est désormais tentée.
+- Un compte avec plusieurs onglets (Claude et ChatGPT par exemple) : le script visait le
+  dernier onglet ouvert ; il vise l'onglet `claude.ai` du compte, et fermer un autre onglet
+  n'oublie plus l'onglet Claude.
+- Le moteur des tâches réessaie aussi quand le champ de saisie manque à l'écriture
+  (`chat_input_not_found`).
+
+### Ajouté
+- Mode debug : bouton **Outils de développement de l'onglet** dans la barre de chaque onglet
+  IA (`webview.openDevTools()`), pour voir le champ qui a le focus.
+- Tests : `test/scheduler-page-prete.test.js`, script d'écriture exécuté en bac à sable
+  (`test/claude-integration.test.js`), scénarios Electron C13.2 (éditeur type ProseMirror) et
+  C13.3 ; catalogues mis à jour (en, de, es, it traduits).
+- Relecture : le bouton « Outils de développement » de la barre du haut ouvre un **second
+  menu** quand un onglet d'IA est actif : « Fenêtre IAO » ou « Page de l'IA : <service> —
+  <compte> » (`openDevToolsMenu`), sans exiger le mode debug ; sans onglet actif, il ouvre
+  directement ceux de la fenêtre IAO. Ctrl+Maj+I inchangé. Scénario Electron C13.4.
+
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté

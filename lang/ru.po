@@ -817,6 +817,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Вернуться на главную {service}"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Выйти из профиля «{profile}»"
 
@@ -851,6 +855,14 @@ msgstr "Вкладка отмечена звёздочкой"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "Звёздочка убрана"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"

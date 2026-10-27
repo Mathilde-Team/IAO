@@ -809,49 +809,91 @@ test('planClaudeAutomationStep : upload_file pose bien l attribut data-iao-uploa
   assert.strictEqual(setAttrValue, 'true', 'la valeur doit être "true"');
 });
 
-test('planClaudeAutomationStep : send_prompt injecte le texte et déclenche l envoi', () => {
+// Issue #320 : le script d'écriture est asynchrone (promesse) ; il écrit via
+// execCommand('insertText') (compris par ProseMirror), se rabat sur
+// textContent, attend un bouton d'envoi actif et n'annonce plus de faux succès.
+function runInjection(opts) {
   var vm = require('vm');
-  var detection = {
+  var o = opts || {};
+  var plan = claude.planClaudeAutomationStep({
     quotaMessage: { detected: false, time: null },
     popups: { count: 0 },
     chatInput: { found: true, count: 1 }
-  };
-  var plan = claude.planClaudeAutomationStep(detection, {
-    requestedAction: 'send_prompt',
-    prompt: 'genere un script python',
-    rng: function() { return 0; }
-  });
-
-  var injectedText = '';
-  var sendClicked = false;
-  var mockChatInput = {
-    tagName: 'DIV',
+  }, { requestedAction: 'send_prompt', prompt: o.prompt || 'genere un script python', rng: function() { return 0; } });
+  var etat = { texte: '', clic: false, entree: false, execCommand: [] };
+  var input = {
+    tagName: o.textarea ? 'TEXTAREA' : 'DIV',
     focus: function() {},
-    set textContent(v) { injectedText = v; },
-    get textContent() { return injectedText; },
-    dispatchEvent: function() {}
+    select: function() {},
+    set textContent(v) { if (!o.ignoreDirect) etat.texte = v; },
+    get textContent() { return etat.texte; },
+    get innerText() { return etat.texte; },
+    get value() { return etat.texte; },
+    set value(v) { if (!o.ignoreDirect) etat.texte = v; },
+    dispatchEvent: function(ev) { if (ev && ev.type === 'keydown') etat.entree = true; }
   };
-  var mockSendBtn = { click: function() { sendClicked = true; } };
+  var bouton = {
+    get disabled() { return typeof o.disabled === 'function' ? o.disabled(etat) : !!o.disabled; },
+    getAttribute: function() { return null; },
+    click: function() { etat.clic = true; }
+  };
   var sandbox = {
     document: {
       querySelector: function(sel) {
-        if (sel.indexOf('contenteditable') !== -1) return mockChatInput;
-        if (sel.indexOf('send-button') !== -1 || sel.indexOf('Send') !== -1) return mockSendBtn;
+        if (sel.indexOf('contenteditable') !== -1 && !o.noInput) return input;
+        if (!o.noButton && (sel.indexOf('send-button') !== -1 || sel.indexOf('Send') !== -1)) return bouton;
         return null;
+      },
+      createRange: function() { return { selectNodeContents: function() {} }; },
+      execCommand: function(cmd, ui, val) {
+        etat.execCommand.push(cmd);
+        if (o.execThrows) throw new Error('execCommand indisponible');
+        if (!o.execIgnore) etat.texte = val;
+        return !o.execIgnore;
       }
     },
-    JSON: JSON,
-    InputEvent: function() {},
-    Event: function() {},
-    KeyboardEvent: function() {}
+    getSelection: function() { return { removeAllRanges: function() {}, addRange: function() {} }; },
+    HTMLTextAreaElement: { prototype: {} },
+    setTimeout: function(f) { return setImmediate(f); },
+    JSON: JSON, Promise: Promise,
+    InputEvent: function(type) { this.type = type; },
+    Event: function(type) { this.type = type; },
+    KeyboardEvent: function(type) { this.type = type; }
   };
   sandbox.window = sandbox;
-  var context = vm.createContext(sandbox);
-  var resultStr = vm.runInContext(plan.script, context);
-  var parsed = JSON.parse(resultStr);
-  assert.ok(parsed.ok, 'le script doit réussir');
-  assert.strictEqual(injectedText, 'genere un script python', 'le prompt doit être injecté');
-  assert.ok(sendClicked, 'le bouton d envoi doit avoir été cliqué');
+  return Promise.resolve(vm.runInContext(plan.script, vm.createContext(sandbox))).then(function(r) {
+    return { res: JSON.parse(r), etat: etat };
+  });
+}
+
+test('#320 : send_prompt écrit via insertText puis clique le bouton une fois actif', async () => {
+  // Bouton grisé tant que l'éditeur n'a pas reçu le texte (comme Claude).
+  var r = await runInjection({ disabled: function(e) { return e.texte === ''; } });
+  assert.deepStrictEqual(r.res, { ok: true, method: 'send_button', written: 'insert_text' });
+  assert.strictEqual(r.etat.texte, 'genere un script python');
+  assert.deepStrictEqual(r.etat.execCommand, ['insertText']);
+  assert.ok(r.etat.clic);
+});
+
+test('#320 : repli textContent si insertText n\'écrit rien, Entrée sans bouton', async () => {
+  var r = await runInjection({ execIgnore: true, noButton: true });
+  assert.deepStrictEqual(r.res, { ok: true, method: 'enter_key', written: 'direct' });
+  assert.strictEqual(r.etat.texte, 'genere un script python');
+  assert.ok(r.etat.entree);
+  var t = await runInjection({ execThrows: true, textarea: true });
+  assert.strictEqual(t.res.ok, true);
+  assert.strictEqual(t.res.written, 'direct');
+});
+
+test('#320 : échec explicite si rien n\'est écrit, bouton grisé ou champ absent', async () => {
+  var rien = await runInjection({ execIgnore: true, ignoreDirect: true });
+  assert.deepStrictEqual(rien.res, { ok: false, error: 'prompt_not_written' });
+  assert.ok(!rien.etat.clic);
+  var grise = await runInjection({ disabled: true });
+  assert.deepStrictEqual(grise.res, { ok: false, error: 'send_button_disabled', written: 'insert_text' });
+  assert.ok(!grise.etat.clic);
+  var absent = await runInjection({ noInput: true });
+  assert.deepStrictEqual(absent.res, { ok: false, error: 'chat_input_not_found' });
 });
 
 // === TESTS vm : vérifications avancées sur les scripts générés ============

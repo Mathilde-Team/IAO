@@ -815,6 +815,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "{service} 홈으로 돌아가기"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "「{profile}」 프로필에서 로그아웃"
 
@@ -849,6 +853,14 @@ msgstr "탭에 별표 표시됨"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "별표 해제됨"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"

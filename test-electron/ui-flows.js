@@ -621,7 +621,7 @@ async function run() {
     assert(r.brand === 'IAO', 'nom de l\'app absent de la barre : ' + r.brand);
     const i = r.actions.indexOf('ui-toggleIdePanel');
     assert(r.actions.indexOf('ui-toggleExplorer') >= 0 && i >= 0, 'Explorateur/Éditeur absents : ' + r.actions);
-    assert(r.actions[i + 1] === 'ui-toggleDevTools', 'outils de dév. pas à côté de l\'Éditeur : ' + r.actions);
+    assert(r.actions[i + 1] === 'ui-openDevToolsMenu', 'outils de dév. pas à côté de l\'Éditeur : ' + r.actions);
     assert(r.ancien === false, 'ancien en-tête encore présent dans la barre latérale');
   });
 
@@ -1609,6 +1609,70 @@ async function run() {
     assert(duree >= 1500 && duree < 5000, 'durée incohérente : ' + duree + ' ms');
     const brut = fs.readFileSync(fichier, 'utf-8');
     assert(!brut.includes('secrète'), 'aucun texte de question ni de réponse ne doit sortir de la page');
+  });
+
+  // Issue #320 : le script d'écriture de l'ordonnanceur, exécuté dans une
+  // vraie page qui imite l'éditeur : le bouton d'envoi ne s'active que sur un
+  // événement « input » natif (isTrusted, comme une frappe ou insertText) ;
+  // l'ancienne méthode (textContent + événement synthétique) le laissait
+  // grisé : rien n'était envoyé.
+  await test('C13.2 Ordonnanceur : prompt écrit dans un éditeur type ProseMirror puis envoyé (#320)', async () => {
+    const page = '<div contenteditable="true" class="ProseMirror" id="e"></div>' +
+      '<button data-testid="send-button" id="b" disabled>Send</button><script>' +
+      'var e=document.getElementById("e"),b=document.getElementById("b");window.envoye="";' +
+      'e.addEventListener("input",function(ev){if(ev.isTrusted)b.disabled=!e.innerText.trim();});' +
+      'b.addEventListener("click",function(){window.envoye=e.innerText;});</' + 'script>';
+    await exec(`window.__c13.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(${JSON.stringify(page)})); 'ok'`);
+    let pret = false;
+    for (let i = 0; i < 40 && !pret; i++) {
+      await sleep(150);
+      pret = await exec(`window.__c13.executeJavaScript('!!document.getElementById("b")').catch(() => false)`);
+    }
+    assert(pret, 'page d\'essai non chargée');
+    const script = require('../lib/claude-adapter').buildPromptInjectionScript("Bonjour l'IA\nligne 2");
+    const brut = await exec(`window.__c13.executeJavaScript(${JSON.stringify(script)})`);
+    const res = JSON.parse(brut);
+    const envoye = await exec(`window.__c13.executeJavaScript('window.envoye')`);
+    assert(res.ok && res.method === 'send_button' && res.written === 'insert_text', 'résultat : ' + brut);
+    assert(/Bonjour l'IA/.test(envoye) && /ligne 2/.test(envoye), 'texte envoyé : ' + JSON.stringify(envoye));
+  });
+
+  await test('C13.3 Bouton « outils de développement » de l\'onglet masqué hors mode debug (#320)', async () => {
+    const r = await exec(`(() => {
+      const b = document.querySelector('#tabsContent [data-action="tab-devtools"]');
+      return { existe: !!b, visible: !!b && getComputedStyle(b).display !== 'none', debug: document.body.classList.contains('iao-debug') };
+    })()`);
+    assert(r.existe, 'bouton tab-devtools absent de la barre d\'onglet');
+    assert(r.visible === r.debug, 'visibilité incohérente avec le mode debug : ' + JSON.stringify(r));
+  });
+
+  await test('C13.4 Outils de développement : second menu fenêtre IAO / page de l\'IA, hors mode debug (#320)', async () => {
+    // Un onglet d'IA est actif (C13) : le bouton de la barre ouvre le menu.
+    const menu = await exec(`(() => {
+      document.querySelector('[data-action="ui-openDevToolsMenu"]').click();
+      const m = document.getElementById('devtoolsMenu');
+      return m ? [...m.querySelectorAll('[data-ctx-action]')].map(e => e.getAttribute('data-ctx-action') + '=' + e.textContent.trim()) : null;
+    })()`);
+    assert(menu && menu.length === 2 && menu[0].startsWith('devtools-iao=') && /^devtools-onglet=.+ — /.test(menu[1]), 'menu : ' + JSON.stringify(menu));
+    const wvId = await exec(`(() => {
+      document.querySelector('#devtoolsMenu [data-ctx-action="devtools-onglet"]').click();
+      const t = document.querySelector('#tabsBar .tab--active');
+      const wv = document.querySelector('#tabsContent .tab-pane.active webview') || document.querySelector('#tabsContent webview');
+      return { ferme: document.getElementById('devtoolsMenu') === null, id: wv ? wv.getWebContentsId() : null, tab: !!t };
+    })()`);
+    assert(wvId.ferme && wvId.id, 'menu non refermé ou webview absente : ' + JSON.stringify(wvId));
+    const { webContents } = require('electron');
+    const wc = webContents.fromId(wvId.id);
+    for (let i = 0; i < 30 && !wc.isDevToolsOpened(); i++) await sleep(100);
+    assert(wc.isDevToolsOpened(), 'outils de développement de la page de l\'IA non ouverts');
+    assert(!win.webContents.isDevToolsOpened(), 'outils de la fenêtre IAO ouverts à tort');
+    wc.closeDevTools();
+    // Entrée « Fenêtre IAO » : ceux de la fenêtre principale.
+    await exec(`document.querySelector('[data-action="ui-openDevToolsMenu"]').click(); document.querySelector('#devtoolsMenu [data-ctx-action="devtools-iao"]').click(); 'ok'`);
+    for (let i = 0; i < 30 && !win.webContents.isDevToolsOpened(); i++) await sleep(100);
+    assert(win.webContents.isDevToolsOpened(), 'outils de la fenêtre IAO non ouverts');
+    await exec('window.toggleDevTools()');
+    for (let i = 0; i < 30 && win.webContents.isDevToolsOpened(); i++) await sleep(100);
   });
 
   // =========================================================================
