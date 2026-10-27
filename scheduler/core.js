@@ -466,11 +466,27 @@ function quietHoursRemainingMs(now) {
   return waitSec * 1000;
 }
 
+// Issue #328 : nom de partition d'une session Electron, lu dans son dossier
+// de stockage (session.storagePath = <userData>/Partitions/<nom>). Electron
+// écrit ce nom en minuscules et encodé façon URL (« Mon Profil » ->
+// « mon%20profil », « é » -> « %C3%A9 », « % » -> « %25 »). Renvoie le nom
+// décodé en minuscules, ou null (session sans dossier, hors Partitions, nom
+// mal encodé). Sert à reconnaître le compte d'un onglet SANS appeler
+// session.fromPartition, qui chargerait la session de chaque compte.
+function partitionDepuisStoragePath(storagePath) {
+  if (typeof storagePath !== 'string' || !storagePath) return null;
+  var normalise = storagePath.replace(/\\/g, '/').replace(/\/+$/, '');
+  var m = /(?:^|\/)Partitions\/(.+)$/.exec(normalise);
+  if (!m) return null;
+  try { return decodeURIComponent(m[1]).toLowerCase(); }
+  catch (e) { return null; }
+}
+
 module.exports = {
   JOB_STATES, ALLOWED_TRANSITIONS, isValidState, canTransition, nextJobState,
   isZipFilename, isTimestampedZipName, formatTimestamp, buildDeliveryPrompt,
   selectOldestEligibleProfile, CSV_COLUMNS, jobsToCSV, buildJobRecord, nextJobId,
-  SERVICE_HOSTS, serviceFromHost, DEFAULT_CONFIG,
+  SERVICE_HOSTS, serviceFromHost, DEFAULT_CONFIG, partitionDepuisStoragePath,
   parseFeaturesMd, isProjectComplete,
   buildProjectRecord, buildTaskRecord, canAssignTaskToAccount,
   // Limiteur de lancement (lot 18/09/2026) — noms principaux + alias du plan

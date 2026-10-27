@@ -929,12 +929,30 @@ class Scheduler {
   // guest aux sessions persist: des profils connus (comptes synchronisés +
   // partitions surveillées). Testé en réel par test-electron/popups-continue.js
   // (test B4) et en unitaire dans test/scheduler-automation.test.js.
+  //
+  // Issue #328 : session.fromPartition CRÉE la session (cookies, cache,
+  // contexte réseau) si elle n'existe pas encore. Comparer à chaque compte
+  // chargeait donc en mémoire la session de TOUS les comptes dès le premier
+  // onglet ouvert. Le profil est d'abord reconnu par le dossier de la session
+  // de l'onglet (storagePath), sans créer aucune session ; la comparaison
+  // n'est gardée que pour une session sans dossier (jamais le cas d'un onglet
+  // IAO, toujours en persist:).
   resolveProfileFromSession(guestSession) {
     if (!guestSession) return null;
     var seen = new Set();
     var candidates = Array.from(this.watchedPartitions)
       .concat(this.accountsSnapshot.map(function(acc) { return acc && acc.profile; }))
       .filter(Boolean);
+    if (typeof guestSession.storagePath === 'string' && guestSession.storagePath) {
+      var nom = core.partitionDepuisStoragePath(guestSession.storagePath);
+      for (var j = 0; nom !== null && j < candidates.length; j++) {
+        if (candidates[j].toLowerCase() === nom) return candidates[j];
+      }
+      this._logActivity(nom === null
+        ? 'Onglet non rattaché : sa session n\'est pas une partition de compte.'
+        : 'Onglet non rattaché : partition « ' + nom + ' » inconnue des comptes.');
+      return null;
+    }
     for (var i = 0; i < candidates.length; i++) {
       var profile = candidates[i];
       if (seen.has(profile)) continue;

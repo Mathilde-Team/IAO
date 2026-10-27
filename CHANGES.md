@@ -1,5 +1,27 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #328 — mémoire : seules les sessions des onglets ouverts sont chargées (27/10/2026)
+
+### Corrigé
+- **`scheduler/index.js`** (`resolveProfileFromSession`) : à chaque onglet ouvert, le compte
+  de l'onglet était cherché par `session.fromPartition('persist:<profil>')` sur chaque
+  compte connu, dans l'ordre de la liste, jusqu'au bon. Or cet appel **crée** la session
+  (cookies, cache, contexte réseau) quand elle n'existe pas : ouvrir un onglet du dernier
+  compte chargeait en mémoire la session de tous les autres. Le compte est maintenant
+  reconnu par le dossier de la session de l'onglet (`storagePath`,
+  `<userData>/Partitions/<profil>`), sans créer aucune session. La comparaison
+  d'origine ne sert plus qu'à une session sans dossier (jamais le cas d'un onglet IAO).
+- **`scheduler/core.js`** : `partitionDepuisStoragePath` (fonction pure) relit le nom
+  écrit par Electron, en minuscules et encodé façon URL (« Mon Profil » ->
+  `mon%20profil`), séparateurs Windows compris.
+- Tests : `test/scheduler-branches-coverage.test.js` ; scénario Electron C15.1 (ouvrir
+  un onglet du dernier compte ne crée que la session de ce compte ; il échoue sans le
+  correctif : session de `profil_3` chargée).
+
+### Non modifié
+- L'ancien ordonnanceur (désactivé par défaut depuis #199) surveille encore toutes les
+  partitions quand on l'active (`_watchAllPartitions`).
+
 ## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
 
 ### Ajouté
