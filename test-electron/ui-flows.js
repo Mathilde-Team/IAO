@@ -349,9 +349,9 @@ async function run() {
     assert(/COMPTES ACTIFS\s*2/i.test(txt), 'compteur « comptes actifs » ≠ 2 : ' + txt.slice(0, 120));
   });
 
-  // Issue #319 : la sélection « mes 9 IA » remplace les services des cartes,
+  // Issue #319 : la sélection « mes IA à portée de main » remplace les services des cartes,
   // sans cumul au redémarrage, et un compte créé ne reçoit qu'elle.
-  await test('C1.6 Choix des 9 : remplacement immédiat, sans cumul au rechargement, appliqué aux nouveaux comptes (#319)', async () => {
+  await test('C1.6 Choix des IA : remplacement immédiat, sans cumul au rechargement, appliqué aux nouveaux comptes (#319)', async () => {
     const lire = () => exec(`(() => {
       const cartes = [...document.querySelectorAll('#accountsList .account-card')];
       return cartes.map(c => [...c.querySelectorAll('[data-action="open-service"]')].map(b => b.dataset.svc).join(','));
@@ -396,6 +396,34 @@ async function run() {
     assert(recharge.every(l => l === attendu), 'au rechargement (anciens + nouveaux ?) : ' + JSON.stringify(recharge));
     assert(nouveau === attendu, 'nouveau compte : ' + nouveau);
     assert(final.length === 2 && final.every(l => l === avant[0]), 'retour à la sélection par défaut : ' + JSON.stringify(final));
+  });
+
+  // Issue #319 (suite) : de 1 à n IA, plus de plafond à 9.
+  await test('C1.7 Choix des IA : 1 seule, puis toutes (plus de plafond à 9) (#319)', async () => {
+    const choisir = (ids) => exec(`(() => {
+      openServicesModal();
+      const list = document.getElementById('servicesList');
+      const voulus = ${JSON.stringify(ids)};
+      [...list.querySelectorAll('[data-svc-id]')].forEach((cb) => {
+        const coche = voulus === 'tous' || voulus.includes(cb.dataset.svcId);
+        if (cb.checked !== coche) { cb.checked = coche; list.onchange({ target: cb }); }
+      });
+      saveServicesModal();
+      const carte = document.querySelector('#accountsList .account-card');
+      return { boutons: carte.querySelectorAll('[data-action="open-service"]').length,
+        total: list.querySelectorAll('[data-svc-id]').length,
+        stocke: JSON.parse(localStorage.getItem('ai_active_services')).length };
+    })()`);
+    const un = await choisir(['claude']);
+    const tous = await choisir('tous');
+    await exec(`localStorage.removeItem('ai_active_services'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const defaut = await exec(`document.querySelector('#accountsList .account-card').querySelectorAll('[data-action="open-service"]').length`);
+    assert(un.boutons === 1 && un.stocke === 1, 'une seule IA : ' + JSON.stringify(un));
+    assert(tous.total > 9 && tous.boutons === tous.total && tous.stocke === tous.total, 'toutes les IA : ' + JSON.stringify(tous));
+    assert(defaut === 9, 'retour à la sélection par défaut : ' + defaut);
   });
 
   // =========================================================================

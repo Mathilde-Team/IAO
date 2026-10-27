@@ -82,8 +82,8 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Επανεκκίνηση σε λειτουργία αποσφαλμάτωσης (λεπτομερές αρχείο)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Επιλογή των 9 ΤΝ μου σε άμεση πρόσβαση"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +214,8 @@ msgid "Fermer"
 msgstr "Κλείσιμο"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Επιλέξτε τις 9 υπηρεσίες που εμφανίζονται στη διεπαφή. Οι υπόλοιπες παραμένουν διαθέσιμες στη βοήθεια."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -880,16 +880,12 @@ msgid "Description à venir."
 msgstr "Η περιγραφή έρχεται σύντομα."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Έως {max} υπηρεσίες σε άμεση πρόσβαση"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Επιλέξτε τουλάχιστον 1 υπηρεσία"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Οι υπηρεσίες ενημερώθηκαν ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

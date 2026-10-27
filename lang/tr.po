@@ -82,8 +82,8 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Hata ayıklama modunda yeniden başlat (ayrıntılı günlük)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Elimin altındaki 9 yapay zekâyı seç"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +214,8 @@ msgid "Fermer"
 msgstr "Kapat"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Arayüzde gösterilecek 9 hizmeti seçin. Diğerleri yardımda kullanılabilir kalır."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -880,16 +880,12 @@ msgid "Description à venir."
 msgstr "Açıklama yakında."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Elinizin altında en fazla {max} hizmet"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "En az 1 hizmet seçin"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Hizmetler güncellendi ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

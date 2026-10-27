@@ -82,8 +82,8 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Käynnistä uudelleen vianetsintätilassa (yksityiskohtainen loki)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Valitse 9 tekoälyäni käden ulottuville"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +214,8 @@ msgid "Fermer"
 msgstr "Sulje"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Valitse käyttöliittymässä näytettävät 9 palvelua. Muut ovat yhä saatavilla ohjeessa."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -880,16 +880,12 @@ msgid "Description à venir."
 msgstr "Kuvaus tulossa."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Enintään {max} palvelua käden ulottuvilla"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Valitse vähintään 1 palvelu"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Palvelut päivitetty ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

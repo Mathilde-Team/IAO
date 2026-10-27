@@ -82,8 +82,8 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Opnieuw starten in debugmodus (gedetailleerd logboek)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Mijn 9 AI's binnen handbereik kiezen"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +214,8 @@ msgid "Fermer"
 msgstr "Sluiten"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Kies de 9 diensten die in de interface worden getoond. De andere blijven beschikbaar in de hulp."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -880,16 +880,12 @@ msgid "Description à venir."
 msgstr "Beschrijving volgt."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Maximaal {max} diensten binnen handbereik"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Selecteer minstens 1 dienst"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Diensten bijgewerkt ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

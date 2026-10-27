@@ -82,8 +82,8 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Перезапустить в режиме отладки (подробный журнал)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Выбрать 9 ИИ под рукой"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +214,8 @@ msgid "Fermer"
 msgstr "Закрыть"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Выберите 9 сервисов, отображаемых в интерфейсе. Остальные доступны в справке."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -881,16 +881,12 @@ msgid "Description à venir."
 msgstr "Описание появится позже."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Не более {max} сервисов под рукой"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Выберите хотя бы 1 сервис"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Сервисы обновлены ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

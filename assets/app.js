@@ -214,9 +214,9 @@
 
     // Issue #42 : liste des services "à portée de main" (9 par défaut).
     // Stockée dans localStorage, modifiable via le menu de sélection.
+    // Issue #319 : de 1 à tous les services (plus de plafond à 9).
     const ACTIVE_SERVICES_KEY = 'ai_active_services';
     const DEFAULT_ACTIVE_SERVICES = ['claude','chatgpt','gemini','zeta','perplexity','grok','leonardo','suno','meshy'];
-    const MAX_ACTIVE_SERVICES = 9;
 
     function getActiveServices() {
       try {
@@ -224,15 +224,15 @@
         if (!raw) return DEFAULT_ACTIVE_SERVICES.slice();
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return DEFAULT_ACTIVE_SERVICES.slice();
-        // Filtrer les IDs invalides + limiter à MAX_ACTIVE_SERVICES
-        const valid = parsed.filter(id => SERVICES.some(s => s.id === id));
+        // Filtrer les IDs invalides et les doublons
+        const valid = parsed.filter((id, i) => SERVICES.some(s => s.id === id) && parsed.indexOf(id) === i);
         if (valid.length === 0) return DEFAULT_ACTIVE_SERVICES.slice();
-        return valid.slice(0, MAX_ACTIVE_SERVICES);
+        return valid;
       } catch (e) { return DEFAULT_ACTIVE_SERVICES.slice(); }
     }
 
     function saveActiveServices(ids) {
-      try { localStorage.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids.slice(0, MAX_ACTIVE_SERVICES))); }
+      try { localStorage.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids)); }
       catch (e) { /* non bloquant */ }
     }
 
@@ -518,7 +518,7 @@
     let currentOpenFilePath = null;
 
     // Migration : convertit les anciens comptes et aligne leurs services sur
-    // la sélection « mes 9 IA » (issue #42), un cooldown pour chacun.
+    // la sélection « mes IA à portée de main » (issue #42), un cooldown pour chacun.
     // Issue #319 : la liste d'un compte EST la sélection active (aucun écran ne
     // la choisit compte par compte). Avant, les services actifs étaient ajoutés
     // à ceux du compte : après un changement de sélection, on retrouvait au
@@ -1508,11 +1508,6 @@
         const cb = e.target;
         if (cb && cb.dataset && cb.dataset.svcId) {
           if (cb.checked) {
-            if (pendingServices.size >= MAX_ACTIVE_SERVICES) {
-              cb.checked = false;
-              showToast(_('Maximum {max} services à portée de main', { max: MAX_ACTIVE_SERVICES }), 'error');
-              return;
-            }
             pendingServices.add(cb.dataset.svcId);
           } else {
             pendingServices.delete(cb.dataset.svcId);
@@ -1535,7 +1530,7 @@
       dbg('services', 'sélection enregistrée', ids.length, 'services,', modifies, 'compte(s) alignés');
       closeServicesModal();
       // Mettre à jour ALL_SERVICES et re-rendre les comptes
-      showToast(_('Services mis à jour ({count}/{max})', { count: ids.length, max: MAX_ACTIVE_SERVICES }));
+      showToast(_('IA à portée de main : {count}', { count: ids.length }));
       // Recharger pour appliquer les changements partout
       renderAccounts();
     };

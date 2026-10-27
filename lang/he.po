@@ -82,8 +82,8 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "הפעלה מחדש במצב ניפוי באגים (יומן מפורט)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "בחירת 9 הבינות המלאכותיות שלי בהישג יד"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +214,8 @@ msgid "Fermer"
 msgstr "סגירה"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "בחרו את 9 השירותים המוצגים בממשק. השאר נשארים זמינים בעזרה."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -880,16 +880,12 @@ msgid "Description à venir."
 msgstr "תיאור יתווסף בהמשך."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "לכל היותר {max} שירותים בהישג יד"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "בחרו שירות אחד לפחות"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "השירותים עודכנו ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
