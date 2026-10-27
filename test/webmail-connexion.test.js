@@ -158,3 +158,41 @@ test('ouvrir : échec du remplissage journalisé, journal muet par défaut', asy
   await attendre();
   assert.equal(w.webContents.scripts.length, 1);
 });
+
+test('#310 ouvrir : relevé des mails de connexion tant que la fenêtre est ouverte, sur l\'hôte du webmail', () => {
+  const d = doublure();
+  const crees = [];
+  const signales = [];
+  const ouvrir = creerOuvreurWebmail({
+    BrowserWindow: d.BrowserWindow,
+    signaler: (e) => signales.push(e),
+    creerReleveurFn: (o) => {
+      const r = { o, arrete: 0, arreter() { r.arrete++; } };
+      crees.push(r);
+      return r;
+    }
+  });
+  const win = ouvrir({ url: 'https://mail.dmathilde.fr/', profil: 'p1', email: 'a@b.fr' });
+  assert.equal(crees.length, 1);
+  const { o } = crees[0];
+  assert.equal(o.profil, 'p1');
+  assert.equal(o.wc, win.webContents);
+  win.url = 'https://ailleurs.example/';
+  assert.equal(o.actif(), false);
+  win.url = 'https://mail.dmathilde.fr/?_task=mail';
+  assert.equal(o.actif(), true);
+  o.signaler({ code: '1' });
+  assert.deepEqual(signales, [{ code: '1' }]);
+  win.emit('closed');
+  assert.equal(crees[0].arrete, 1);
+  // Sans signaler : aucun relevé (ancien comportement).
+  const sans = creerOuvreurWebmail({ BrowserWindow: d.BrowserWindow, creerReleveurFn: () => assert.fail('relevé créé') });
+  sans({ url: 'https://mail.dmathilde.fr/', profil: 'p2' }).emit('closed');
+});
+
+test('#310 ouvrir : le relevé par défaut est celui de lib/webmail-codes', () => {
+  const d = doublure();
+  const ouvrir = creerOuvreurWebmail({ BrowserWindow: d.BrowserWindow, signaler: () => {} });
+  const win = ouvrir({ url: 'https://mail.dmathilde.fr/', profil: 'p3' });
+  win.emit('closed'); // arrête la minuterie réelle
+});

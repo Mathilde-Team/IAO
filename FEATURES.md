@@ -134,6 +134,9 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
   par profil) ; au premier chargement sur l'hôte du webmail, `#rcmloginuser`/`#rcmloginpwd`
   reçoivent l'adresse et le mot de passe du coffre, puis le formulaire est validé (une seule
   tentative, mot de passe jamais journalisé). Le renderer ne transmet que `{ profil, email }`.
+  Relecture du 27/10/2026 : `lib/webmail-codes.js` relève toutes les 10 s les nouveaux mails
+  de la fenêtre ouverte ; code à 6 chiffres affiché dans un bandeau sous l'onglet du service
+  (Copier), lien de connexion du même service ouvert automatiquement après 3 s (Annuler).
 
 - **Comptes en série, mot de passe de messagerie, webmail (issue #201, 18/10/2026)**
   `lib/comptes-serie.js` (numéros suivants, adresses, mot de passe aléatoire sans biais),

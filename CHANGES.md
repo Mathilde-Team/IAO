@@ -1,5 +1,44 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
+
+### Ajouté
+- **`lib/webmail-codes.js`** : tant que la fenêtre webmail d'un compte est ouverte, le
+  process principal relève toutes les 10 s la première page de la boîte de réception,
+  dans cette fenêtre (requêtes Roundcube `_action=list` puis `_action=viewsource` de la
+  page elle-même, jeton `rcmail.env.request_token` : aucun mot de passe ni cookie ne sort
+  de la fenêtre ; 5 nouveaux messages au plus par relevé, dédoublonnés par uid). Chaque
+  message est analysé sans dépendance (multipart, quoted-printable, base64, en-têtes
+  RFC 2047, HTML -> texte) : expéditeur d'un domaine connu d'un des 21 services, reçu
+  depuis moins de 15 min, code à 6 chiffres hors liens et adresses (de préférence près de
+  « code » / « vérification »), lien de connexion https vers un domaine du même service
+  uniquement. Le journal ne contient ni le code ni le lien.
+- **Interface** : `webmail:attendre` (attente longue de 25 s, le preload n'expose que
+  `invoke`) remet les événements au renderer. Dans l'onglet du service pour ce compte
+  (ouvert s'il ne l'est pas et qu'un lien est présent), un bandeau au début de la barre
+  « recharger / accueil / déconnecter » affiche le code et un bouton Copier ; si un lien
+  est présent, il est ouvert dans l'onglet après 3 s (compte à rebours, bouton Annuler,
+  puis « Ouvrir le lien de connexion » à la main). Bandeau retiré après 5 min ou par ×.
+  Nouvelles chaînes traduites en anglais, allemand, espagnol et italien.
+
+### Corrigé
+- Tâche programmée vers un onglet déjà ouvert : l'échec de `loadURL` (réseau coupé,
+  navigation remplacée) était un rejet de promesse non géré qui affichait le bandeau
+  « IAO a rencontré un problème » ; il est maintenant journalisé (`[taches]`).
+
+### Limites
+- Relevé seulement pendant que la fenêtre webmail du compte est ouverte ; première page de
+  la boîte de réception (tri Roundcube par date décroissante supposé).
+- Testé sur des sources de mails réelles (Perplexity, Mistral) et une page Roundcube
+  simulée, pas sur un serveur Roundcube réel ; l'affichage de la source peut marquer le
+  message comme lu selon la configuration du serveur.
+
+### Tests
+- `test/webmail-codes.test.js`, `test/webmail-connexion.test.js` (relevé créé, actif
+  seulement sur l'hôte du webmail, arrêté à la fermeture), canal `webmail:attendre` dans
+  `test/main-harness.test.js` ; couverture 100 %. Harnais Electron : C9.3 (bandeau, lien
+  ouvert après 3 s, annulation, événements invalides ignorés).
+
 ## Issue #310 — webmail ouvert connecté au compte (26/10/2026)
 
 ### Corrigé
