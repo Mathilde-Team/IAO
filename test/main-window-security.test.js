@@ -512,6 +512,38 @@ test('#187 : app:relaunch-debug relance avec --iao-debug, fenêtre principale un
   }
 });
 
+test('#317 : stockage écrit avant relance ; app:relaunch relance en mode normal', async () => {
+  const h = boot();
+  const savedArgv = process.argv;
+  const savedDebug = process.env.IAO_DEBUG;
+  try {
+    const calls = [];
+    h.electron.app.relaunch = (opts) => calls.push(['relaunch', opts]);
+    h.electron.app.exit = (code) => calls.push(['exit', code]);
+    h.wc.session = { flushStorageData: () => calls.push(['flush']) };
+    process.argv = ['/usr/bin/electron', '.', '--no-sandbox', '--iao-debug'];
+    process.env.IAO_DEBUG = '1';
+    const normal = h.electron.ipcHandlers.get('app:relaunch');
+    assert.equal(await normal({ sender: h.wc }), true);
+    assert.deepEqual(calls, [['flush'], ['relaunch', { args: ['.', '--no-sandbox'] }], ['exit', 0]]);
+    assert.equal(process.env.IAO_DEBUG, undefined, 'IAO_DEBUG non hérité par la relance normale');
+    assert.match(h.readLog(), /Relance en mode normal demandée/);
+    // Écriture impossible : journalisée, la relance a lieu quand même.
+    calls.length = 0;
+    h.wc.session = { flushStorageData: () => { throw new Error('disque plein'); } };
+    assert.equal(await h.electron.ipcHandlers.get('app:relaunch-debug')({ sender: h.wc }), true);
+    assert.deepEqual(calls.map((c) => c[0]), ['relaunch', 'exit']);
+    assert.match(h.readLog(), /Écriture du stockage avant relance impossible \(disque plein\)/);
+    // Autre émetteur : refus.
+    assert.equal(await normal({ sender: {} }), false);
+    assert.equal(calls.length, 2);
+  } finally {
+    process.argv = savedArgv;
+    if (savedDebug === undefined) delete process.env.IAO_DEBUG; else process.env.IAO_DEBUG = savedDebug;
+    h.cleanup();
+  }
+});
+
 test('#187 : app:log-path renvoie le chemin du journal', async () => {
   const h = boot();
   try {

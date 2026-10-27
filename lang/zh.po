@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "以调试模式重启（详细日志）"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes 9 IA à portée de main"
 msgstr "选择常用的 9 个 AI"
 
@@ -740,6 +744,14 @@ msgstr "聊天、代码和图片分析的免费替代，多语言支持良好。
 #: assets/app.js
 msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "无法保存账户（存储空间已满？）"
+
+#: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
 
 #: assets/app.js
 msgid "Ctrl+S pour sauvegarder."

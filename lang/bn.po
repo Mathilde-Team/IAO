@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "ডিবাগ মোডে পুনরায় চালু করুন (বিস্তারিত লগ)"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes 9 IA à portée de main"
 msgstr "আমার হাতের কাছের ৯টি AI বেছে নিন"
 
@@ -740,6 +744,14 @@ msgstr "চ্যাট, কোড ও ছবি বিশ্লেষণের 
 #: assets/app.js
 msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "অ্যাকাউন্ট সংরক্ষণ করা যায়নি (স্টোরেজ পূর্ণ?)"
+
+#: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
 
 #: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
