@@ -23,6 +23,15 @@ const fs = require('fs');
 const os = require('os');
 const v8cov = require('./v8-coverage');
 
+// Les runners auto-hébergés tournent en conteneur, avec un /dev/shm de 64 Mo
+// (valeur par défaut de Docker). Chromium y place la mémoire partagée de ses
+// processus de rendu : mesuré en local avec la même limite, le harnais monte
+// déjà à 58 Mo sur dev et la dépasse dès que la page s'alourdit (logos de
+// #324) ; le renderer s'arrête alors (« crashed », code 133), comme dans les
+// crashs intermittents de #283. Option Chromium prévue pour les conteneurs :
+// la mémoire partagée passe par le dossier temporaire au lieu de /dev/shm.
+app.commandLine.appendSwitch('disable-dev-shm-usage');
+
 // Issue #51, lot 3 : sans demande explicite, l'interface suit la langue du
 // système. Les scénarios vérifient les libellés français (langue source) :
 // on l'impose, sauf dans C7.2/C7.3 qui changent la langue eux-mêmes.

@@ -24,7 +24,14 @@
   Electron C5.3 (logos dans boutons, onglets, aide et choix ; boutons de même fond) ;
   `test/activity-status.test.js` adapté au `<span class="svc-btn__nom">`.
 
- capture HAR des 15 premières minutes d'une connexion (25/10/2026)
+### Corrigé (CI)
+- Harnais Electron : le renderer s'arrêtait (« crashed », code 133) pendant C7.5 sur les
+  runners. Cause mesurée en local avec un `/dev/shm` de 64 Mo (taille par défaut d'un
+  conteneur Docker) : la mémoire partagée de Chromium culmine à 58 Mo sur dev et dépasse
+  64 Mo avec les logos (3 crashs sur 3). `test-electron/ui-flows.js` active
+  `disable-dev-shm-usage` (option Chromium pour les conteneurs) : 0 crash, 57/57.
+
+## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté
 - **`lib/har.js`** : module pur d'enregistrement HAR 1.2 à partir des événements CDP
