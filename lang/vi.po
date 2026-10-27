@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Khởi động lại ở chế độ gỡ lỗi (nhật ký chi tiết)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Chọn 9 AI trong tầm tay của tôi"
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "Đóng"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Chọn 9 dịch vụ hiển thị trên giao diện. Các dịch vụ khác vẫn có trong phần trợ giúp."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Không thể lưu tài khoản (bộ nhớ đầy?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S để lưu."
 
@@ -879,16 +891,12 @@ msgid "Description à venir."
 msgstr "Mô tả sẽ sớm có."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Tối đa {max} dịch vụ trong tầm tay"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Chọn ít nhất 1 dịch vụ"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Đã cập nhật dịch vụ ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -997,6 +1005,38 @@ msgstr "Không thể sao chép vào bảng nhớ tạm"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "Đã sao chép email: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1870,8 +1910,8 @@ msgid "Comptes retrouvés"
 msgstr "Đã tìm lại tài khoản"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "Không đọc được tài khoản nào khi khởi động, nhưng bộ lập lịch biết {count} tài khoản. Khôi phục chúng? Phiên của các dịch vụ được giữ nguyên; địa chỉ email cần bổ sung qua «Sửa tài khoản»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

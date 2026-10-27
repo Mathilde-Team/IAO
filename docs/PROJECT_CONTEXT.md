@@ -266,6 +266,11 @@ sursolliciter toujours le même compte.
   - **Registre de jobs persistant** dans `<userData>/scheduler/` : `jobs.json` (source de vérité) +
     `jobs.csv` (export, régénéré à chaque écriture), `config.json`, `accounts-snapshot.json`,
     `activity.json` (journal, 500 dernières entrées).
+  - **Copie complète des comptes** (issue #311) : `<userData>/comptes-sauvegarde.json`, écrite à
+    chaque `syncAccounts` (fichier temporaire puis renommage), format exact de l'export. Au
+    démarrage sans compte, `reportStartupAccounts` la propose en priorité (`accountsFromBackup`),
+    l'instantané partiel `accounts-snapshot.json` seulement à défaut ; l'interface restaure par
+    `importAccountsJSON`, le même chemin que le bouton « Importer ».
   - **Détection des téléchargements** : pour chaque profil connu (reçu via `syncAccounts`),
     `session.fromPartition('persist:<profil>').on('will-download', ...)` — si le fichier se termine
     en `.zip` **et que l'ordonnanceur est activé**, crée un job `DOWNLOADING` puis le fait passer à
@@ -458,6 +463,20 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Notifications quand un cooldown se termine.
 
 ## 13. Dernières évolutions
+
+### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
+
+- `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans
+  privilèges, partition `persist:<profil>`, et s'y connecte avec le mot de passe du coffre.
+- `lib/webmail-codes.js` : `creerReleveur` (créé par fenêtre, actif seulement sur l'hôte du
+  webmail, arrêté à la fermeture) exécute toutes les 10 s `scriptReleve(apresUid)` dans la
+  page (`_action=list` puis `_action=viewsource`, jeton `rcmail.env.request_token`) ;
+  `analyserMail` garde les mails d'un domaine de service connu (`DOMAINES`), récents
+  (15 min), et en extrait le code à 6 chiffres et le lien de connexion du même service.
+- `creerFileConnexions` + canal `webmail:attendre` (attente longue 25 s) : le renderer
+  (`boucleConnexionsWebmail`, `afficherConnexionWebmail`) affiche le bandeau `.tab-code` au
+  début de `.tab-toolbar` de l'onglet (compte par profil, service), ouvre le lien après 3 s
+  sauf Annuler. Ni le code ni le lien ne sont journalisés.
 
 ### Stockage : un localStorage cassé ne tue plus le renderer (issues #52/#186, 25/10/2026)
 

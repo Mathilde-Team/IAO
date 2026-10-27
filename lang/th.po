@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "เริ่มใหม่ในโหมดดีบัก (บันทึกโดยละเอียด)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "เลือก AI 9 ตัวที่ใช้บ่อยของฉัน"
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "ปิด"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "เลือก 9 บริการที่แสดงในอินเทอร์เฟซ บริการอื่นยังใช้ได้จากส่วนช่วยเหลือ"
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "บันทึกบัญชีไม่ได้ (พื้นที่เต็มหรือไม่?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "กด Ctrl+S เพื่อบันทึก"
 
@@ -879,16 +891,12 @@ msgid "Description à venir."
 msgstr "คำอธิบายจะมีเร็วๆ นี้"
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "สูงสุด {max} บริการที่ใช้บ่อย"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "เลือกอย่างน้อย 1 บริการ"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "อัปเดตบริการแล้ว ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -997,6 +1005,38 @@ msgstr "คัดลอกไปยังคลิปบอร์ดไม่ไ
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "คัดลอกอีเมลแล้ว: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1870,8 +1910,8 @@ msgid "Comptes retrouvés"
 msgstr "พบบัญชี"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "ไม่ได้อ่านบัญชีใดเมื่อเริ่มต้น แต่ตัวจัดตารางรู้จัก {count} บัญชี กู้คืนหรือไม่? เซสชันของบริการยังอยู่ ต้องกรอกที่อยู่อีเมลเพิ่มจาก «แก้ไขบัญชี»"
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

@@ -358,6 +358,83 @@ async function run() {
     assert(/COMPTES ACTIFS\s*2/i.test(txt), 'compteur « comptes actifs » ≠ 2 : ' + txt.slice(0, 120));
   });
 
+  // Issue #319 : la sélection « mes IA à portée de main » remplace les services des cartes,
+  // sans cumul au redémarrage, et un compte créé ne reçoit qu'elle.
+  await test('C1.6 Choix des IA : remplacement immédiat, sans cumul au rechargement, appliqué aux nouveaux comptes (#319)', async () => {
+    const lire = () => exec(`(() => {
+      const cartes = [...document.querySelectorAll('#accountsList .account-card')];
+      return cartes.map(c => [...c.querySelectorAll('[data-action="open-service"]')].map(b => b.dataset.svc).join(','));
+    })()`);
+    const avant = await lire();
+    await exec(`(() => {
+      openServicesModal();
+      const cb = (id) => document.querySelector('#servicesList [data-svc-id="' + id + '"]');
+      const list = document.getElementById('servicesList');
+      cb('meshy').checked = false; list.onchange({ target: cb('meshy') });
+      cb('deepseek').checked = true; list.onchange({ target: cb('deepseek') });
+      saveServicesModal();
+      return 'ok';
+    })()`);
+    const attendu = 'claude,chatgpt,gemini,zeta,perplexity,grok,leonardo,suno,deepseek';
+    const apres = await lire();
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const recharge = await lire();
+    const nouveau = await exec(`(() => {
+      openModal();
+      document.getElementById('inputName').value = 'Compte 319';
+      document.getElementById('inputEmail').value = 'c319@example.com';
+      document.getElementById('inputProfile').value = 'profil_319';
+      saveAccount();
+      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const c = comptes.find(a => a.profile === 'profil_319');
+      const services = c ? c.services.join(',') : null;
+      if (c) {
+        localStorage.setItem('ai_accounts', JSON.stringify(comptes.filter(a => a.profile !== 'profil_319')));
+      }
+      localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
+      return services;
+    })()`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const final = await lire();
+    assert(avant.every(l => l.split(',').length === 9 && l.includes('meshy')), 'avant : ' + JSON.stringify(avant));
+    assert(apres.length === 2 && apres.every(l => l === attendu), 'après enregistrement : ' + JSON.stringify(apres));
+    assert(recharge.every(l => l === attendu), 'au rechargement (anciens + nouveaux ?) : ' + JSON.stringify(recharge));
+    assert(nouveau === attendu, 'nouveau compte : ' + nouveau);
+    assert(final.length === 2 && final.every(l => l === avant[0]), 'retour à la sélection par défaut : ' + JSON.stringify(final));
+  });
+
+  // Issue #319 (suite) : de 1 à n IA, plus de plafond à 9.
+  await test('C1.7 Choix des IA : 1 seule, puis toutes (plus de plafond à 9) (#319)', async () => {
+    const choisir = (ids) => exec(`(() => {
+      openServicesModal();
+      const list = document.getElementById('servicesList');
+      const voulus = ${JSON.stringify(ids)};
+      [...list.querySelectorAll('[data-svc-id]')].forEach((cb) => {
+        const coche = voulus === 'tous' || voulus.includes(cb.dataset.svcId);
+        if (cb.checked !== coche) { cb.checked = coche; list.onchange({ target: cb }); }
+      });
+      saveServicesModal();
+      const carte = document.querySelector('#accountsList .account-card');
+      return { boutons: carte.querySelectorAll('[data-action="open-service"]').length,
+        total: list.querySelectorAll('[data-svc-id]').length,
+        stocke: JSON.parse(localStorage.getItem('ai_active_services')).length };
+    })()`);
+    const un = await choisir(['claude']);
+    const tous = await choisir('tous');
+    await exec(`localStorage.removeItem('ai_active_services'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const defaut = await exec(`document.querySelector('#accountsList .account-card').querySelectorAll('[data-action="open-service"]').length`);
+    assert(un.boutons === 1 && un.stocke === 1, 'une seule IA : ' + JSON.stringify(un));
+    assert(tous.total > 9 && tous.boutons === tous.total && tous.stocke === tous.total, 'toutes les IA : ' + JSON.stringify(tous));
+    assert(defaut === 9, 'retour à la sélection par défaut : ' + defaut);
+  });
+
   // =========================================================================
   // C2 — Réglages et thème
   // =========================================================================
@@ -582,6 +659,14 @@ async function run() {
     assert(r.action === 'ui-relaunchDebug', 'data-action : ' + r.action);
     assert(r.hidden === false, 'bouton masqué hors mode debug');
     assert(r.fn === 'function', 'window.relaunchDebug absente');
+    // Issue #317 : « Redémarrer IAO » (mode normal), toujours visible.
+    const n = await exec(`(() => {
+      const b = document.getElementById('btnRelaunch');
+      return { exists: !!b, action: b && b.getAttribute('data-action'), hidden: b ? b.classList.contains('hidden') : null,
+        fn: typeof window.relaunchNormal };
+    })()`);
+    assert(n.exists && n.action === 'ui-relaunch' && n.hidden === false, 'bouton Redémarrer IAO : ' + JSON.stringify(n));
+    assert(n.fn === 'function', 'window.relaunchNormal absente');
     const logPath = await ipc('app:log-path');
     assert(typeof logPath === 'string' && /logs[\\/]iao\.log$/.test(logPath), 'chemin du journal : ' + logPath);
   });
@@ -752,12 +837,25 @@ async function run() {
       setTimeout(() => resolve({
         modal: document.getElementById('snapshotRestore') !== null,
         cards: document.querySelectorAll('#accountsList .account-card').length,
-        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile)
+        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile),
+        emails: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.email),
+        couleurs: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.color),
+        noms: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.name),
+        lignes: [...document.querySelectorAll('#accountsList .account-email')].map((e) => e.textContent.trim())
       }), 200);
     })`);
     assert(!after.modal, 'modale toujours ouverte après restauration');
     assert(after.cards === seedAccounts.length, 'cartes après restauration : ' + after.cards);
     assert(JSON.stringify(after.stored) === JSON.stringify(seedAccounts.map((a) => a.profile)), 'profils enregistrés : ' + after.stored.join(','));
+    // Issue #311 : l'adresse revient avec le compte, à sa place sur la carte.
+    assert(JSON.stringify(after.emails) === JSON.stringify(seedAccounts.map((a) => a.email)), 'e-mails restaurés : ' + after.emails.join(','));
+    // Issue #311 (suite) : restauration = import de la copie complète, donc
+    // nom et couleur reviennent tels qu'à l'export (l'ancien instantané les perdait).
+    assert(JSON.stringify(after.noms) === JSON.stringify(seedAccounts.map((a) => a.name)), 'noms restaurés : ' + after.noms.join(','));
+    assert(JSON.stringify(after.couleurs) === JSON.stringify(seedAccounts.map((a) => a.color)), 'couleurs restaurées : ' + after.couleurs.join(','));
+    // Ordre d'affichage propre à la liste : comparaison sans ordre.
+    const attendues = seedAccounts.map((a) => a.email + ' • ' + a.profile).sort();
+    assert(JSON.stringify([...after.lignes].sort()) === JSON.stringify(attendues), 'lignes e-mail des cartes : ' + after.lignes.join(' | '));
   });
 
   await test('C8.2 comptes présents : aucune modale de restauration', async () => {
@@ -766,6 +864,46 @@ async function run() {
     await waitLoaded();
     await sleep(300);
     assert(await exec(`document.getElementById('snapshotRestore') === null`), 'modale affichée alors que les comptes sont présents');
+  });
+
+  await test('C8.3 onglets de la session précédente proposés au démarrage (#317, #318)', async () => {
+    // Le harnais démarre avec « Restaurer les onglets » coché : la proposition
+    // n'a lieu que décoché. Réglage et onglets mémorisés remis à la fin du test
+    // (sinon l'onglet Claude rouvert plus tard perturbe C10 et C12).
+    const reglages = await ipc('settings:load');
+    const ongletsAvant = await exec(`localStorage.getItem('ai_open_tabs')`);
+    try {
+      const sansRestauration = await ipc('settings:save', Object.assign({}, reglages, { startWithLastSession: false }));
+      assert(sansRestauration && sansRestauration.ok, 'settings:save : ' + JSON.stringify(sansRestauration));
+      await exec(`localStorage.setItem('ai_open_tabs', JSON.stringify([{ accId: 'acc_test_1', svcId: 'claude' }, { accId: 'inconnu', svcId: 'claude' }])); 'ok'`);
+      win.webContents.reload();
+      await sleep(300);
+      await waitLoaded();
+      await sleep(500);
+      const r = await exec(`(() => {
+        const m = document.getElementById('confirmModal');
+        return { open: m.classList.contains('open'), title: m.querySelector('.confirm-title').textContent,
+          msg: m.querySelector('.confirm-msg').textContent };
+      })()`);
+      assert(r.open, 'proposition de réouverture absente');
+      assert(r.title === 'Rouvrir les onglets précédents ?', 'titre : ' + r.title);
+      assert(/^Onglets ouverts à la fermeture d'IAO : 1\./.test(r.msg), 'onglet d\'un compte inconnu compté : ' + r.msg);
+      // Réglages rouverts : pas de seconde proposition. Refus : rien n'est ouvert.
+      const apres = await exec(`(async () => {
+        document.getElementById('confirmModalNo').click();
+        openSettingsModal();
+        await new Promise((r) => setTimeout(r, 300));
+        closeSettingsModal();
+        return { open: document.getElementById('confirmModal').classList.contains('open'),
+          onglets: document.querySelectorAll('#tabsBar .tab').length };
+      })()`);
+      assert(!apres.open, 'proposition réaffichée à l\'ouverture des réglages');
+      assert(apres.onglets === 0, 'refus : aucun onglet attendu, trouvé ' + apres.onglets);
+    } finally {
+      await ipc('settings:save', reglages);
+      await exec(ongletsAvant === null ? `localStorage.removeItem('ai_open_tabs'); 'ok'`
+        : `localStorage.setItem('ai_open_tabs', ${JSON.stringify(ongletsAvant)}); 'ok'`);
+    }
   });
 
   // =========================================================================
@@ -814,6 +952,69 @@ async function run() {
     assert(r.masque === 'password', 'masqué par défaut attendu, trouvé ' + r.masque);
     assert(r.apres.type === 'text' && r.apres.longueur === 20, 'mot de passe généré visible de 20 caractères : ' + JSON.stringify(r.apres));
     assert(r.final === 'password' && r.titre === 'Afficher le mot de passe', 'bouton œil : ' + JSON.stringify(r));
+  });
+
+  await test('C9.3 Code et lien de connexion reçus par mail : bannière de l\'onglet, lien ouvert après 3 s, annulation (#310)', async () => {
+    // Un onglet du compte acc_test_1 (ouvert plus haut ou ici).
+    const cible = await exec(`new Promise((resolve) => {
+      const trouver = () => document.querySelector('#tabsBar .tab[data-acc="acc_test_1"]');
+      if (!trouver()) openService('acc_test_1', 'claude');
+      setTimeout(() => {
+        const t = trouver();
+        t.click();
+        const wv = document.getElementById(t.dataset.tab).querySelector('webview');
+        window.__liens310 = [];
+        wv.loadURL = (u) => { window.__liens310.push(u); return Promise.resolve(); };
+        const acc = JSON.parse(localStorage.getItem('ai_accounts')).find(a => a.id === 'acc_test_1');
+        resolve({ tab: t.dataset.tab, svc: t.dataset.svc, profil: acc.profile });
+      }, 200);
+    })`);
+    const ev = JSON.stringify({ profil: cible.profil, service: cible.svc, code: '482913', lien: 'https://exemple.invalid/auth/callback?token=482913' });
+    const r1 = await exec(`(() => {
+      afficherConnexionWebmail(${ev});
+      const b = document.querySelector('#${cible.tab} .tab-toolbar .tab-code');
+      return b ? { code: b.querySelector('.tab-code__valeur').textContent, etat: b.querySelector('.tab-code__etat').textContent,
+        boutons: [...b.querySelectorAll('[data-code-action]')].filter(x => !x.hidden).map(x => x.dataset.codeAction),
+        premier: b.parentNode.firstElementChild === b, largeur: b.getBoundingClientRect().width } : null;
+    })()`);
+    assert(r1 && r1.code === '482913' && r1.premier && r1.largeur > 100, 'bannière : ' + JSON.stringify(r1));
+    assert(/3/.test(r1.etat), 'compte à rebours : ' + r1.etat);
+    assert(JSON.stringify(r1.boutons) === JSON.stringify(['copier', 'annuler', 'fermer']), 'boutons : ' + r1.boutons);
+    if (process.env.IAO_CAPTURES_DIR) {
+      await sleep(300);
+      const dossier = require('./rtl-visuel').dossierCaptures(process.env.IAO_CAPTURES_DIR);
+      fs.writeFileSync(path.join(dossier, 'code-mail-onglet.png'), (await win.webContents.capturePage()).toPNG());
+    }
+    await sleep(3400);
+    const r2 = await exec(`({ liens: window.__liens310, etat: document.querySelector('#${cible.tab} .tab-code__etat').textContent })`);
+    assert(r2.liens.length === 1 && r2.liens[0].endsWith('token=482913'), 'lien non ouvert : ' + JSON.stringify(r2));
+    // Second mail : « Annuler » arrête l'ouverture, « Ouvrir le lien » la fait à la main.
+    const r3 = await exec(`(() => {
+      afficherConnexionWebmail(${ev.replace('482913', '135790')});
+      document.querySelector('#${cible.tab} [data-code-action="annuler"]').click();
+      return document.querySelectorAll('#${cible.tab} .tab-code').length;
+    })()`);
+    assert(r3 === 1, 'une seule bannière attendue : ' + r3);
+    await sleep(3400);
+    const r4 = await exec(`(() => {
+      const n = window.__liens310.length;
+      document.querySelector('#${cible.tab} [data-code-action="ouvrir"]').click();
+      const apres = window.__liens310.length;
+      document.querySelector('#${cible.tab} [data-code-action="fermer"]').click();
+      return { n, apres, reste: document.querySelectorAll('#${cible.tab} .tab-code').length };
+    })()`);
+    assert(r4.n === 1 && r4.apres === 2 && r4.reste === 0, 'annulation / ouverture / fermeture : ' + JSON.stringify(r4));
+    // Compte ou service inconnu, lien non https : rien.
+    const r5 = await exec(`(() => {
+      afficherConnexionWebmail({ profil: 'inconnu', service: 'claude', code: '111111' });
+      afficherConnexionWebmail(null);
+      afficherConnexionWebmail(${ev.replace('https://', 'http://').replace('482913', '999999')});
+      const b = document.querySelector('#${cible.tab} .tab-code');
+      return { bandeau: !!b, lien: !!(b && b.querySelector('[data-code-action="annuler"]')) };
+    })()`);
+    assert(r5.bandeau && !r5.lien, 'lien non https accepté : ' + JSON.stringify(r5));
+    // La doublure de loadURL est retirée : l'onglet resservira (C13).
+    await exec(`(() => { document.querySelector('#${cible.tab} [data-code-action="fermer"]').click(); delete document.getElementById('${cible.tab}').querySelector('webview').loadURL; return 'ok'; })()`);
   });
 
   // =========================================================================

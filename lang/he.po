@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "הפעלה מחדש במצב ניפוי באגים (יומן מפורט)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "בחירת 9 הבינות המלאכותיות שלי בהישג יד"
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "סגירה"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "בחרו את 9 השירותים המוצגים בממשק. השאר נשארים זמינים בעזרה."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "לא ניתן לשמור את החשבונות (האחסון מלא?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S לשמירה."
 
@@ -880,16 +892,12 @@ msgid "Description à venir."
 msgstr "תיאור יתווסף בהמשך."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "לכל היותר {max} שירותים בהישג יד"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "בחרו שירות אחד לפחות"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "השירותים עודכנו ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1002,6 +1010,38 @@ msgstr "לא ניתן להעתיק ללוח"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "הדוא״ל הועתק: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1886,8 +1926,8 @@ msgid "Comptes retrouvés"
 msgstr "נמצאו חשבונות"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "לא נקרא אף חשבון בהפעלה, אך המתזמן מכיר {count}. לשחזר אותם? השיחות בשירותים נשמרות; יש להשלים את כתובות הדוא״ל דרך «עריכת החשבון»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

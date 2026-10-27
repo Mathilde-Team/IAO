@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Start på nytt i feilsøkingsmodus (detaljert logg)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Velg mine 9 KI-er for hånden"
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "Lukk"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Velg de 9 tjenestene som vises i grensesnittet. De andre er fortsatt tilgjengelige i hjelpen."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Kan ikke lagre kontoene (lagringsplassen full?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S for å lagre."
 
@@ -880,16 +892,12 @@ msgid "Description à venir."
 msgstr "Beskrivelse kommer."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Høyst {max} tjenester for hånden"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Velg minst 1 tjeneste"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Tjenestene oppdatert ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1002,6 +1010,38 @@ msgstr "Kan ikke kopiere til utklippstavlen"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "E-postadressen kopiert: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1886,8 +1926,8 @@ msgid "Comptes retrouvés"
 msgstr "Kontoer funnet igjen"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "Ingen kontoer ble lest ved oppstart, men planleggeren kjenner til {count}. Gjenopprette dem? Tjenestenes økter beholdes; e-postadressene må fylles ut via «Rediger kontoen»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

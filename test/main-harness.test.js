@@ -101,13 +101,13 @@ function loadMain() {
 }
 
 const MAIN_CHANNELS = [
-  'accounts:disconnect-profile', 'accounts:export', 'accounts:import', 'app:is-debug', 'app:log-path', 'app:open-webmail', 'app:relaunch-debug', 'app:toggle-devtools',
+  'accounts:disconnect-profile', 'accounts:export', 'accounts:import', 'app:is-debug', 'app:log-path', 'app:open-webmail', 'app:relaunch', 'app:relaunch-debug', 'app:toggle-devtools',
   'i18n:catalog', 'iao-identifiants:focus', 'identifiants:enregistrer', 'identifiants:lister', 'identifiants:obtenir', 'identifiants:supprimer', 'read-directory', 'read-directory-recursive', 'read-file', 'save-file',
   'secrets:available', 'secrets:delete', 'secrets:get', 'secrets:set',
   'select-folder', 'settings:load', 'settings:save', 'stats:export',
   'stats:load', 'stats:noter-quota', 'stats:noter-reponse', 'stats:quotas', 'stats:reponses', 'stats:reset', 'stats:sync',
   'taches:delete', 'taches:dues', 'taches:history', 'taches:list', 'taches:report', 'taches:run-now',
-  'taches:save', 'taches:set-active'
+  'taches:save', 'taches:set-active', 'webmail:attendre'
 ];
 
 test('main.js se charge avec un module electron simulé et liste ses canaux IPC', (t) => {
