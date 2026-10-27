@@ -1004,6 +1004,38 @@ msgid "E-mail copié : {email}"
 msgstr "Correo copiado: {email}"
 
 #: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr "Código de {service} para {account}: {code}"
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr "Código recibido por correo:"
+
+#: assets/app.js
+msgid "Copier"
+msgstr "Copiar"
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr "Abrir el enlace de inicio de sesión"
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr "Enlace de inicio de sesión abierto"
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr "Inicio de sesión automático en {seconds} s"
+
+#: assets/app.js
+msgid "Code copié"
+msgstr "Código copiado"
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr "Inicio de sesión automático cancelado"
+
+#: assets/app.js
 msgid "Cooldown terminé"
 msgstr "Cooldown terminado"
 

@@ -823,7 +823,10 @@
       openService(acc.id, svcId);
       const wv = avant && url && avant.paneEl ? avant.paneEl.querySelector('webview') : null;
       if (wv) {
-        try { wv.loadURL(url); } catch (e) { dbg('taches', 'nouvelle session impossible', e && e.message); }
+        // loadURL renvoie une promesse : un échec de chargement (réseau coupé,
+        // navigation remplacée) était un rejet non géré -> bandeau d'erreur.
+        Promise.resolve().then(() => wv.loadURL(url))
+          .catch((e) => dbg('taches', 'nouvelle session impossible', e && e.message));
       }
       return !!tabs.find(t => t.accId === acc.id && t.svcId === svcId);
     }
@@ -1709,10 +1712,14 @@
     };
 
     // Issue #201 : webmail (URL des réglages, ouverte par le process principal) ;
-    // l'adresse du compte est copiée pour la saisir dans Roundcube.
+    // l'adresse du compte est copiée. Issue #310 : le process principal ouvre le
+    // webmail dans la partition du compte et s'y connecte avec l'adresse et le
+    // mot de passe du coffre (le renderer ne transmet que profil et adresse).
     function openWebmail(accId) {
       copyAccountEmail(accId);
-      ipcRenderer.invoke('app:open-webmail').then((ok) => {
+      const acc = accounts.find(a => a.id === accId);
+      const compte = acc ? { profil: acc.profile, email: acc.email || '' } : null;
+      ipcRenderer.invoke('app:open-webmail', compte).then((ok) => {
         if (ok !== true) showToast(_('Adresse du webmail non configurée dans les réglages'), 'warning');
       }).catch(() => showToast(_('Ouverture du webmail impossible'), 'error'));
     }
@@ -1727,6 +1734,112 @@
         showToast(ok ? _('E-mail copié : {email}', { email: acc.email }) : _('Copie impossible dans le presse-papiers'), ok ? 'success' : 'error');
       });
     }
+
+    // Issue #310 (relecture) : codes et liens de connexion relevés par le
+    // process principal dans la fenêtre du webmail d'un compte (lib/webmail-codes).
+    // Affichés dans la barre de l'onglet du service pour ce compte (à côté de
+    // recharger / accueil / déconnexion) ; le lien est ouvert dans l'onglet
+    // après 3 s, sauf « Annuler ». Le code reste affiché 5 minutes (sa durée de vie).
+    const CONNEXION_DELAI_S = 3;
+    const CONNEXION_AFFICHAGE_MS = 5 * 60 * 1000;
+    function afficherConnexionWebmail(ev) {
+      if (!ev || typeof ev !== 'object') return;
+      const acc = accounts.find(a => a.profile === ev.profil);
+      const svc = SERVICES.find(s => s.id === ev.service);
+      if (!acc || !svc) { dbg('webmail', 'connexion reçue sans compte ou service connu', ev.profil, ev.service); return; }
+      const code = /^\d{6}$/.test(ev.code || '') ? ev.code : '';
+      const lien = typeof ev.lien === 'string' && ev.lien.startsWith('https://') ? ev.lien : '';
+      let tab = tabs.find(t => t.accId === acc.id && t.svcId === svc.id);
+      if (!tab && lien) {
+        // Onglet fermé : on l'ouvre pour y suivre le lien.
+        window.openService(acc.id, svc.id);
+        tab = tabs.find(t => t.accId === acc.id && t.svcId === svc.id);
+      }
+      dbg('webmail', 'connexion reçue', acc.profile, svc.id, code ? 'code' : 'sans code', lien ? 'lien' : 'sans lien', tab ? tab.id : 'sans onglet');
+      if (code) showToast(_('Code {service} pour {account} : {code}', { service: svc.name, account: acc.name, code }));
+      if (!tab) return;
+      const toolbar = tab.paneEl.querySelector('.tab-toolbar');
+      if (!toolbar) return;
+      const ancien = toolbar.querySelector('.tab-code');
+      if (ancien) { clearInterval(Number(ancien.dataset.minuterie)); ancien.remove(); }
+      const bandeau = document.createElement('div');
+      bandeau.className = 'tab-code';
+      bandeau.setAttribute('role', 'status');
+      bandeau.innerHTML = `
+        ${code ? `<span class="tab-code__libelle">${escapeHtml(_('Code reçu par mail :'))}</span><strong class="tab-code__valeur">${escapeHtml(code)}</strong>
+        <button type="button" class="tab-code__btn" data-code-action="copier">${escapeHtml(_('Copier'))}</button>` : ''}
+        ${lien ? `<span class="tab-code__etat"></span>
+        <button type="button" class="tab-code__btn" data-code-action="annuler">${escapeHtml(_('Annuler'))}</button>
+        <button type="button" class="tab-code__btn" data-code-action="ouvrir" hidden>${escapeHtml(_('Ouvrir le lien de connexion'))}</button>` : ''}
+        <button type="button" class="tab-code__btn tab-code__fermer" data-code-action="fermer" title="${escapeHtml(_('Fermer'))}">×</button>`;
+      toolbar.insertBefore(bandeau, toolbar.firstChild);
+      const etat = bandeau.querySelector('.tab-code__etat');
+      const btnAnnuler = bandeau.querySelector('[data-code-action="annuler"]');
+      const btnOuvrir = bandeau.querySelector('[data-code-action="ouvrir"]');
+      let reste = CONNEXION_DELAI_S;
+      let minuterie = 0;
+      const ouvrirLien = () => {
+        clearInterval(minuterie);
+        const webview = tab.paneEl.querySelector('webview');
+        if (webview) {
+          webview.loadURL(lien).catch((e) => dbg('webmail', 'ouverture du lien interrompue', tab.id, e && e.message));
+          dbg('webmail', 'lien de connexion ouvert dans l\'onglet', tab.id);
+        }
+        if (etat) etat.textContent = _('Lien de connexion ouvert');
+        if (btnAnnuler) btnAnnuler.hidden = true;
+        if (btnOuvrir) btnOuvrir.hidden = true;
+      };
+      if (lien) {
+        etat.textContent = _('Connexion automatique dans {seconds} s', { seconds: reste });
+        minuterie = setInterval(() => {
+          reste -= 1;
+          if (reste <= 0) ouvrirLien();
+          else etat.textContent = _('Connexion automatique dans {seconds} s', { seconds: reste });
+        }, 1000);
+        bandeau.dataset.minuterie = String(minuterie);
+      }
+      const fin = setTimeout(() => { clearInterval(minuterie); bandeau.remove(); }, CONNEXION_AFFICHAGE_MS);
+      bandeau.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-code-action]');
+        if (!b) return;
+        const action = b.getAttribute('data-code-action');
+        if (action === 'copier') {
+          copyText(code, { clipboard: navigator.clipboard, document }).then(ok => {
+            showToast(ok ? _('Code copié') : _('Copie impossible dans le presse-papiers'), ok ? 'success' : 'error');
+          });
+        } else if (action === 'annuler') {
+          clearInterval(minuterie);
+          etat.textContent = _('Connexion automatique annulée');
+          btnAnnuler.hidden = true;
+          btnOuvrir.hidden = false;
+        } else if (action === 'ouvrir') {
+          ouvrirLien();
+        } else {
+          clearInterval(minuterie);
+          clearTimeout(fin);
+          bandeau.remove();
+        }
+      });
+    }
+    window.afficherConnexionWebmail = afficherConnexionWebmail;
+
+    // Attente longue (canal webmail:attendre) : le process principal répond dès
+    // qu'un mail de connexion est relevé, ou par une liste vide au bout de 25 s.
+    async function boucleConnexionsWebmail() {
+      for (;;) {
+        let lot = [];
+        try {
+          lot = await ipcRenderer.invoke('webmail:attendre');
+        } catch (e) {
+          console.warn('[webmail] attente des mails de connexion interrompue :', e && e.message);
+          await new Promise(r => setTimeout(r, 5000));
+        }
+        for (const ev of Array.isArray(lot) ? lot : []) {
+          try { afficherConnexionWebmail(ev); } catch (e) { console.error('[webmail] affichage du code impossible :', e); }
+        }
+      }
+    }
+    boucleConnexionsWebmail();
 
     function showToast(msg, type = 'success') {
       const toast = document.createElement('div');

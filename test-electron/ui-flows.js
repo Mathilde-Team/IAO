@@ -779,6 +779,69 @@ async function run() {
     assert(r.final === 'password' && r.titre === 'Afficher le mot de passe', 'bouton œil : ' + JSON.stringify(r));
   });
 
+  await test('C9.3 Code et lien de connexion reçus par mail : bannière de l\'onglet, lien ouvert après 3 s, annulation (#310)', async () => {
+    // Un onglet du compte acc_test_1 (ouvert plus haut ou ici).
+    const cible = await exec(`new Promise((resolve) => {
+      const trouver = () => document.querySelector('#tabsBar .tab[data-acc="acc_test_1"]');
+      if (!trouver()) openService('acc_test_1', 'claude');
+      setTimeout(() => {
+        const t = trouver();
+        t.click();
+        const wv = document.getElementById(t.dataset.tab).querySelector('webview');
+        window.__liens310 = [];
+        wv.loadURL = (u) => { window.__liens310.push(u); return Promise.resolve(); };
+        const acc = JSON.parse(localStorage.getItem('ai_accounts')).find(a => a.id === 'acc_test_1');
+        resolve({ tab: t.dataset.tab, svc: t.dataset.svc, profil: acc.profile });
+      }, 200);
+    })`);
+    const ev = JSON.stringify({ profil: cible.profil, service: cible.svc, code: '482913', lien: 'https://exemple.invalid/auth/callback?token=482913' });
+    const r1 = await exec(`(() => {
+      afficherConnexionWebmail(${ev});
+      const b = document.querySelector('#${cible.tab} .tab-toolbar .tab-code');
+      return b ? { code: b.querySelector('.tab-code__valeur').textContent, etat: b.querySelector('.tab-code__etat').textContent,
+        boutons: [...b.querySelectorAll('[data-code-action]')].filter(x => !x.hidden).map(x => x.dataset.codeAction),
+        premier: b.parentNode.firstElementChild === b, largeur: b.getBoundingClientRect().width } : null;
+    })()`);
+    assert(r1 && r1.code === '482913' && r1.premier && r1.largeur > 100, 'bannière : ' + JSON.stringify(r1));
+    assert(/3/.test(r1.etat), 'compte à rebours : ' + r1.etat);
+    assert(JSON.stringify(r1.boutons) === JSON.stringify(['copier', 'annuler', 'fermer']), 'boutons : ' + r1.boutons);
+    if (process.env.IAO_CAPTURES_DIR) {
+      await sleep(300);
+      const dossier = require('./rtl-visuel').dossierCaptures(process.env.IAO_CAPTURES_DIR);
+      fs.writeFileSync(path.join(dossier, 'code-mail-onglet.png'), (await win.webContents.capturePage()).toPNG());
+    }
+    await sleep(3400);
+    const r2 = await exec(`({ liens: window.__liens310, etat: document.querySelector('#${cible.tab} .tab-code__etat').textContent })`);
+    assert(r2.liens.length === 1 && r2.liens[0].endsWith('token=482913'), 'lien non ouvert : ' + JSON.stringify(r2));
+    // Second mail : « Annuler » arrête l'ouverture, « Ouvrir le lien » la fait à la main.
+    const r3 = await exec(`(() => {
+      afficherConnexionWebmail(${ev.replace('482913', '135790')});
+      document.querySelector('#${cible.tab} [data-code-action="annuler"]').click();
+      return document.querySelectorAll('#${cible.tab} .tab-code').length;
+    })()`);
+    assert(r3 === 1, 'une seule bannière attendue : ' + r3);
+    await sleep(3400);
+    const r4 = await exec(`(() => {
+      const n = window.__liens310.length;
+      document.querySelector('#${cible.tab} [data-code-action="ouvrir"]').click();
+      const apres = window.__liens310.length;
+      document.querySelector('#${cible.tab} [data-code-action="fermer"]').click();
+      return { n, apres, reste: document.querySelectorAll('#${cible.tab} .tab-code').length };
+    })()`);
+    assert(r4.n === 1 && r4.apres === 2 && r4.reste === 0, 'annulation / ouverture / fermeture : ' + JSON.stringify(r4));
+    // Compte ou service inconnu, lien non https : rien.
+    const r5 = await exec(`(() => {
+      afficherConnexionWebmail({ profil: 'inconnu', service: 'claude', code: '111111' });
+      afficherConnexionWebmail(null);
+      afficherConnexionWebmail(${ev.replace('https://', 'http://').replace('482913', '999999')});
+      const b = document.querySelector('#${cible.tab} .tab-code');
+      return { bandeau: !!b, lien: !!(b && b.querySelector('[data-code-action="annuler"]')) };
+    })()`);
+    assert(r5.bandeau && !r5.lien, 'lien non https accepté : ' + JSON.stringify(r5));
+    // La doublure de loadURL est retirée : l'onglet resservira (C13).
+    await exec(`(() => { document.querySelector('#${cible.tab} [data-code-action="fermer"]').click(); delete document.getElementById('${cible.tab}').querySelector('webview').loadURL; return 'ok'; })()`);
+  });
+
   // =========================================================================
   // C10 — Tâches programmables (issue #199, lot 4)
   // =========================================================================
