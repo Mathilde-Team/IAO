@@ -62,6 +62,9 @@ class Scheduler {
     this.csvPath = path.join(this.dir, 'jobs.csv');
     this.configPath = path.join(this.dir, 'config.json');
     this.accountsPath = path.join(this.dir, 'accounts-snapshot.json');
+    // Issue #311 : copie complète des comptes, au format de l'export, hors du
+    // dossier de l'ordonnanceur (fichier importable tel quel par l'utilisateur).
+    this.accountsBackupPath = path.join(this._app.getPath('userData'), 'comptes-sauvegarde.json');
     this.logPath = path.join(this.dir, 'activity.json');
     this.projectsPath = path.join(this.dir, 'projects.json');
 
@@ -158,6 +161,7 @@ class Scheduler {
     this.config = { ...core.DEFAULT_CONFIG, ...this._readJSONSync(this.configPath, {}) };
     this.jobs = this._readJSONSync(this.jobsPath, []);
     this.accountsSnapshot = this._readJSONSync(this.accountsPath, []);
+    this.accountsBackup = this._readJSONSync(this.accountsBackupPath, null);
     this.log = this._readJSONSync(this.logPath, []);
     this.projects = this._readJSONSync(this.projectsPath, []);
     this.jobSeq = this.jobs.reduce((max, j) => {
@@ -194,12 +198,30 @@ class Scheduler {
     catch (e) { this._error('échec écriture instantané comptes :', e); }
   }
 
+  // Issue #311 : copie complète, au format exact de l'export (JSON indenté de
+  // 2, comme exportAccountsJSON). Écriture dans un fichier temporaire puis
+  // renommage : une coupure pendant l'écriture ne laisse jamais une copie
+  // tronquée à la place de la précédente.
+  _persistAccountsBackup(accounts) {
+    const tmp = this.accountsBackupPath + '.tmp';
+    try {
+      fs.writeFileSync(tmp, JSON.stringify(accounts, null, 2), 'utf-8');
+      fs.renameSync(tmp, this.accountsBackupPath);
+      this.accountsBackup = accounts;
+      this._debug('copie complète des comptes écrite : ' + accounts.length + ' compte(s) dans ' + this.accountsBackupPath);
+    } catch (e) { this._error('échec écriture de la copie complète des comptes :', e); }
+  }
+
   // Issue #186 : l'interface signale au démarrage ce qu'elle a lu dans son
   // localStorage ({ status, count }). La ligne part toujours dans iao.log ; si
   // l'interface n'a aucun compte alors que l'instantané en contient, les comptes
   // reconstruits sont renvoyés pour proposer leur restauration.
   reportStartupAccounts(loaded) {
-    const candidates = accountsRecovery.accountsFromSnapshot(this.accountsSnapshot);
+    // Issue #311 : la copie complète d'abord (restauration = import) ; l'ancien
+    // instantané partiel seulement à défaut (installation antérieure à #311).
+    const copie = accountsRecovery.accountsFromBackup(this.accountsBackup);
+    const candidates = copie || accountsRecovery.accountsFromSnapshot(this.accountsSnapshot);
+    this._debug('restauration possible depuis ' + (copie ? 'la copie complète ' + this.accountsBackupPath : "l'instantané de l'ordonnanceur") + ' : ' + candidates.length + ' compte(s)');
     const report = accountsRecovery.startupAccountsReport(loaded, candidates.length);
     if (this._logFn) this._logFn('scheduler', report.level, report.message);
     else console.log('[scheduler]', report.message);
@@ -259,6 +281,8 @@ class Scheduler {
       return {
         id: a.id,
         name: a.name,
+        // Issue #311 : l'adresse sert à la restauration (accountsFromSnapshot).
+        email: typeof a.email === 'string' ? a.email : '',
         profile: a.profile,
         automation: {
           enabled: incomingAuto.enabled !== false,
@@ -268,6 +292,7 @@ class Scheduler {
       };
     });
     this._persistAccounts();
+    if (Array.isArray(accounts)) this._persistAccountsBackup(accounts);
     // Issue #181 : pas de surveillance tant que l'ordonnanceur est arrêté.
     if (this.config.enabled) this._watchAllPartitions();
   }

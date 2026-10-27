@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Riavvia in modalità debug (registro dettagliato)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Scegli le mie 9 IA a portata di mano"
+msgid "Redémarrer IAO"
+msgstr "Riavvia IAO"
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr "Scegli le mie IA a portata di mano"
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "Chiudi"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Seleziona i 9 servizi mostrati nell'interfaccia. Gli altri restano disponibili nella guida."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr "Seleziona le IA mostrate nell'interfaccia, quante vuoi (almeno una). Le altre restano disponibili nella guida."
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Impossibile salvare gli account (spazio esaurito?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr "Riaprire le schede precedenti?"
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr "Schede aperte alla chiusura di IAO: {n}. Riaprirle?"
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S per salvare."
 
@@ -892,16 +904,12 @@ msgid "Description à venir."
 msgstr "Descrizione in arrivo."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Massimo {max} servizi a portata di mano"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Seleziona almeno 1 servizio"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Servizi aggiornati ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr "IA a portata di mano: {count}"
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1014,6 +1022,38 @@ msgstr "Copia negli appunti impossibile"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "E-mail copiata: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr "Codice {service} per {account}: {code}"
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr "Codice ricevuto via email:"
+
+#: assets/app.js
+msgid "Copier"
+msgstr "Copia"
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr "Apri il link di accesso"
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr "Link di accesso aperto"
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr "Accesso automatico tra {seconds} s"
+
+#: assets/app.js
+msgid "Code copié"
+msgstr "Codice copiato"
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr "Accesso automatico annullato"
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1898,8 +1938,8 @@ msgid "Comptes retrouvés"
 msgstr "Account ritrovati"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "All'avvio non è stato letto nessun account, ma il pianificatore ne conosce {count}. Ripristinarli? Le sessioni dei servizi sono conservate; gli indirizzi e-mail vanno completati da «Modifica l'account»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr "Nessun account è stato letto all'avvio, ma IAO ne ha conservato una copia ({count} account). Ripristinarli? È la stessa operazione dell'importazione di un file di esportazione: account, indirizzi e sessioni dei servizi vengono conservati."
 
 #: assets/app.js
 msgid "Ignorer"

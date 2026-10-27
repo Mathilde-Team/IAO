@@ -297,6 +297,20 @@
   .svc-pika { background: var(--pika-dim); color: var(--pika); border-color: rgba(162,89,255,0.2); }
   .svc-qwen { background: var(--qwen-dim); color: var(--qwen); border-color: rgba(97,92,237,0.2); }
   .svc-btn.cooldown-active { opacity: 0.4; filter: grayscale(50%); }
+  /* Issue #324 : boutons de couleur standard (les classes .svc-<id> ci-dessus ne
+     sont plus posées sur les boutons), logo officiel du service devant le nom. */
+  .svc-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--bg-elevated); color: var(--fg); border-color: var(--border); }
+  .svc-btn:hover { background: var(--bg-card-hover); border-color: var(--border-active); }
+  .svc-btn__nom { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .svc-ic { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; }
+  .svc-ic svg { width: 100%; height: 100%; display: block; }
+  .svc-ic--mono { color: var(--fg); }
+  .svc-ic--lettre { border-radius: 50%; font-size: 10px; font-weight: 700; line-height: 1; color: #fff; }
+  .svc-ic--teinte.svc-fg-gemini { color: var(--gemini); }
+  .svc-ic--teinte.svc-fg-kling { color: var(--kling); }
+  .svc-ic--teinte.svc-fg-wolfram { color: var(--wolfram); }
+  .svc-ic--teinte.svc-fg-notebooklm { color: var(--notebooklm); }
+  .help-entry__name .svc-ic, .service-select-item .svc-ic { width: 18px; height: 18px; }
 
   /* --- Vue compacte : repli/dépli de la grille de services par carte --- */
   /* Animation de hauteur sans max-height arbitraire : la rangée de grille passe
@@ -349,14 +363,10 @@
   .tab { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; border-radius: 10px 10px 0 0; background: var(--bg-card); border: 1px solid var(--border); border-bottom: none; cursor: grab; font-size: 12px; color: var(--fg-muted); white-space: nowrap; max-width: 220px; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
   .tab:hover { background: var(--bg-card-hover); color: var(--fg); }
   .tab.active { background: var(--bg-elevated); color: var(--fg); border-color: var(--border-active); box-shadow: inset 0 2px 0 var(--accent); }
-  .tab__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .tab__text { display: flex; flex-direction: column; overflow: hidden; line-height: 1.25; }
-  /* tab__label = 1re ligne (grasse) ; tab__acc = 2e ligne (petite, atténuée).
-     Lot 16/09/2026 : c'est désormais le nom du COMPTE qui occupe tab__label
-     (inversion demandée) -> passé de 600 à 700 pour un « gras » sans
-     ambiguïté ; tab__acc reçoit maintenant le nom du service. */
+  /* Issue #324 : onglet = logo du service + nom du compte (le service reste dans
+     l'infobulle). */
   .tab__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
-  .tab__acc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg-dim); font-size: 10px; }
   /* Onglet non consulté depuis 5 min (lot 16/09/2026) : simple rappel visuel
      calculé sur le focus LOCAL de l'onglet (lastFocusAt, mis à jour par
      activateTab) — ne surveille jamais le contenu de la <webview>. */
@@ -401,6 +411,14 @@
   .tab-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 4px; height: 32px; padding: 0 8px; flex-shrink: 0; background: var(--bg-elevated); border-bottom: 1px solid var(--border); }
   .tab-toolbar__btn { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--radius-sm); color: var(--fg-muted); background: transparent; border: none; cursor: pointer; font-size: 13px; transition: background 0.15s, color 0.15s; }
   .tab-toolbar__btn:hover { background: var(--bg-card-hover); color: var(--fg); }
+  /* Issue #310 : code / lien de connexion reçus par mail, à gauche de la barre de l'onglet. */
+  .tab-code { display: flex; align-items: center; gap: 8px; margin-right: auto; min-width: 0; font-size: 12px; color: var(--fg); }
+  .tab-code__libelle, .tab-code__etat { color: var(--fg-muted); white-space: nowrap; }
+  .tab-code__valeur { font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.12em; color: var(--accent); user-select: all; }
+  .tab-code__btn { height: 22px; padding: 0 8px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); color: var(--fg); font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .tab-code__btn:hover { background: var(--bg-card-hover); }
+  .tab-code__btn[hidden] { display: none; }
+  .tab-code__fermer { border: none; background: transparent; color: var(--fg-muted); font-size: 15px; padding: 0 6px; }
   .tab-toolbar__btn--danger:hover { background: var(--danger-dim); color: var(--danger); }
   /* Issue #320 : outils de développement de l'onglet, en mode debug seulement. */
   .tab-toolbar__btn--debug { display: none; }
@@ -454,7 +472,6 @@
   .help-list { overflow-y: auto; margin-top: 18px; display: flex; flex-direction: column; gap: 12px; padding-inline-end: 6px; }
   .help-entry { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
   .help-entry__name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .help-entry__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
   .help-entry__line { font-size: 13px; line-height: 1.55; color: var(--fg); margin-top: 4px; }
   .help-entry__label { color: var(--fg-muted); font-weight: 600; }
 

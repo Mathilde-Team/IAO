@@ -50,6 +50,8 @@
      l'ordonnanceur peut proposer la restauration depuis son instantané. -->
 <script src="lib/local-storage-json.js"></script>
 <script src="lib/comptes-serie.js"></script>
+<script src="lib/service-icons.js"></script>
+<script src="lib/services-actifs.js"></script>
 <script src="lib/taches-runner.js"></script>
 <!-- Helpers purs de l'interface des tâches programmables (issue #199, lot 4).
      Conversions datetime-local <-> ISO et descriptions, testés par node --test
@@ -148,11 +150,13 @@
     <button class="btn btn--icon" data-action="ui-openDevToolsMenu" title="Outils de développement (Ctrl+Maj+I)"><span class="ic" data-icon="bug"></span></button>
     <!-- Issue #187 : relance en mode debug (masqué quand le mode debug est déjà actif). -->
     <button class="btn btn--icon" id="btnRelaunchDebug" data-action="ui-relaunchDebug" title="Redémarrer en mode debug (journal détaillé)"><span class="ic" data-icon="arrow-rotate-right"></span></button>
+    <!-- Issue #317 : redémarrage en mode normal (aussi pour quitter le mode debug). -->
+    <button class="btn btn--icon" id="btnRelaunch" data-action="ui-relaunch" title="Redémarrer IAO"><span class="ic" data-icon="right-from-bracket"></span></button>
     <div class="flex-1"></div>
     <div class="flex-row-gap-8">
       <!-- Aide « Comprendre les IA disponibles » : dans la barre du workspace
            (toujours visible, même sidebar repliée), à l'écart des boutons de vue. -->
-      <button class="btn btn--icon" data-action="ui-openServicesModal" title="Choisir mes 9 IA à portée de main"><span class="ic" data-icon="columns"></span></button>
+      <button class="btn btn--icon" data-action="ui-openServicesModal" title="Choisir mes IA à portée de main"><span class="ic" data-icon="columns"></span></button>
       <button class="btn btn--icon" data-action="ui-openHelpModal" title="Comprendre les IA disponibles"><span class="ic" data-icon="circle-question"></span></button>
       <!-- Issue #206 : statistiques d'utilisation (locales, sans télémétrie). -->
       <button class="btn btn--icon" data-action="ui-openStatsModal" title="Statistiques d'utilisation"><span class="ic" data-icon="chart-simple"></span></button>
@@ -298,8 +302,8 @@
      services qu'il veut voir dans l'interface principale. -->
 <div class="modal-overlay" id="servicesModal">
   <div class="modal modal--help">
-    <div class="modal__title">Choisir mes 9 IA à portée de main</div>
-    <div class="modal__subtitle">Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide.</div>
+    <div class="modal__title">Choisir mes IA à portée de main</div>
+    <div class="modal__subtitle">Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide.</div>
     <div class="help-list" id="servicesList"></div>
     <div class="modal__actions">
       <button class="btn" data-action="ui-closeServicesModal">Annuler</button>

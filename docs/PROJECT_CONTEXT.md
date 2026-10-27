@@ -266,6 +266,11 @@ sursolliciter toujours le même compte.
   - **Registre de jobs persistant** dans `<userData>/scheduler/` : `jobs.json` (source de vérité) +
     `jobs.csv` (export, régénéré à chaque écriture), `config.json`, `accounts-snapshot.json`,
     `activity.json` (journal, 500 dernières entrées).
+  - **Copie complète des comptes** (issue #311) : `<userData>/comptes-sauvegarde.json`, écrite à
+    chaque `syncAccounts` (fichier temporaire puis renommage), format exact de l'export. Au
+    démarrage sans compte, `reportStartupAccounts` la propose en priorité (`accountsFromBackup`),
+    l'instantané partiel `accounts-snapshot.json` seulement à défaut ; l'interface restaure par
+    `importAccountsJSON`, le même chemin que le bouton « Importer ».
   - **Détection des téléchargements** : pour chaque profil connu (reçu via `syncAccounts`),
     `session.fromPartition('persist:<profil>').on('will-download', ...)` — si le fichier se termine
     en `.zip` **et que l'ordonnanceur est activé**, crée un job `DOWNLOADING` puis le fait passer à
@@ -402,6 +407,14 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Logo (`.app-brand__icon`) : dégradé **rose → violet** (`var(--rose)` → `var(--accent)`).
 - Stats : « Comptes actifs » en violet, « IA disponibles » en rose.
 - Les couleurs de marque des IA (Claude/ChatGPT/Gemini/Perplexity/Grok) sont **conservées** pour la reconnaissance ; Z.ai est violet et s'intègre au thème ; Leonardo AI est magenta (`--leonardo: #d946ef`), distinct du violet Z.ai et du rose du thème. Suno est **orange-rouge** (`--suno: #f8441b` — sa marque officielle est noir/blanc, on reprend le pôle orange du dégradé signature rose→orange de son app, le rose étant trop proche de Leonardo) ; Meshy AI est **vert lime** (`--meshy: #c5f955`, couleur dominante relevée sur meshy.ai).
+- **Logos des IA** (issue #324) : `lib/service-icons.js` (`iconeService(id, nom)`, SVG inline,
+  tracés Lobe Icons MIT et Simple Icons CC0, revalidés avant rendu) affiche le logo officiel
+  devant le nom dans les boutons des cartes, la fenêtre « Comprendre les IA », la fenêtre de
+  choix des IA et chaque onglet. Les boutons des cartes ont désormais une **couleur standard**
+  (fond neutre du thème) : le logo suffit à reconnaître le service. Un onglet = logo + nom du
+  compte (le service est dans l'infobulle). Logos monochromes en `currentColor` (lisibles en
+  sombre et en clair), Gemini, Kling, Wolfram et NotebookLM teintés par `--<service>`. Leonardo AI
+  et Elicit (pas de logo libre) : initiale du nom sur la pastille de couleur du service.
 - Polices et icônes **désormais 100% locales** (`assets/fonts/` + `assets/icons.js`) — plus aucune dépendance Internet pour l'ossature visuelle. Monaco est local. Les `@font-face` sont dans le `<style>` d'`index.html` avec des chemins **relatifs** (valables en dev ET en `.exe`).
 
 ## 9. Comportements par défaut importants
@@ -450,6 +463,20 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Notifications quand un cooldown se termine.
 
 ## 13. Dernières évolutions
+
+### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
+
+- `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans
+  privilèges, partition `persist:<profil>`, et s'y connecte avec le mot de passe du coffre.
+- `lib/webmail-codes.js` : `creerReleveur` (créé par fenêtre, actif seulement sur l'hôte du
+  webmail, arrêté à la fermeture) exécute toutes les 10 s `scriptReleve(apresUid)` dans la
+  page (`_action=list` puis `_action=viewsource`, jeton `rcmail.env.request_token`) ;
+  `analyserMail` garde les mails d'un domaine de service connu (`DOMAINES`), récents
+  (15 min), et en extrait le code à 6 chiffres et le lien de connexion du même service.
+- `creerFileConnexions` + canal `webmail:attendre` (attente longue 25 s) : le renderer
+  (`boucleConnexionsWebmail`, `afficherConnexionWebmail`) affiche le bandeau `.tab-code` au
+  début de `.tab-toolbar` de l'onglet (compte par profil, service), ouvre le lien après 3 s
+  sauf Annuler. Ni le code ni le lien ne sont journalisés.
 
 ### Stockage : un localStorage cassé ne tue plus le renderer (issues #52/#186, 25/10/2026)
 

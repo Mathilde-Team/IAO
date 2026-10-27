@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "디버그 모드로 다시 시작 (상세 로그)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "자주 쓰는 AI 9개 선택"
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "닫기"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "인터페이스에 표시할 서비스 9개를 선택하세요. 나머지는 도움말에서 계속 사용할 수 있습니다."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "계정을 저장할 수 없습니다 (저장 공간 부족?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S로 저장합니다."
 
@@ -891,16 +903,12 @@ msgid "Description à venir."
 msgstr "설명 준비 중."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "자주 쓰는 서비스는 최대 {max}개"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "서비스를 하나 이상 선택하세요"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "서비스 업데이트됨 ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1009,6 +1017,38 @@ msgstr "클립보드에 복사할 수 없음"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "이메일 복사됨: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1882,8 +1922,8 @@ msgid "Comptes retrouvés"
 msgstr "계정 발견됨"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "시작 시 읽은 계정은 없지만 스케줄러가 {count}개를 알고 있습니다. 복원할까요? 서비스 세션은 유지되며, 이메일 주소는 「계정 수정」에서 채워야 합니다."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"
