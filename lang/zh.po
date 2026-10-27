@@ -815,6 +815,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "返回 {service} 首页"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "退出配置文件“{profile}”的登录"
 
@@ -849,6 +853,14 @@ msgstr "已加星标"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "已取消星标"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"
