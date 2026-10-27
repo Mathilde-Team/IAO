@@ -390,11 +390,11 @@ async function run() {
       document.getElementById('inputEmail').value = 'c319@example.com';
       document.getElementById('inputProfile').value = 'profil_319';
       saveAccount();
-      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : comptes dans profils.json
       const c = comptes.find(a => a.profile === 'profil_319');
       const services = c ? c.services.join(',') : null;
       if (c) {
-        localStorage.setItem('ai_accounts', JSON.stringify(comptes.filter(a => a.profile !== 'profil_319')));
+        window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'profil_319'));
       }
       localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
       return services;
