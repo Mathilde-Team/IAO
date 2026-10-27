@@ -451,6 +451,20 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 
 ## 13. Dernières évolutions
 
+### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
+
+- `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans
+  privilèges, partition `persist:<profil>`, et s'y connecte avec le mot de passe du coffre.
+- `lib/webmail-codes.js` : `creerReleveur` (créé par fenêtre, actif seulement sur l'hôte du
+  webmail, arrêté à la fermeture) exécute toutes les 10 s `scriptReleve(apresUid)` dans la
+  page (`_action=list` puis `_action=viewsource`, jeton `rcmail.env.request_token`) ;
+  `analyserMail` garde les mails d'un domaine de service connu (`DOMAINES`), récents
+  (15 min), et en extrait le code à 6 chiffres et le lien de connexion du même service.
+- `creerFileConnexions` + canal `webmail:attendre` (attente longue 25 s) : le renderer
+  (`boucleConnexionsWebmail`, `afficherConnexionWebmail`) affiche le bandeau `.tab-code` au
+  début de `.tab-toolbar` de l'onglet (compte par profil, service), ouvre le lien après 3 s
+  sauf Annuler. Ni le code ni le lien ne sont journalisés.
+
 ### Stockage : un localStorage cassé ne tue plus le renderer (issues #52/#186, 25/10/2026)
 
 Défaut démontré par analyse des captures de #52 : si l'accès au localStorage
