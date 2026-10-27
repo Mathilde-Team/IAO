@@ -548,6 +548,26 @@ ipc.handle('accounts:disconnect-profile', async (event, profile) => {
   }
 });
 
+// --- Issue #331 : préférences de l'interface dans <userData>/preferences.json ---
+// Canaux SYNCHRONES (ipcRenderer.sendSync, preload.js). Seules les clés de
+// lib/preferences.js CLES sont gardées ; jamais de valeur dans le journal.
+const preferences = require('./lib/preferences');
+
+ipc.on('preferences:lire', (event) => {
+  const r = preferences.lireAvecCles(app.getPath('userData'), { fs, path });
+  if (r.status === 'ok') debug('preferences', preferences.NOM_FICHIER + ' lu : ' + Object.keys(r.preferences).length + ' clé(s).');
+  else if (r.status === 'absent') debug('preferences', preferences.NOM_FICHIER + ' absent (premier démarrage ou migration).');
+  else log('preferences', 'error', preferences.NOM_FICHIER + ' illisible (' + r.status + ') : ' + r.erreur);
+  event.returnValue = r;
+});
+
+ipc.on('preferences:ecrire', (event, prefs) => {
+  const r = preferences.ecrirePreferences(app.getPath('userData'), prefs, { fs, path });
+  if (r.ok) debug('preferences', preferences.NOM_FICHIER + ' écrit : ' + r.cles + ' clé(s).');
+  else log('preferences', 'error', 'échec de l\'écriture de ' + preferences.NOM_FICHIER + ' : ' + r.erreur);
+  event.returnValue = r;
+});
+
 // --- IPC pour les réglages utilisateur (lot 18/09/2026, FEATURES.md P2) ---
 // Persistance dans <userData>/settings.json. La normalisation/validation est
 // faite côté renderer via lib/settings.js (fonctions pures testées).

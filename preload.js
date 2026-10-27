@@ -13,6 +13,8 @@
 // Il expose une API MINIMALE via contextBridge.exposeInMainWorld :
 //   window.iaoAPI.ipcInvoke(channel, ...args)  → ipcRenderer.invoke
 //   window.iaoAPI.resolveMonacoBase()          → URL absolue de Monaco
+//   window.iaoAPI.preferencesLire()            → préférences de preferences.json (#331)
+//   window.iaoAPI.preferencesEcrire(prefs)     → écriture de preferences.json (#331)
 //
 // Aucun autre accès Node n'est exposé : le renderer ne peut appeler QUE
 // les canaux IPC whitelistés par le process principal (main.js).
@@ -25,6 +27,12 @@ contextBridge.exposeInMainWorld('iaoAPI', {
   // Aucune exposition de ipcRenderer.on/send/removeListener — l'app
   // n'utilise que invoke (requête/réponse, jamais push du main vers renderer).
   ipcInvoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+
+  // Issue #331 : préférences de l'interface dans <userData>/preferences.json.
+  // Canaux SYNCHRONES fixes : lues avant de dessiner l'interface, écrites
+  // avant que l'appelant rende la main.
+  preferencesLire: () => ipcRenderer.sendSync('preferences:lire'),
+  preferencesEcrire: (prefs) => ipcRenderer.sendSync('preferences:ecrire', prefs),
 
   // URL absolue (file:///…/node_modules/monaco-editor/min/vs) du dossier
   // Monaco, calculée depuis l'URL de la page avec l'API URL standard (pas
