@@ -86,8 +86,8 @@ msgid "Redémarrer IAO"
 msgstr ""
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "手元に置く 9 つの AI を選ぶ"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -218,8 +218,8 @@ msgid "Fermer"
 msgstr "閉じる"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "画面に表示する 9 つのサービスを選んでください。その他はヘルプから利用できます。"
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -891,16 +891,12 @@ msgid "Description à venir."
 msgstr "説明は準備中です。"
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "手元に置けるサービスは最大 {max} 個です"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "サービスを 1 つ以上選んでください"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "サービスを更新しました（{count}/{max}）"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

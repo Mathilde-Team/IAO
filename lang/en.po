@@ -84,8 +84,8 @@ msgid "Redémarrer IAO"
 msgstr "Restart IAO"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Choose my 9 go-to AIs"
+msgid "Choisir mes IA à portée de main"
+msgstr "Choose my go-to AIs"
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -216,8 +216,8 @@ msgid "Fermer"
 msgstr "Close"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Select the 9 services shown in the interface. The others remain available in the help."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr "Tick the AIs shown in the interface, as many as you like (at least one). The others remain available in the help."
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -890,16 +890,12 @@ msgid "Description à venir."
 msgstr "Description coming soon."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "At most {max} services at hand"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Select at least 1 service"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Services updated ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr "Go-to AIs: {count}"
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

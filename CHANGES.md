@@ -104,6 +104,20 @@
 - Tests : `test/main-window-security.test.js`, `test/startup-diagnostics.test.js`, scénarios
   Electron C6.5 et C8.3 ; catalogues mis à jour (en, de, es, it traduits).
 
+## Issue #319 — choix des IA : de 1 à n, plus de cumul au redémarrage (26/10/2026)
+
+### Corrigé
+- Après un changement de la sélection « mes 9 IA à portée de main », le démarrage
+  **ajoutait** les services actifs à ceux de chaque compte : on retrouvait les 9 anciens plus
+  les nouveaux. Les services d'un compte sont désormais exactement la sélection active, dans
+  son ordre (`lib/services-actifs.js`, pur, 100 %), au démarrage comme dès l'enregistrement de
+  la sélection. Les cooldowns sont conservés.
+- Un compte créé (fenêtre « Ajouter un compte » ou création en série) recevait tout le
+  catalogue (21 services) au lieu de la sélection active.
+- Plus de plafond à 9 (demande de l'issue) : on choisit de 1 à toutes les IA (« Choisir mes IA
+  à portée de main ») ; libellés et catalogues mis à jour (en, de, es, it traduits).
+- Tests : `test/services-actifs.test.js`, scénarios Electron C1.6 et C1.7.
+
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté

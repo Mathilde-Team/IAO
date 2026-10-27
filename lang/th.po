@@ -86,8 +86,8 @@ msgid "Redémarrer IAO"
 msgstr ""
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "เลือก AI 9 ตัวที่ใช้บ่อยของฉัน"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -218,8 +218,8 @@ msgid "Fermer"
 msgstr "ปิด"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "เลือก 9 บริการที่แสดงในอินเทอร์เฟซ บริการอื่นยังใช้ได้จากส่วนช่วยเหลือ"
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -891,16 +891,12 @@ msgid "Description à venir."
 msgstr "คำอธิบายจะมีเร็วๆ นี้"
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "สูงสุด {max} บริการที่ใช้บ่อย"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "เลือกอย่างน้อย 1 บริการ"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "อัปเดตบริการแล้ว ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
