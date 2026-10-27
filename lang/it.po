@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Riavvia in modalità debug (registro dettagliato)"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr "Riavvia IAO"
+
+#: index.html
 msgid "Choisir mes 9 IA à portée de main"
 msgstr "Scegli le mie 9 IA a portata di mano"
 
@@ -740,6 +744,14 @@ msgstr "Alternativa gratuita per chat, codice e analisi di immagini, con buon su
 #: assets/app.js
 msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Impossibile salvare gli account (spazio esaurito?)"
+
+#: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr "Riaprire le schede precedenti?"
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr "Schede aperte alla chiusura di IAO: {n}. Riaprirle?"
 
 #: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
