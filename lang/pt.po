@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Reiniciar em modo de depuração (registo detalhado)"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes IA à portée de main"
 msgstr ""
 
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Não foi possível guardar as contas (armazenamento cheio?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S para guardar."
 
@@ -998,6 +1010,38 @@ msgstr "Não foi possível copiar para a área de transferência"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "E-mail copiado: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1882,8 +1926,8 @@ msgid "Comptes retrouvés"
 msgstr "Contas reencontradas"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "No arranque não foi lida nenhuma conta, mas o planificador conhece {count}. Restaurá-las? As sessões dos serviços são conservadas; os endereços de e-mail devem ser completados em «Editar a conta»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

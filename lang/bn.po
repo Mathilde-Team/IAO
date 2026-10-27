@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "ডিবাগ মোডে পুনরায় চালু করুন (বিস্তারিত লগ)"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes IA à portée de main"
 msgstr ""
 
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "অ্যাকাউন্ট সংরক্ষণ করা যায়নি (স্টোরেজ পূর্ণ?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "সংরক্ষণ করতে Ctrl+S।"
 
@@ -998,6 +1010,38 @@ msgstr "ক্লিপবোর্ডে কপি করা যায়নি
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "ইমেল কপি হয়েছে: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1882,8 +1926,8 @@ msgid "Comptes retrouvés"
 msgstr "অ্যাকাউন্ট পাওয়া গেছে"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "চালুর সময় কোনো অ্যাকাউন্ট পড়া যায়নি, তবে সময়সূচক {count}টি অ্যাকাউন্ট জানে। সেগুলো পুনরুদ্ধার করবেন? পরিষেবার সেশন রাখা আছে; ইমেল ঠিকানা «অ্যাকাউন্ট সম্পাদনা» থেকে পূরণ করতে হবে।"
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

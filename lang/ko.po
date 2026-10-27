@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "디버그 모드로 다시 시작 (상세 로그)"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes IA à portée de main"
 msgstr ""
 
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "계정을 저장할 수 없습니다 (저장 공간 부족?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S로 저장합니다."
 
@@ -993,6 +1005,38 @@ msgstr "클립보드에 복사할 수 없음"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "이메일 복사됨: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1866,8 +1910,8 @@ msgid "Comptes retrouvés"
 msgstr "계정 발견됨"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "시작 시 읽은 계정은 없지만 스케줄러가 {count}개를 알고 있습니다. 복원할까요? 서비스 세션은 유지되며, 이메일 주소는 「계정 수정」에서 채워야 합니다."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

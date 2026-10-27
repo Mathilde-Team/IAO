@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Reiniciar en modo depuración (registro detallado)"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr "Reiniciar IAO"
+
+#: index.html
 msgid "Choisir mes IA à portée de main"
 msgstr "Elegir mis IA a mano"
 
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "No se pudieron guardar las cuentas (¿almacenamiento lleno?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr "¿Volver a abrir las pestañas anteriores?"
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr "Pestañas abiertas al cerrar IAO: {n}. ¿Volver a abrirlas?"
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S para guardar."
 
@@ -998,6 +1010,38 @@ msgstr "No se pudo copiar al portapapeles"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "Correo copiado: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr "Código de {service} para {account}: {code}"
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr "Código recibido por correo:"
+
+#: assets/app.js
+msgid "Copier"
+msgstr "Copiar"
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr "Abrir el enlace de inicio de sesión"
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr "Enlace de inicio de sesión abierto"
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr "Inicio de sesión automático en {seconds} s"
+
+#: assets/app.js
+msgid "Code copié"
+msgstr "Código copiado"
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr "Inicio de sesión automático cancelado"
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1882,8 +1926,8 @@ msgid "Comptes retrouvés"
 msgstr "Cuentas encontradas"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "Al inicio no se leyó ninguna cuenta, pero el planificador conoce {count}. ¿Restaurarlas? Las sesiones de los servicios se conservan; las direcciones de correo se completan desde «Editar la cuenta»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr "No se leyó ninguna cuenta al iniciar, pero IAO guardó una copia ({count} cuenta(s)). ¿Restaurarlas? Es la misma operación que importar un archivo de exportación: se conservan las cuentas, las direcciones y las sesiones de los servicios."
 
 #: assets/app.js
 msgid "Ignorer"
