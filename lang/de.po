@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Im Debug-Modus neu starten (detailliertes Protokoll)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Meine 9 KI-Dienste griffbereit auswählen"
+msgid "Redémarrer IAO"
+msgstr "IAO neu starten"
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr "Meine griffbereiten KIs auswählen"
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "Schließen"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Wählen Sie die 9 Dienste, die in der Oberfläche angezeigt werden. Die übrigen bleiben in der Hilfe verfügbar."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr "Wählen Sie die in der Oberfläche angezeigten KIs, so viele Sie möchten (mindestens eine). Die anderen bleiben in der Hilfe verfügbar."
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Konten konnten nicht gespeichert werden (Speicher voll?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr "Vorherige Tabs wieder öffnen?"
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr "Beim Schließen von IAO geöffnete Tabs: {n}. Wieder öffnen?"
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Strg+S zum Speichern."
 
@@ -880,16 +892,12 @@ msgid "Description à venir."
 msgstr "Beschreibung folgt."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Maximal {max} Dienste griffbereit"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Wählen Sie mindestens 1 Dienst"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Dienste aktualisiert ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr "Griffbereite KIs: {count}"
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1002,6 +1010,38 @@ msgstr "Kopieren in die Zwischenablage nicht möglich"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "E-Mail-Adresse kopiert: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr "{service}-Code für {account}: {code}"
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr "Per E-Mail erhaltener Code:"
+
+#: assets/app.js
+msgid "Copier"
+msgstr "Kopieren"
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr "Anmeldelink öffnen"
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr "Anmeldelink geöffnet"
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr "Automatische Anmeldung in {seconds} s"
+
+#: assets/app.js
+msgid "Code copié"
+msgstr "Code kopiert"
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr "Automatische Anmeldung abgebrochen"
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1886,8 +1926,8 @@ msgid "Comptes retrouvés"
 msgstr "Konten gefunden"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "Beim Start wurde kein Konto gelesen, aber der Planer kennt {count}. Wiederherstellen? Die Dienst-Sitzungen bleiben erhalten; die E-Mail-Adressen sind über „Konto bearbeiten“ zu ergänzen."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr "Beim Start wurde kein Konto gelesen, aber IAO hat eine Kopie behalten ({count} Konto/Konten). Wiederherstellen? Es ist derselbe Vorgang wie das Importieren einer Exportdatei: Konten, Adressen und Dienst-Sitzungen bleiben erhalten."
 
 #: assets/app.js
 msgid "Ignorer"

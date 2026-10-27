@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "以调试模式重启（详细日志）"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "选择常用的 9 个 AI"
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "关闭"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "选择界面中显示的 9 个服务。其他服务仍可在帮助中使用。"
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "无法保存账户（存储空间已满？）"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "按 Ctrl+S 保存。"
 
@@ -879,16 +891,12 @@ msgid "Description à venir."
 msgstr "描述即将补充。"
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "最多 {max} 个常用服务"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "请至少选择 1 个服务"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "服务已更新（{count}/{max}）"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -997,6 +1005,38 @@ msgstr "无法复制到剪贴板"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "已复制邮箱：{email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1870,8 +1910,8 @@ msgid "Comptes retrouvés"
 msgstr "已找回账户"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "启动时未读取到任何账户，但调度器记录了 {count} 个。要恢复它们吗？各服务的会话会保留；邮箱地址需通过“编辑账户”补全。"
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

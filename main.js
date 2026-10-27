@@ -32,6 +32,8 @@ const diag = require('./lib/startup-diagnostics');
 const DEBUG = diag.isDebugEnabled(process.argv, process.env);
 const debugTrace = require('./lib/debug-trace');
 const { CoffreSecrets, registerComptesIPC } = require('./lib/coffre-secrets');
+const { creerOuvreurWebmail } = require('./lib/webmail-connexion');
+const { creerFileConnexions } = require('./lib/webmail-codes');
 const { IdentifiantsPartages, registerIdentifiantsIPC } = require('./lib/identifiants');
 const focusIdentifiants = require('./lib/identifiants-focus');
 const startupStorage = require('./lib/startup-storage');
@@ -376,12 +378,29 @@ ipc.handle('app:is-debug', () => DEBUG);
 // d'erreur de démarrage, bouton de la barre du workspace). Réservé à la fenêtre
 // principale, comme app:toggle-devtools. app.relaunch() n'arrête pas l'app :
 // app.exit(0) ensuite (documentation Electron, app.relaunch).
-ipc.handle('app:relaunch-debug', (event) => {
+// Issue #317 : app.exit() n'attend pas que Chromium écrive le localStorage
+// (comptes, onglets ouverts) ; les comptes créés juste avant la relance étaient
+// perdus. Le stockage de la fenêtre principale est donc écrit avant de relancer.
+// « Redémarrer IAO » (app:relaunch) relance en mode normal, même depuis le mode
+// debug : options et variable IAO_DEBUG retirées.
+function relancer(event, args, motif) {
   if (!mainWindow || event.sender !== mainWindow.webContents) return false;
-  log('demarrage', 'info', 'Relance en mode debug demandée depuis l\'interface.');
-  app.relaunch({ args: diag.debugRelaunchArgs(process.argv) });
+  log('demarrage', 'info', motif);
+  try {
+    event.sender.session.flushStorageData();
+    debug('demarrage', 'stockage de la fenêtre principale écrit avant relance');
+  } catch (e) {
+    log('demarrage', 'warning', 'Écriture du stockage avant relance impossible (' + e.message + ').');
+  }
+  app.relaunch({ args });
   app.exit(0);
   return true;
+}
+ipc.handle('app:relaunch-debug', (event) =>
+  relancer(event, diag.debugRelaunchArgs(process.argv), 'Relance en mode debug demandée depuis l\'interface.'));
+ipc.handle('app:relaunch', (event) => {
+  delete process.env.IAO_DEBUG; // hérité par le process relancé
+  return relancer(event, diag.normalRelaunchArgs(process.argv), 'Relance en mode normal demandée depuis l\'interface.');
 });
 
 // Issue #187 : chemin du journal, affiché dans le bandeau d'erreur.
@@ -557,6 +576,7 @@ ipc.handle('settings:save', async (event, rawSettings) => {
 });
 
 // --- Issue #201 : mots de passe de messagerie (chiffrés) et webmail ---
+const connexionsWebmail = creerFileConnexions();
 registerComptesIPC(ipc, {
   coffre: new CoffreSecrets({
     fichier: path.join(app.getPath('userData'), 'secrets.json'),
@@ -566,8 +586,16 @@ registerComptesIPC(ipc, {
   fichierReglages: settingsPath,
   normaliser: normalizeSettings,
   fsPromises,
-  ouvrirExterne: shell.openExternal.bind(shell)
+  ouvrirExterne: shell.openExternal.bind(shell),
+  // Issue #310 : webmail connecté au compte, dans une fenêtre sans privilèges.
+  ouvrirWebmail: creerOuvreurWebmail({
+    BrowserWindow, journal: log.bind(null, 'webmail'), debug: debug.bind(null, 'webmail'),
+    signaler: connexionsWebmail.ajouter
+  })
 });
+// Issue #310 (relecture) : codes et liens de connexion relevés dans le webmail,
+// lus par l'interface en attente longue (le preload n'expose pas ipcRenderer.on).
+ipc.handle('webmail:attendre', connexionsWebmail.attendre);
 
 // --- Identifiants partagés entre profils (issue #278) ---
 // Coffre d'identifiants de connexion (login + mot de passe, chiffrés par le

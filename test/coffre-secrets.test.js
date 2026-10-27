@@ -93,10 +93,12 @@ test('registerComptesIPC : coffre, webmail des réglages seulement, erreurs conv
   const { coffre, fichier } = creer(t, { dispo: true });
   const reglages = path.join(path.dirname(fichier), 'settings.json');
   const ouverts = [];
+  const webmails = [];
   const h = {};
   registerComptesIPC({ handle: (c, fn) => { h[c] = fn; } }, {
     coffre, fichierReglages: reglages, normaliser: normalizeSettings,
-    fsPromises: fs.promises, ouvrirExterne: async (u) => { ouverts.push(u); }
+    fsPromises: fs.promises, ouvrirExterne: async (u) => { ouverts.push(u); },
+    ouvrirWebmail: (o) => { webmails.push(o); }
   });
   assert.equal(await h['secrets:available'](null), true);
   assert.deepEqual(await h['secrets:set'](null, 'p', 'v'), { ok: true });
@@ -106,6 +108,16 @@ test('registerComptesIPC : coffre, webmail des réglages seulement, erreurs conv
   fs.writeFileSync(reglages, JSON.stringify({ webmailUrl: 'https://mail.dmathilde.fr' }));
   assert.equal(await h['app:open-webmail'](null, 'https://evil.example'), true);
   assert.deepEqual(ouverts, ['https://mail.dmathilde.fr/']);
+  // Issue #310 : compte valide -> fenêtre connectée, mot de passe lu dans le coffre,
+  // toujours sur l'URL des réglages (une URL du renderer est ignorée).
+  coffre.definir('docker1', 'mdp');
+  assert.equal(await h['app:open-webmail'](null, { profil: 'docker1', email: 'a@b.fr', url: 'https://evil.example' }), true);
+  assert.equal(await h['app:open-webmail'](null, { profil: 'docker2', email: 'c@b.fr' }), true);
+  assert.deepEqual(webmails, [
+    { url: 'https://mail.dmathilde.fr/', profil: 'docker1', email: 'a@b.fr', motDePasse: 'mdp' },
+    { url: 'https://mail.dmathilde.fr/', profil: 'docker2', email: 'c@b.fr', motDePasse: null }
+  ]);
+  assert.equal(ouverts.length, 1);
   coffre.lire = () => { throw new Error('boum'); };
   assert.deepEqual(await h['secrets:get'](null, 'p'), { error: 'boum' });
   coffre.lire = () => { throw 'brut'; }; // eslint-disable-line no-throw-literal
