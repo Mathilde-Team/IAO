@@ -26,6 +26,10 @@
 - Tests : `test/scheduler-page-prete.test.js`, script d'écriture exécuté en bac à sable
   (`test/claude-integration.test.js`), scénarios Electron C13.2 (éditeur type ProseMirror) et
   C13.3 ; catalogues mis à jour (en, de, es, it traduits).
+- Relecture : le bouton « Outils de développement » de la barre du haut ouvre un **second
+  menu** quand un onglet d'IA est actif : « Fenêtre IAO » ou « Page de l'IA : <service> —
+  <compte> » (`openDevToolsMenu`), sans exiger le mode debug ; sans onglet actif, il ouvre
+  directement ceux de la fenêtre IAO. Ctrl+Maj+I inchangé. Scénario Electron C13.4.
 
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 

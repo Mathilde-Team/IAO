@@ -843,6 +843,14 @@ msgid "Étoile retirée"
 msgstr "별표 해제됨"
 
 #: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
+
+#: assets/app.js
 msgid "Échec de la déconnexion du profil"
 msgstr "프로필 로그아웃 실패"
 

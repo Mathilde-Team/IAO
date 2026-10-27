@@ -845,6 +845,14 @@ msgid "Étoile retirée"
 msgstr "Stea eliminată"
 
 #: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
+
+#: assets/app.js
 msgid "Échec de la déconnexion du profil"
 msgstr "Deconectarea profilului a eșuat"
 

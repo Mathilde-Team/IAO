@@ -844,6 +844,14 @@ msgid "Étoile retirée"
 msgstr "Stella rimossa"
 
 #: assets/app.js
+msgid "Fenêtre IAO"
+msgstr "Finestra IAO"
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr "Pagina dell'IA: {service} — {compte}"
+
+#: assets/app.js
 msgid "Échec de la déconnexion du profil"
 msgstr "Disconnessione del profilo non riuscita"
 

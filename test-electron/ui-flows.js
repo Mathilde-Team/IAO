@@ -490,7 +490,7 @@ async function run() {
     assert(r.brand === 'IAO', 'nom de l\'app absent de la barre : ' + r.brand);
     const i = r.actions.indexOf('ui-toggleIdePanel');
     assert(r.actions.indexOf('ui-toggleExplorer') >= 0 && i >= 0, 'Explorateur/Éditeur absents : ' + r.actions);
-    assert(r.actions[i + 1] === 'ui-toggleDevTools', 'outils de dév. pas à côté de l\'Éditeur : ' + r.actions);
+    assert(r.actions[i + 1] === 'ui-openDevToolsMenu', 'outils de dév. pas à côté de l\'Éditeur : ' + r.actions);
     assert(r.ancien === false, 'ancien en-tête encore présent dans la barre latérale');
   });
 
@@ -1389,6 +1389,35 @@ async function run() {
     })()`);
     assert(r.existe, 'bouton tab-devtools absent de la barre d\'onglet');
     assert(r.visible === r.debug, 'visibilité incohérente avec le mode debug : ' + JSON.stringify(r));
+  });
+
+  await test('C13.4 Outils de développement : second menu fenêtre IAO / page de l\'IA, hors mode debug (#320)', async () => {
+    // Un onglet d'IA est actif (C13) : le bouton de la barre ouvre le menu.
+    const menu = await exec(`(() => {
+      document.querySelector('[data-action="ui-openDevToolsMenu"]').click();
+      const m = document.getElementById('devtoolsMenu');
+      return m ? [...m.querySelectorAll('[data-ctx-action]')].map(e => e.getAttribute('data-ctx-action') + '=' + e.textContent.trim()) : null;
+    })()`);
+    assert(menu && menu.length === 2 && menu[0].startsWith('devtools-iao=') && /^devtools-onglet=.+ — /.test(menu[1]), 'menu : ' + JSON.stringify(menu));
+    const wvId = await exec(`(() => {
+      document.querySelector('#devtoolsMenu [data-ctx-action="devtools-onglet"]').click();
+      const t = document.querySelector('#tabsBar .tab--active');
+      const wv = document.querySelector('#tabsContent .tab-pane.active webview') || document.querySelector('#tabsContent webview');
+      return { ferme: document.getElementById('devtoolsMenu') === null, id: wv ? wv.getWebContentsId() : null, tab: !!t };
+    })()`);
+    assert(wvId.ferme && wvId.id, 'menu non refermé ou webview absente : ' + JSON.stringify(wvId));
+    const { webContents } = require('electron');
+    const wc = webContents.fromId(wvId.id);
+    for (let i = 0; i < 30 && !wc.isDevToolsOpened(); i++) await sleep(100);
+    assert(wc.isDevToolsOpened(), 'outils de développement de la page de l\'IA non ouverts');
+    assert(!win.webContents.isDevToolsOpened(), 'outils de la fenêtre IAO ouverts à tort');
+    wc.closeDevTools();
+    // Entrée « Fenêtre IAO » : ceux de la fenêtre principale.
+    await exec(`document.querySelector('[data-action="ui-openDevToolsMenu"]').click(); document.querySelector('#devtoolsMenu [data-ctx-action="devtools-iao"]').click(); 'ok'`);
+    for (let i = 0; i < 30 && !win.webContents.isDevToolsOpened(); i++) await sleep(100);
+    assert(win.webContents.isDevToolsOpened(), 'outils de la fenêtre IAO non ouverts');
+    await exec('window.toggleDevTools()');
+    for (let i = 0; i < 30 && win.webContents.isDevToolsOpened(); i++) await sleep(100);
   });
 
   // =========================================================================

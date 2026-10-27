@@ -844,6 +844,14 @@ msgid "Étoile retirée"
 msgstr "तारा हटाया गया"
 
 #: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
+
+#: assets/app.js
 msgid "Échec de la déconnexion du profil"
 msgstr "प्रोफ़ाइल डिस्कनेक्ट करना विफल"
 

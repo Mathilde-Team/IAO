@@ -1188,9 +1188,16 @@
     // (champ qui a le focus, sélecteurs) ; ceux de la fenêtre principale
     // n'inspectent pas l'intérieur des <webview>.
     function toggleTabDevTools(tabId) {
+      if (!debugMode) return false;
+      return basculerDevToolsOnglet(tabId);
+    }
+
+    // Issue #320 (relecture) : outils de développement de la page de l'IA,
+    // sans exiger le mode debug (comme ceux de la fenêtre IAO).
+    function basculerDevToolsOnglet(tabId) {
       const tab = tabs.find(t => t.id === tabId);
       const webview = tab && tab.paneEl.querySelector('webview');
-      if (!webview || !debugMode) return false;
+      if (!webview) return false;
       try {
         if (webview.isDevToolsOpened()) webview.closeDevTools();
         else webview.openDevTools();
@@ -1201,6 +1208,49 @@
         return false;
       }
     }
+
+    // Issue #320 (relecture) : le bouton « outils de développement » de la barre
+    // du haut ouvre un second menu quand un onglet d'IA est actif : la fenêtre
+    // IAO ou la page de l'IA (pour voir quel champ a le focus). Sans onglet
+    // actif, il bascule directement ceux de la fenêtre IAO, comme avant.
+    window.openDevToolsMenu = function() {
+      const tab = tabs.find(t => t.id === activeTabId);
+      if (!tab || !tab.paneEl.querySelector('webview')) return window.toggleDevTools();
+      const svc = SERVICES.find(s => s.id === tab.svcId);
+      const acc = accounts.find(a => a.id === tab.accId);
+      closeContextMenu();
+      ctxMenuEl = document.createElement('div');
+      ctxMenuEl.className = 'ctx-menu';
+      ctxMenuEl.id = 'devtoolsMenu';
+      ctxMenuEl.innerHTML = `
+        <div class="ctx-menu__item" data-ctx-action="devtools-iao">
+          <span class="ic" data-icon="bug"></span>
+          <span>${escapeHtml(_('Fenêtre IAO'))}</span>
+        </div>
+        <div class="ctx-menu__item" data-ctx-action="devtools-onglet">
+          <span class="ic" data-icon="bug"></span>
+          <span>${escapeHtml(_('Page de l\'IA : {service} — {compte}', { service: svc ? svc.name : tab.svcId, compte: acc ? acc.name : '' }))}</span>
+        </div>
+      `;
+      document.body.appendChild(ctxMenuEl);
+      hydrateIcons(ctxMenuEl);
+      const btn = document.querySelector('[data-action="ui-openDevToolsMenu"]');
+      const ancre = btn ? btn.getBoundingClientRect() : { left: 0, bottom: 0 };
+      const rect = ctxMenuEl.getBoundingClientRect();
+      ctxMenuEl.style.left = Math.max(4, Math.min(ancre.left, window.innerWidth - rect.width - 4)) + 'px';
+      ctxMenuEl.style.top = (ancre.bottom + 4) + 'px';
+      const tabId = tab.id;
+      ctxMenuEl.addEventListener('click', (ev) => {
+        const item = ev.target.closest('[data-ctx-action]');
+        if (!item) return;
+        const action = item.getAttribute('data-ctx-action');
+        closeContextMenu();
+        dbg('onglet', 'menu des outils de développement :', action);
+        if (action === 'devtools-iao') window.toggleDevTools();
+        else basculerDevToolsOnglet(tabId);
+      });
+      return 'menu';
+    };
 
     function tabGoHome(tabId) {
       const tab = tabs.find(t => t.id === tabId);
@@ -3541,7 +3591,7 @@ const UI_ACTIONS = {
   'ui-toggleAllCards': 'toggleAllCards',
   'ui-toggleExplorer': 'toggleExplorer',
   'ui-toggleIdePanel': 'toggleIdePanel',
-  'ui-toggleDevTools': 'toggleDevTools',
+  'ui-openDevToolsMenu': 'openDevToolsMenu',
   'ui-relaunchDebug': 'relaunchDebug',
   'ui-openPalette': 'openPalette',
   'ui-openModal': 'openModal',

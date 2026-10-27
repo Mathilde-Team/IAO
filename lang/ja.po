@@ -843,6 +843,14 @@ msgid "Étoile retirée"
 msgstr "スターを外しました"
 
 #: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
+
+#: assets/app.js
 msgid "Échec de la déconnexion du profil"
 msgstr "プロファイルのログアウトに失敗しました"
 
