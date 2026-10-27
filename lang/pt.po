@@ -138,16 +138,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Nenhum separador aberto — escolha um serviço na lista de contas"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "O perfil permite isolar os cookies no Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Nome da conta"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Nome do perfil"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

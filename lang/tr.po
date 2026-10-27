@@ -138,16 +138,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Açık sekme yok — hesap listesinden bir hizmet seçin"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Profil, Electron'da çerezleri yalıtmayı sağlar."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Hesap adı"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Profil adı"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

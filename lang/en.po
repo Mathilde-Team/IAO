@@ -136,16 +136,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "No open tab — pick a service in the account list"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "The profile keeps cookies isolated in Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Account name"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Profile name"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

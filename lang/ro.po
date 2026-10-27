@@ -138,16 +138,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Nicio filă deschisă — alegeți un serviciu din lista de conturi"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Profilul permite izolarea cookie-urilor în Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Numele contului"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Numele profilului"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

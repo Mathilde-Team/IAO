@@ -138,16 +138,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "没有打开的标签页 — 请在账户列表中选择一个服务"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "配置文件用于在 Electron 中隔离 Cookie。"
-
-#: index.html
 msgid "Nom du compte"
 msgstr "账户名称"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "配置文件名称"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

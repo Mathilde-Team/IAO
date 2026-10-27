@@ -138,16 +138,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "ไม่มีแท็บที่เปิดอยู่ — เลือกบริการจากรายการบัญชี"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "โปรไฟล์ช่วยแยกคุกกี้ใน Electron"
-
-#: index.html
 msgid "Nom du compte"
 msgstr "ชื่อบัญชี"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "ชื่อโปรไฟล์"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

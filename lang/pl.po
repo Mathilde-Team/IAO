@@ -138,16 +138,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Brak otwartych kart — wybierz usługę z listy kont"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Profil pozwala odizolować pliki cookie w Electronie."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Nazwa konta"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Nazwa profilu"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

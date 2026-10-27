@@ -1,5 +1,15 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #333 — le nom de profil n'est plus saisi ni affiché (27/10/2026)
+
+### Modifié
+- Le formulaire de compte ne demande plus de « Nom du Profil » : à la création, le profil Electron est tiré du nom du compte (`lib/profil-compte.js` : sans accents, minuscules, `[a-z0-9_-]`, 64 caractères au plus, rendu unique par suffixe `_2`, `_3`…).
+- Un compte modifié garde son profil (ses cookies et sessions y sont rangés) ; les anciens comptes sans profil en reçoivent un au démarrage.
+- La carte d'un compte n'affiche plus le profil ; l'ordonnanceur, l'historique des tâches et les messages présentent un compte par « nom - adresse mail ».
+- Création en série : le profil vaut le numéro du compte (`profil_<n>` si déjà pris).
+
+### Tests
+- `test/profil-compte.test.js`, `test/comptes-serie.test.js` ; harnais : C9.1b et contrôle du libellé dans C10.
 ## Issue #311 (relecture du 27/10/2026) — comptes dans `profils.json` (27/10/2026)
 
 ### Modifié

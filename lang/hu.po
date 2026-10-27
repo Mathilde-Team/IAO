@@ -138,16 +138,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Nincs megnyitott lap — válasszon szolgáltatást a fióklistából"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "A profil lehetővé teszi a sütik elkülönítését az Electronban."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Fiók neve"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Profil neve"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
