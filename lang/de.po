@@ -46,6 +46,10 @@ msgid "Importer des comptes (JSON)"
 msgstr "Konten importieren (JSON)"
 
 #: index.html
+msgid "Sauvegarde complète"
+msgstr "Vollständige Sicherung"
+
+#: index.html
 msgid "Ajouter un compte"
 msgstr "Konto hinzufügen"
 
@@ -202,6 +206,42 @@ msgid "Remplacer et importer"
 msgstr "Ersetzen und importieren"
 
 #: index.html
+msgid "Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas."
+msgstr "Konten, Anmeldesitzungen, Einstellungen, Statistiken und gespeicherte Passwörter in einer ZIP-Datei. Caches, Protokolle und HAR-Aufzeichnungen sind nicht enthalten."
+
+#: index.html
+msgid "Mot de passe de la sauvegarde"
+msgstr "Passwort der Sicherung"
+
+#: index.html
+msgid "Confirmer le mot de passe"
+msgstr "Passwort bestätigen"
+
+#: index.html
+msgid "Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer."
+msgstr "Mindestens 8 Zeichen. Es verschlüsselt die gespeicherten Passwörter in der Sicherung und wird bei der Wiederherstellung abgefragt."
+
+#: index.html
+msgid "Fermer"
+msgstr "Schließen"
+
+#: index.html
+msgid "Restaurer une sauvegarde"
+msgstr "Sicherung wiederherstellen"
+
+#: index.html
+msgid "Sauvegarder"
+msgstr "Sichern"
+
+#: index.html
+msgid "Restaurer une sauvegarde complète"
+msgstr "Vollständige Sicherung wiederherstellen"
+
+#: index.html
+msgid "Restaurer et redémarrer"
+msgstr "Wiederherstellen und neu starten"
+
+#: index.html
 msgid "Déconnecter le profil"
 msgstr "Profil abmelden"
 
@@ -212,10 +252,6 @@ msgstr "Abmelden"
 #: index.html
 msgid "À quoi sert chaque service, et quand l'utiliser."
 msgstr "Wozu jeder Dienst dient und wann man ihn verwendet."
-
-#: index.html
-msgid "Fermer"
-msgstr "Schließen"
 
 #: index.html
 msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
@@ -946,6 +982,56 @@ msgstr[1] "{count} Konten importiert"
 #: assets/app.js
 msgid "Échec de l'import : {error}"
 msgstr "Import fehlgeschlagen: {error}"
+
+#: assets/app.js
+msgid "Un mot de passe d'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés."
+msgstr "Ein Passwort mit mindestens 8 Zeichen ist erforderlich: Es sind Passwörter gespeichert."
+
+#: assets/app.js
+msgid "Mot de passe de la sauvegarde incorrect."
+msgstr "Falsches Passwort der Sicherung."
+
+#: assets/app.js
+msgid "Ce fichier n'est pas une sauvegarde complète d'IAO."
+msgstr "Diese Datei ist keine vollständige IAO-Sicherung."
+
+#: assets/app.js
+msgid "Échec : {error}"
+msgstr "Fehlgeschlagen: {error}"
+
+#: assets/app.js
+msgid "Les deux mots de passe sont différents."
+msgstr "Die beiden Passwörter stimmen nicht überein."
+
+#: assets/app.js
+msgid "Au moins 8 caractères."
+msgstr "Mindestens 8 Zeichen."
+
+#: assets/app.js
+msgid "Sauvegarde en cours…"
+msgstr "Sicherung läuft…"
+
+#: assets/app.js
+msgid "{count} fichier sauvegardé"
+msgid_plural "{count} fichiers sauvegardés"
+msgstr[0] "{count} Datei gesichert"
+msgstr[1] "{count} Dateien gesichert"
+
+#: assets/app.js
+msgid "Sauvegarde complète enregistrée"
+msgstr "Vollständige Sicherung gespeichert"
+
+#: assets/app.js
+msgid "Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d'IAO (comptes, sessions, réglages, statistiques) puis redémarre l'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données."
+msgstr "Sicherung vom {date}, {count} Datei(en). Die Wiederherstellung ERSETZT alle IAO-Daten (Konten, Sitzungen, Einstellungen, Statistiken) und startet die Anwendung neu. Die aktuellen Daten bleiben in einem Ordner avant-restauration im Datenordner erhalten."
+
+#: assets/app.js
+msgid "Restauration en cours…"
+msgstr "Wiederherstellung läuft…"
+
+#: assets/app.js
+msgid "Redémarrage…"
+msgstr "Neustart…"
 
 #: assets/app.js
 msgid "Compte supprimé"

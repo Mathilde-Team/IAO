@@ -44,6 +44,10 @@ msgid "Importer des comptes (JSON)"
 msgstr "Import accounts (JSON)"
 
 #: index.html
+msgid "Sauvegarde complète"
+msgstr "Full backup"
+
+#: index.html
 msgid "Ajouter un compte"
 msgstr "Add an account"
 
@@ -200,6 +204,42 @@ msgid "Remplacer et importer"
 msgstr "Replace and import"
 
 #: index.html
+msgid "Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas."
+msgstr "Accounts, login sessions, settings, statistics and saved passwords, in a ZIP file. Caches, logs and HAR captures are not included."
+
+#: index.html
+msgid "Mot de passe de la sauvegarde"
+msgstr "Backup password"
+
+#: index.html
+msgid "Confirmer le mot de passe"
+msgstr "Confirm password"
+
+#: index.html
+msgid "Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer."
+msgstr "At least 8 characters. It encrypts the saved passwords in the backup and will be asked for when restoring it."
+
+#: index.html
+msgid "Fermer"
+msgstr "Close"
+
+#: index.html
+msgid "Restaurer une sauvegarde"
+msgstr "Restore a backup"
+
+#: index.html
+msgid "Sauvegarder"
+msgstr "Back up"
+
+#: index.html
+msgid "Restaurer une sauvegarde complète"
+msgstr "Restore a full backup"
+
+#: index.html
+msgid "Restaurer et redémarrer"
+msgstr "Restore and restart"
+
+#: index.html
 msgid "Déconnecter le profil"
 msgstr "Sign out the profile"
 
@@ -210,10 +250,6 @@ msgstr "Sign out"
 #: index.html
 msgid "À quoi sert chaque service, et quand l'utiliser."
 msgstr "What each service is for, and when to use it."
-
-#: index.html
-msgid "Fermer"
-msgstr "Close"
 
 #: index.html
 msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
@@ -944,6 +980,56 @@ msgstr[1] "{count} accounts imported"
 #: assets/app.js
 msgid "Échec de l'import : {error}"
 msgstr "Import failed: {error}"
+
+#: assets/app.js
+msgid "Un mot de passe d'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés."
+msgstr "A password of at least 8 characters is required: passwords are saved."
+
+#: assets/app.js
+msgid "Mot de passe de la sauvegarde incorrect."
+msgstr "Incorrect backup password."
+
+#: assets/app.js
+msgid "Ce fichier n'est pas une sauvegarde complète d'IAO."
+msgstr "This file is not a full IAO backup."
+
+#: assets/app.js
+msgid "Échec : {error}"
+msgstr "Failed: {error}"
+
+#: assets/app.js
+msgid "Les deux mots de passe sont différents."
+msgstr "The two passwords do not match."
+
+#: assets/app.js
+msgid "Au moins 8 caractères."
+msgstr "At least 8 characters."
+
+#: assets/app.js
+msgid "Sauvegarde en cours…"
+msgstr "Backing up…"
+
+#: assets/app.js
+msgid "{count} fichier sauvegardé"
+msgid_plural "{count} fichiers sauvegardés"
+msgstr[0] "{count} file backed up"
+msgstr[1] "{count} files backed up"
+
+#: assets/app.js
+msgid "Sauvegarde complète enregistrée"
+msgstr "Full backup saved"
+
+#: assets/app.js
+msgid "Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d'IAO (comptes, sessions, réglages, statistiques) puis redémarre l'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données."
+msgstr "Backup from {date}, {count} file(s). Restoring REPLACES all IAO data (accounts, sessions, settings, statistics) and then restarts the application. The current data is kept in an avant-restauration folder of the data folder."
+
+#: assets/app.js
+msgid "Restauration en cours…"
+msgstr "Restoring…"
+
+#: assets/app.js
+msgid "Redémarrage…"
+msgstr "Restarting…"
 
 #: assets/app.js
 msgid "Compte supprimé"

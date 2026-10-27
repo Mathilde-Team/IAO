@@ -1,5 +1,36 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #329 — sauvegarde complète et restauration (27/10/2026)
+
+### Ajouté
+- Bouton « Sauvegarde complète » dans la barre du haut : ZIP du dossier de données
+  (`ai-manager`), sans caches de Chromium, verrous, journaux, captures HAR ni
+  fichiers temporaires.
+- Mots de passe (`secrets.json`, `identifiants.json`) : déchiffrés par le trousseau
+  puis rechiffrés avec le mot de passe de la sauvegarde (scrypt N=2^15, AES-256-GCM)
+  dans `iao-secrets.json` ; jamais en clair sur le disque ni dans le journal. Mot de
+  passe d'au moins 8 caractères exigé dès qu'un mot de passe est enregistré.
+- « Restaurer une sauvegarde » : manifeste, chemins et mot de passe vérifiés avant
+  toute extraction, mots de passe rechiffrés par le trousseau de la machine, données
+  préparées dans `restauration-en-attente` puis appliquées au redémarrage, avant
+  l'ouverture des sessions. Les données remplacées vont dans
+  `avant-restauration-<date>` (seule la dernière est gardée) ; un échec défait les
+  déplacements.
+- `lib/ecriture-zip.js` (écriture ZIP sans dépendance, relue par `lib/lecture-zip.js`),
+  `lib/sauvegarde.js` (sauvegarde, restauration, canaux `sauvegarde:creer`,
+  `sauvegarde:choisir`, `sauvegarde:restaurer`).
+
+### Testé
+- `test/ecriture-zip.test.js`, `test/sauvegarde.test.js` (aller-retour vers une autre
+  machine, mot de passe faux, archives refusées, échec en cours de restauration),
+  `test/main-accounts.test.js` (restauration au démarrage) ; harnais C16.1 et C16.2.
+
+### Limites
+- Pas de ZIP64 : 4 Go et 65 534 fichiers au plus.
+- Les fichiers de Chromium sont copiés pendant que l'application tourne.
+- Les cookies restent chiffrés par Chromium : sur un autre ordinateur ou un autre
+  compte, il faudra se reconnecter aux IA.
+
 ## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
 
 ### Ajouté

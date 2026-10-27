@@ -46,6 +46,12 @@ msgid "Importer des comptes (JSON)"
 msgstr "Importovat účty (JSON)"
 
 #: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "Smazat účet"
+
+#: index.html
 msgid "Ajouter un compte"
 msgstr "Přidat účet"
 
@@ -202,6 +208,54 @@ msgid "Remplacer et importer"
 msgstr "Nahradit a importovat"
 
 #: index.html
+msgid "Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas."
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "Heslo k e-mailu"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "Zobrazit heslo"
+
+#: index.html
+msgid "Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer."
+msgstr ""
+
+#: index.html
+msgid "Fermer"
+msgstr "Zavřít"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde"
+msgstr "Obnovit zálohu"
+
+#: index.html
+#, fuzzy
+#| msgid "Ctrl+S pour sauvegarder."
+msgid "Sauvegarder"
+msgstr "Ctrl+S pro uložení."
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "Obnovit zálohu"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Restaurer et redémarrer"
+msgstr "Obnovit otevřené karty při spuštění"
+
+#: index.html
 msgid "Déconnecter le profil"
 msgstr "Odhlásit profil"
 
@@ -212,10 +266,6 @@ msgstr "Odhlásit"
 #: index.html
 msgid "À quoi sert chaque service, et quand l'utiliser."
 msgstr "K čemu slouží jednotlivé služby a kdy je použít."
-
-#: index.html
-msgid "Fermer"
-msgstr "Zavřít"
 
 #: index.html
 msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
@@ -949,6 +999,66 @@ msgstr[2] "{count} účtů importováno"
 #: assets/app.js
 msgid "Échec de l'import : {error}"
 msgstr "Import se nezdařil: {error}"
+
+#: assets/app.js
+msgid "Un mot de passe d'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés."
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect."
+msgstr "Heslo k e-mailu"
+
+#: assets/app.js
+msgid "Ce fichier n'est pas une sauvegarde complète d'IAO."
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de l'import : {error}"
+msgid "Échec : {error}"
+msgstr "Import se nezdařil: {error}"
+
+#: assets/app.js
+msgid "Les deux mots de passe sont différents."
+msgstr ""
+
+#: assets/app.js
+msgid "Au moins 8 caractères."
+msgstr ""
+
+#: assets/app.js
+msgid "Sauvegarde en cours…"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "{count} compte restauré"
+#| msgid_plural "{count} comptes restaurés"
+msgid "{count} fichier sauvegardé"
+msgid_plural "{count} fichiers sauvegardés"
+msgstr[0] "{count} účet obnoven"
+msgstr[1] "{count} účty obnoveny"
+msgstr[2] "{count} účtů obnoveno"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Comptes enregistrés"
+msgid "Sauvegarde complète enregistrée"
+msgstr "Uložené účty"
+
+#: assets/app.js
+msgid "Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d'IAO (comptes, sessions, réglages, statistiques) puis redémarre l'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données."
+msgstr ""
+
+#: assets/app.js
+msgid "Restauration en cours…"
+msgstr ""
+
+#: assets/app.js
+msgid "Redémarrage…"
+msgstr ""
 
 #: assets/app.js
 msgid "Compte supprimé"

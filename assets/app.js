@@ -1641,6 +1641,99 @@
         showToast(_('Échec de l\'import : {error}', { error: e.message || e }), 'error');
       }
     }
+    // Issue #329 : sauvegarde complète (ZIP du dossier de données) et
+    // restauration. Le mot de passe ne fait que passer : jamais gardé, jamais
+    // journalisé ; les champs sont vidés à la fermeture des modales.
+    const MESSAGES_SAUVEGARDE = {
+      'mot-de-passe-requis': () => _('Un mot de passe d\'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés.'),
+      'mot-de-passe-incorrect': () => _('Mot de passe de la sauvegarde incorrect.'),
+      'archive-invalide': () => _('Ce fichier n\'est pas une sauvegarde complète d\'IAO.')
+    };
+    function messageSauvegarde(res) {
+      const m = res && MESSAGES_SAUVEGARDE[res.code];
+      return m ? m() : _('Échec : {error}', { error: (res && res.erreur) || '?' });
+    }
+    function viderChampsSauvegarde() {
+      ['sauvegardeMotDePasse', 'sauvegardeConfirmation', 'restaurationMotDePasse'].forEach((id) => {
+        document.getElementById(id).value = '';
+      });
+    }
+    window.openSauvegardeModal = function() {
+      viderChampsSauvegarde();
+      document.getElementById('sauvegardeEtat').textContent = '';
+      document.getElementById('sauvegardeModal').classList.add('open');
+    }
+    window.closeSauvegardeModal = function() {
+      viderChampsSauvegarde();
+      document.getElementById('sauvegardeModal').classList.remove('open');
+    }
+    window.creerSauvegarde = async function() {
+      const etat = document.getElementById('sauvegardeEtat');
+      const motDePasse = document.getElementById('sauvegardeMotDePasse').value;
+      if (motDePasse !== document.getElementById('sauvegardeConfirmation').value) {
+        etat.textContent = _('Les deux mots de passe sont différents.');
+        return;
+      }
+      if (motDePasse !== '' && motDePasse.length < 8) {
+        etat.textContent = _('Au moins 8 caractères.');
+        return;
+      }
+      const bouton = document.getElementById('btnCreerSauvegarde');
+      bouton.disabled = true;
+      etat.textContent = _('Sauvegarde en cours…');
+      try {
+        const res = await ipcRenderer.invoke('sauvegarde:creer', motDePasse);
+        if (res && res.canceled) { etat.textContent = ''; return; }
+        if (!res || !res.ok) { etat.textContent = messageSauvegarde(res); return; }
+        etat.textContent = _n('{count} fichier sauvegardé', '{count} fichiers sauvegardés', res.fichiers, { count: res.fichiers });
+        viderChampsSauvegarde();
+        showToast(_('Sauvegarde complète enregistrée'));
+      } catch (e) {
+        console.error('[sauvegarde] création impossible :', e);
+        etat.textContent = _('Échec : {error}', { error: e.message || e });
+      } finally {
+        bouton.disabled = false;
+      }
+    }
+    window.choisirRestauration = async function() {
+      try {
+        const res = await ipcRenderer.invoke('sauvegarde:choisir');
+        if (res && res.canceled) return;
+        if (!res || !res.ok) { document.getElementById('sauvegardeEtat').textContent = messageSauvegarde(res); return; }
+        document.getElementById('restaurationDesc').textContent =
+          _('Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d\'IAO (comptes, sessions, réglages, statistiques) puis redémarre l\'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données.',
+            { date: new Date(res.date).toLocaleString(), count: res.fichiers });
+        document.getElementById('restaurationMotDePasseBloc').hidden = !res.motDePasseRequis;
+        document.getElementById('restaurationEtat').textContent = '';
+        document.getElementById('restaurationModal').classList.add('open');
+      } catch (e) {
+        console.error('[sauvegarde] choix de l\'archive impossible :', e);
+        document.getElementById('sauvegardeEtat').textContent = _('Échec : {error}', { error: e.message || e });
+      }
+    }
+    window.closeRestaurationModal = function() {
+      document.getElementById('restaurationMotDePasse').value = '';
+      document.getElementById('restaurationModal').classList.remove('open');
+    }
+    window.confirmerRestauration = async function() {
+      const etat = document.getElementById('restaurationEtat');
+      const bouton = document.getElementById('btnConfirmerRestauration');
+      bouton.disabled = true;
+      etat.textContent = _('Restauration en cours…');
+      try {
+        const res = await ipcRenderer.invoke('sauvegarde:restaurer', document.getElementById('restaurationMotDePasse').value);
+        if (!res || !res.ok) { etat.textContent = messageSauvegarde(res); return; }
+        viderChampsSauvegarde();
+        etat.textContent = _('Redémarrage…');
+        await window.relaunchNormal();
+      } catch (e) {
+        console.error('[sauvegarde] restauration impossible :', e);
+        etat.textContent = _('Échec : {error}', { error: e.message || e });
+      } finally {
+        bouton.disabled = false;
+      }
+    }
+
     window.confirmDelete = function() {
       const id = document.getElementById('deleteId').value;
       accounts = accounts.filter(a => a.id !== id);
@@ -3681,6 +3774,12 @@ const UI_ACTIONS = {
   'ui-resetStats': 'resetStats',
   'ui-exportAccountsToFile': 'exportAccountsToFile',
   'ui-importAccountsFromFile': 'importAccountsFromFile',
+  'ui-openSauvegardeModal': 'openSauvegardeModal',
+  'ui-closeSauvegardeModal': 'closeSauvegardeModal',
+  'ui-creerSauvegarde': 'creerSauvegarde',
+  'ui-choisirRestauration': 'choisirRestauration',
+  'ui-closeRestaurationModal': 'closeRestaurationModal',
+  'ui-confirmerRestauration': 'confirmerRestauration',
   'ui-selectLocalFolder': 'selectLocalFolder',
   'ui-closeModal': 'closeModal',
   'ui-saveAccount': 'saveAccount',

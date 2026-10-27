@@ -1897,6 +1897,85 @@ async function run() {
   });
 
   // =========================================================================
+  // C16 — Sauvegarde complète et restauration (issue #329)
+  // =========================================================================
+  console.log('\n--- C16 : Sauvegarde complète (#329) ---');
+  const zipC16 = path.join(app.getPath('userData'), '..', 'sauvegarde-c16.zip');
+
+  await test('C16.1 Sauvegarde complète : contrôle des mots de passe, ZIP sans caches ni journaux (#329)', async () => {
+    const { dialog } = require('electron');
+    const lectureZip = require(path.join(__dirname, '..', 'lib', 'lecture-zip.js'));
+    const origine = dialog.showSaveDialog;
+    dialog.showSaveDialog = async () => ({ canceled: false, filePath: zipC16 });
+    try {
+      const bouton = await exec(`!!document.querySelector('[data-action="ui-openSauvegardeModal"]')`);
+      assert(bouton, 'bouton « Sauvegarde complète » absent de la barre');
+      const differents = await exec(`(async () => {
+        window.openSauvegardeModal();
+        document.getElementById('sauvegardeMotDePasse').value = 'mot-de-passe-c16';
+        document.getElementById('sauvegardeConfirmation').value = 'autre';
+        await window.creerSauvegarde();
+        return document.getElementById('sauvegardeEtat').textContent;
+      })()`);
+      assert(/différents/.test(differents), 'mots de passe différents non signalés : ' + differents);
+      const r = await exec(`(async () => {
+        document.getElementById('sauvegardeConfirmation').value = 'mot-de-passe-c16';
+        await window.creerSauvegarde();
+        return { etat: document.getElementById('sauvegardeEtat').textContent,
+          vide: document.getElementById('sauvegardeMotDePasse').value === '' };
+      })()`);
+      assert(/sauvegardé/.test(r.etat), 'état après la sauvegarde : ' + r.etat);
+      assert(r.vide, 'le mot de passe doit être effacé du champ après la sauvegarde');
+      const fd = fs.openSync(zipC16, 'r');
+      let noms;
+      try { noms = lectureZip.lireEntrees(lectureZip.lecteurDeFichier(fd, fs)).map((e) => e.nom); }
+      finally { fs.closeSync(fd); }
+      assert(noms[0] === 'iao-sauvegarde.json', 'manifeste en tête : ' + noms[0]);
+      assert(noms.some((n) => n.startsWith('donnees/stats/')), 'statistiques absentes de la sauvegarde');
+      const interdits = noms.filter((n) => /^donnees\/(logs|har)\//.test(n) || /\/(Cache|Code Cache|GPUCache)\//.test(n) || /Singleton/.test(n));
+      assert(interdits.length === 0, 'fichiers exclus présents : ' + interdits.slice(0, 5).join(', '));
+      await exec(`window.closeSauvegardeModal(); 'ok'`);
+    } finally {
+      dialog.showSaveDialog = origine;
+    }
+  });
+
+  await test('C16.2 Restauration : archive vérifiée, données préparées pour le redémarrage (#329)', async () => {
+    const { dialog } = require('electron');
+    const origine = dialog.showOpenDialog;
+    const attente = path.join(app.getPath('userData'), 'restauration-en-attente');
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [zipC16] });
+    try {
+      const r = await exec(`(async () => {
+        window.__relanceC16 = false;
+        const relance = window.relaunchNormal;
+        window.relaunchNormal = async () => { window.__relanceC16 = true; };
+        try {
+          window.openSauvegardeModal();
+          await window.choisirRestauration();
+          const ouverte = document.getElementById('restaurationModal').classList.contains('open');
+          const desc = document.getElementById('restaurationDesc').textContent;
+          await window.confirmerRestauration();
+          return { ouverte, desc, relance: window.__relanceC16, etat: document.getElementById('restaurationEtat').textContent };
+        } finally {
+          window.relaunchNormal = relance;
+          window.closeRestaurationModal();
+          window.closeSauvegardeModal();
+        }
+      })()`);
+      assert(r.ouverte, 'fenêtre de restauration non ouverte');
+      assert(/REMPLACE/.test(r.desc), 'avertissement absent : ' + r.desc);
+      assert(r.relance, 'redémarrage non demandé : ' + r.etat);
+      assert(fs.existsSync(path.join(attente, 'settings.json')) || fs.readdirSync(attente).length > 0, 'restauration en attente vide');
+    } finally {
+      dialog.showOpenDialog = origine;
+      // Le harnais ne redémarre pas : rien ne doit être appliqué au prochain lancement.
+      fs.rmSync(attente, { recursive: true, force: true });
+      fs.rmSync(zipC16, { force: true });
+    }
+  });
+
+  // =========================================================================
   // Nettoyage
   // =========================================================================
   etapeCourante = 'résumé et nettoyage';

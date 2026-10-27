@@ -39,6 +39,7 @@ const focusIdentifiants = require('./lib/identifiants-focus');
 const startupStorage = require('./lib/startup-storage');
 const stats = require('./lib/stats');
 const har = require('./lib/har');
+const sauvegarde = require('./lib/sauvegarde');
 const LOG_DIR = path.join(app.getPath('userData'), 'logs');
 const LOG_FILE = path.join(LOG_DIR, 'iao.log');
 const LOG_MAX_BYTES = 1024 * 1024;
@@ -90,6 +91,15 @@ if (!gotSingleInstanceLock) {
   app.quit();
 } else {
   prepareLogFile();
+  // Issue #329 : une restauration préparée à la session précédente remplace
+  // les données ICI, avant que Chromium n'ouvre le moindre profil.
+  const restauration = sauvegarde.appliquerRestauration(app.getPath('userData'), new Date(), { fs, path });
+  if (restauration.status === 'appliquee') {
+    log('sauvegarde', 'info', 'Sauvegarde complète restaurée : ' + restauration.restaures + ' élément(s) ; anciennes données dans ' + restauration.avant + '.');
+  } else if (restauration.status === 'erreur') {
+    log('sauvegarde', 'error', 'Restauration impossible, données laissées en place (' + restauration.defaits + '/' + restauration.aDefaire +
+      ' déplacement(s) défait(s)) : ' + restauration.erreur);
+  }
   app.on('second-instance', () => {
     log('demarrage', 'info', 'Seconde instance demandée : mise au premier plan de la fenêtre existante.');
     if (mainWindow) {
@@ -609,6 +619,19 @@ const identifiantsPartages = new IdentifiantsPartages({
   journal: log.bind(null, 'identifiants')
 });
 registerIdentifiantsIPC(ipc, { identifiants: identifiantsPartages });
+
+// --- Issue #329 : sauvegarde complète du dossier de données et restauration ---
+// Mots de passe déchiffrés par le trousseau puis rechiffrés avec le mot de
+// passe de la sauvegarde (et l'inverse à la restauration) : lib/sauvegarde.js.
+sauvegarde.registerSauvegardeIPC({
+  ipc, dialog,
+  fenetre: () => mainWindow,
+  dossier: app.getPath('userData'),
+  chiffreur: safeStorage,
+  version: app.getVersion(),
+  journal: (niveau, message) => (niveau === 'debug' ? debug('sauvegarde', message) : log('sauvegarde', niveau, message)),
+  deps: { fs, path, crypto: require('crypto') }
+});
 
 // --- Issue #278, lot 2 : menu d'identifiants au focus d'un champ de connexion ---
 // lib/identifiants-preload.js est posé sur CHAQUE session (webviews ET popups

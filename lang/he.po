@@ -46,6 +46,12 @@ msgid "Importer des comptes (JSON)"
 msgstr "ייבוא חשבונות (JSON)"
 
 #: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "מחיקת החשבון"
+
+#: index.html
 msgid "Ajouter un compte"
 msgstr "הוספת חשבון"
 
@@ -202,6 +208,54 @@ msgid "Remplacer et importer"
 msgstr "החלפה וייבוא"
 
 #: index.html
+msgid "Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas."
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "סיסמת הדואר"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "הצגת הסיסמה"
+
+#: index.html
+msgid "Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer."
+msgstr ""
+
+#: index.html
+msgid "Fermer"
+msgstr "סגירה"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde"
+msgstr "שחזור הגיבוי"
+
+#: index.html
+#, fuzzy
+#| msgid "Ctrl+S pour sauvegarder."
+msgid "Sauvegarder"
+msgstr "Ctrl+S לשמירה."
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "שחזור הגיבוי"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Restaurer et redémarrer"
+msgstr "שחזור הכרטיסיות הפתוחות בהפעלה"
+
+#: index.html
 msgid "Déconnecter le profil"
 msgstr "ניתוק הפרופיל"
 
@@ -212,10 +266,6 @@ msgstr "ניתוק"
 #: index.html
 msgid "À quoi sert chaque service, et quand l'utiliser."
 msgstr "למה משמש כל שירות, ומתי להשתמש בו."
-
-#: index.html
-msgid "Fermer"
-msgstr "סגירה"
 
 #: index.html
 msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
@@ -946,6 +996,65 @@ msgstr[1] "{count} חשבונות יובאו"
 #: assets/app.js
 msgid "Échec de l'import : {error}"
 msgstr "הייבוא נכשל: {error}"
+
+#: assets/app.js
+msgid "Un mot de passe d'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés."
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect."
+msgstr "סיסמת הדואר"
+
+#: assets/app.js
+msgid "Ce fichier n'est pas une sauvegarde complète d'IAO."
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de l'import : {error}"
+msgid "Échec : {error}"
+msgstr "הייבוא נכשל: {error}"
+
+#: assets/app.js
+msgid "Les deux mots de passe sont différents."
+msgstr ""
+
+#: assets/app.js
+msgid "Au moins 8 caractères."
+msgstr ""
+
+#: assets/app.js
+msgid "Sauvegarde en cours…"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "{count} compte restauré"
+#| msgid_plural "{count} comptes restaurés"
+msgid "{count} fichier sauvegardé"
+msgid_plural "{count} fichiers sauvegardés"
+msgstr[0] "{count} חשבון שוחזר"
+msgstr[1] "{count} חשבונות שוחזרו"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Comptes enregistrés"
+msgid "Sauvegarde complète enregistrée"
+msgstr "חשבונות שמורים"
+
+#: assets/app.js
+msgid "Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d'IAO (comptes, sessions, réglages, statistiques) puis redémarre l'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données."
+msgstr ""
+
+#: assets/app.js
+msgid "Restauration en cours…"
+msgstr ""
+
+#: assets/app.js
+msgid "Redémarrage…"
+msgstr ""
 
 #: assets/app.js
 msgid "Compte supprimé"

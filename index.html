@@ -125,6 +125,7 @@
       <button class="btn btn--icon" id="btnToggleAllCards" data-action="ui-toggleAllCards" title="Tout replier / Tout déplier"><span class="ic" data-icon="chevron-down"></span></button>
       <button class="btn btn--icon" data-action="ui-exportAccountsToFile" title="Exporter les comptes (JSON)"><span class="ic" data-icon="file-arrow-up"></span></button>
       <button class="btn btn--icon" data-action="ui-importAccountsFromFile" title="Importer des comptes (JSON)"><span class="ic" data-icon="file-arrow-down"></span></button>
+      <button class="btn btn--icon" data-action="ui-openSauvegardeModal" title="Sauvegarde complète"><span class="ic" data-icon="folder-open"></span></button>
       <button class="btn btn--icon" data-action="ui-openModal" title="Ajouter un compte"><span class="ic" data-icon="plus"></span></button>
       <button class="btn btn--icon" data-action="ui-openSerieModal" title="Créer des comptes en série"><span class="ic" data-icon="users"></span></button>
     </div>
@@ -263,6 +264,47 @@
     <div class="modal__actions">
       <button class="btn" data-action="ui-closeImportConfirm">Annuler</button>
       <button class="btn btn--danger" data-action="ui-confirmImport">Remplacer et importer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Issue #329 : sauvegarde complète du dossier de données (ZIP) et
+     restauration. Les mots de passe enregistrés sont rechiffrés avec le mot de
+     passe de la sauvegarde (lib/sauvegarde.js, process principal). -->
+<div class="modal-overlay" id="sauvegardeModal">
+  <div class="modal">
+    <div class="modal__title">Sauvegarde complète</div>
+    <div class="modal__desc">Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas.</div>
+    <div class="form-group">
+      <label class="form-label" for="sauvegardeMotDePasse">Mot de passe de la sauvegarde</label>
+      <input class="form-input" id="sauvegardeMotDePasse" type="password" autocomplete="new-password" spellcheck="false">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="sauvegardeConfirmation">Confirmer le mot de passe</label>
+      <input class="form-input" id="sauvegardeConfirmation" type="password" autocomplete="new-password" spellcheck="false">
+      <span class="settings-hint">Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer.</span>
+    </div>
+    <div class="modal__desc" id="sauvegardeEtat" role="status"></div>
+    <div class="modal__actions">
+      <button class="btn" data-action="ui-closeSauvegardeModal">Fermer</button>
+      <button class="btn" data-action="ui-choisirRestauration">Restaurer une sauvegarde</button>
+      <button class="btn btn--primary" id="btnCreerSauvegarde" data-action="ui-creerSauvegarde">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="restaurationModal">
+  <div class="modal">
+    <div class="modal__title">Restaurer une sauvegarde complète</div>
+    <div class="modal__desc" id="restaurationDesc"></div>
+    <div class="form-group" id="restaurationMotDePasseBloc">
+      <label class="form-label" for="restaurationMotDePasse">Mot de passe de la sauvegarde</label>
+      <input class="form-input" id="restaurationMotDePasse" type="password" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="modal__desc" id="restaurationEtat" role="status"></div>
+    <div class="modal__actions">
+      <button class="btn" data-action="ui-closeRestaurationModal">Annuler</button>
+      <button class="btn btn--danger" id="btnConfirmerRestauration" data-action="ui-confirmerRestauration">Restaurer et redémarrer</button>
     </div>
   </div>
 </div>

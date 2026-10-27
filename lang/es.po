@@ -46,6 +46,10 @@ msgid "Importer des comptes (JSON)"
 msgstr "Importar cuentas (JSON)"
 
 #: index.html
+msgid "Sauvegarde complète"
+msgstr "Copia de seguridad completa"
+
+#: index.html
 msgid "Ajouter un compte"
 msgstr "Añadir una cuenta"
 
@@ -202,6 +206,42 @@ msgid "Remplacer et importer"
 msgstr "Reemplazar e importar"
 
 #: index.html
+msgid "Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas."
+msgstr "Cuentas, sesiones iniciadas, ajustes, estadísticas y contraseñas guardadas, en un archivo ZIP. No incluye cachés, registros ni capturas HAR."
+
+#: index.html
+msgid "Mot de passe de la sauvegarde"
+msgstr "Contraseña de la copia de seguridad"
+
+#: index.html
+msgid "Confirmer le mot de passe"
+msgstr "Confirmar la contraseña"
+
+#: index.html
+msgid "Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer."
+msgstr "Al menos 8 caracteres. Cifra las contraseñas guardadas en la copia y se pedirá para restaurarla."
+
+#: index.html
+msgid "Fermer"
+msgstr "Cerrar"
+
+#: index.html
+msgid "Restaurer une sauvegarde"
+msgstr "Restaurar una copia de seguridad"
+
+#: index.html
+msgid "Sauvegarder"
+msgstr "Guardar copia"
+
+#: index.html
+msgid "Restaurer une sauvegarde complète"
+msgstr "Restaurar una copia de seguridad completa"
+
+#: index.html
+msgid "Restaurer et redémarrer"
+msgstr "Restaurar y reiniciar"
+
+#: index.html
 msgid "Déconnecter le profil"
 msgstr "Desconectar el perfil"
 
@@ -212,10 +252,6 @@ msgstr "Desconectar"
 #: index.html
 msgid "À quoi sert chaque service, et quand l'utiliser."
 msgstr "Para qué sirve cada servicio y cuándo usarlo."
-
-#: index.html
-msgid "Fermer"
-msgstr "Cerrar"
 
 #: index.html
 msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
@@ -946,6 +982,56 @@ msgstr[1] "{count} cuentas importadas"
 #: assets/app.js
 msgid "Échec de l'import : {error}"
 msgstr "Fallo en la importación: {error}"
+
+#: assets/app.js
+msgid "Un mot de passe d'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés."
+msgstr "Se necesita una contraseña de al menos 8 caracteres: hay contraseñas guardadas."
+
+#: assets/app.js
+msgid "Mot de passe de la sauvegarde incorrect."
+msgstr "Contraseña de la copia de seguridad incorrecta."
+
+#: assets/app.js
+msgid "Ce fichier n'est pas une sauvegarde complète d'IAO."
+msgstr "Este archivo no es una copia de seguridad completa de IAO."
+
+#: assets/app.js
+msgid "Échec : {error}"
+msgstr "Error: {error}"
+
+#: assets/app.js
+msgid "Les deux mots de passe sont différents."
+msgstr "Las dos contraseñas no coinciden."
+
+#: assets/app.js
+msgid "Au moins 8 caractères."
+msgstr "Al menos 8 caracteres."
+
+#: assets/app.js
+msgid "Sauvegarde en cours…"
+msgstr "Copia de seguridad en curso…"
+
+#: assets/app.js
+msgid "{count} fichier sauvegardé"
+msgid_plural "{count} fichiers sauvegardés"
+msgstr[0] "{count} archivo guardado"
+msgstr[1] "{count} archivos guardados"
+
+#: assets/app.js
+msgid "Sauvegarde complète enregistrée"
+msgstr "Copia de seguridad completa guardada"
+
+#: assets/app.js
+msgid "Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d'IAO (comptes, sessions, réglages, statistiques) puis redémarre l'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données."
+msgstr "Copia del {date}, {count} archivo(s). La restauración REEMPLAZA todos los datos de IAO (cuentas, sesiones, ajustes, estadísticas) y reinicia la aplicación. Los datos actuales se conservan en una carpeta avant-restauration de la carpeta de datos."
+
+#: assets/app.js
+msgid "Restauration en cours…"
+msgstr "Restauración en curso…"
+
+#: assets/app.js
+msgid "Redémarrage…"
+msgstr "Reiniciando…"
 
 #: assets/app.js
 msgid "Compte supprimé"

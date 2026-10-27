@@ -17,8 +17,9 @@ const EventEmitter = require('node:events');
 
 const MAIN_PATH = path.join(__dirname, '..', 'main.js');
 
-function loadMain() {
+function loadMain(preparer) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-main-accounts-'));
+  if (preparer) preparer(path.join(tmp, 'userData'));
   const ipcHandlers = new Map();
   const state = {
     saveDialogArgs: null,
@@ -220,5 +221,52 @@ test('accounts:disconnect-profile : échec de clearStorageData -> clear_failed',
     h.state.clearImpl = async () => { throw new Error('boom'); };
     assert.deepEqual(await h.invoke('accounts:disconnect-profile', 'profil_4'), { ok: false, error: 'clear_failed' });
     assert.deepEqual(h.state.partitions, ['persist:profil_4']);
+  } finally { h.cleanup(); }
+});
+
+// --- Issue #329 : sauvegarde complète et restauration au démarrage -------------
+
+test('#329 démarrage : une restauration en attente remplace les données avant toute session', () => {
+  const h = loadMain((userData) => {
+    fs.mkdirSync(path.join(userData, 'restauration-en-attente'), { recursive: true });
+    fs.writeFileSync(path.join(userData, 'settings.json'), 'actuel');
+    fs.writeFileSync(path.join(userData, 'restauration-en-attente', 'settings.json'), 'restauré');
+  });
+  try {
+    const userData = path.join(h.tmp, 'userData');
+    assert.equal(fs.readFileSync(path.join(userData, 'settings.json'), 'utf-8'), 'restauré');
+    const avant = fs.readdirSync(userData).filter((n) => n.startsWith('avant-restauration-'));
+    assert.equal(avant.length, 1);
+    assert.equal(fs.readFileSync(path.join(userData, avant[0], 'settings.json'), 'utf-8'), 'actuel');
+    assert.equal(fs.existsSync(path.join(userData, 'restauration-en-attente')), false);
+  } finally { h.cleanup(); }
+});
+
+test('#329 démarrage : restauration impossible -> données laissées en place', () => {
+  const h = loadMain((userData) => {
+    fs.mkdirSync(userData, { recursive: true });
+    fs.writeFileSync(path.join(userData, 'settings.json'), 'actuel');
+    fs.writeFileSync(path.join(userData, 'restauration-en-attente'), 'pas un dossier');
+  });
+  try {
+    assert.equal(fs.readFileSync(path.join(h.tmp, 'userData', 'settings.json'), 'utf-8'), 'actuel');
+  } finally { h.cleanup(); }
+});
+
+test('#329 sauvegarde:creer puis sauvegarde:choisir et sauvegarde:restaurer via main.js', async () => {
+  const h = loadMain();
+  try {
+    const userData = path.join(h.tmp, 'userData');
+    fs.writeFileSync(path.join(userData, 'settings.json'), '{"theme":"dark"}');
+    const zip = path.join(h.tmp, 'sauvegarde.zip');
+    h.state.saveResult = { canceled: false, filePath: zip };
+    const r = await h.invoke('sauvegarde:creer', '');
+    assert.equal(r.ok, true, JSON.stringify(r));
+    assert.match(h.state.saveDialogArgs.defaultPath, /^iao-sauvegarde-\d{4}-\d{2}-\d{2}\.zip$/);
+    h.state.openResult = { canceled: false, filePaths: [zip] };
+    const choix = await h.invoke('sauvegarde:choisir');
+    assert.deepEqual([choix.ok, choix.motDePasseRequis], [true, false]);
+    assert.equal((await h.invoke('sauvegarde:restaurer', '')).ok, true);
+    assert.equal(fs.existsSync(path.join(userData, 'restauration-en-attente', 'settings.json')), true);
   } finally { h.cleanup(); }
 });

@@ -46,6 +46,12 @@ msgid "Importer des comptes (JSON)"
 msgstr "Importér konti (JSON)"
 
 #: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "Slet kontoen"
+
+#: index.html
 msgid "Ajouter un compte"
 msgstr "Tilføj en konto"
 
@@ -202,6 +208,54 @@ msgid "Remplacer et importer"
 msgstr "Erstat og importér"
 
 #: index.html
+msgid "Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas."
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "Adgangskode til e-mail"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "Vis adgangskoden"
+
+#: index.html
+msgid "Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer."
+msgstr ""
+
+#: index.html
+msgid "Fermer"
+msgstr "Luk"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde"
+msgstr "Gendan sikkerhedskopien"
+
+#: index.html
+#, fuzzy
+#| msgid "Ctrl+S pour sauvegarder."
+msgid "Sauvegarder"
+msgstr "Ctrl+S for at gemme."
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "Gendan sikkerhedskopien"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Restaurer et redémarrer"
+msgstr "Gendan åbne faner ved start"
+
+#: index.html
 msgid "Déconnecter le profil"
 msgstr "Log profilen ud"
 
@@ -212,10 +266,6 @@ msgstr "Log ud"
 #: index.html
 msgid "À quoi sert chaque service, et quand l'utiliser."
 msgstr "Hvad hver tjeneste bruges til, og hvornår den skal bruges."
-
-#: index.html
-msgid "Fermer"
-msgstr "Luk"
 
 #: index.html
 msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
@@ -946,6 +996,65 @@ msgstr[1] "{count} konti importeret"
 #: assets/app.js
 msgid "Échec de l'import : {error}"
 msgstr "Importen mislykkedes: {error}"
+
+#: assets/app.js
+msgid "Un mot de passe d'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés."
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect."
+msgstr "Adgangskode til e-mail"
+
+#: assets/app.js
+msgid "Ce fichier n'est pas une sauvegarde complète d'IAO."
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de l'import : {error}"
+msgid "Échec : {error}"
+msgstr "Importen mislykkedes: {error}"
+
+#: assets/app.js
+msgid "Les deux mots de passe sont différents."
+msgstr ""
+
+#: assets/app.js
+msgid "Au moins 8 caractères."
+msgstr ""
+
+#: assets/app.js
+msgid "Sauvegarde en cours…"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "{count} compte restauré"
+#| msgid_plural "{count} comptes restaurés"
+msgid "{count} fichier sauvegardé"
+msgid_plural "{count} fichiers sauvegardés"
+msgstr[0] "{count} konto gendannet"
+msgstr[1] "{count} konti gendannet"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Comptes enregistrés"
+msgid "Sauvegarde complète enregistrée"
+msgstr "Gemte konti"
+
+#: assets/app.js
+msgid "Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d'IAO (comptes, sessions, réglages, statistiques) puis redémarre l'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données."
+msgstr ""
+
+#: assets/app.js
+msgid "Restauration en cours…"
+msgstr ""
+
+#: assets/app.js
+msgid "Redémarrage…"
+msgstr ""
 
 #: assets/app.js
 msgid "Compte supprimé"

@@ -46,6 +46,12 @@ msgid "Importer des comptes (JSON)"
 msgstr "นำเข้าบัญชี (JSON)"
 
 #: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "ลบบัญชี"
+
+#: index.html
 msgid "Ajouter un compte"
 msgstr "เพิ่มบัญชี"
 
@@ -202,6 +208,54 @@ msgid "Remplacer et importer"
 msgstr "แทนที่และนำเข้า"
 
 #: index.html
+msgid "Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas."
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "รหัสผ่านอีเมล"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "แสดงรหัสผ่าน"
+
+#: index.html
+msgid "Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer."
+msgstr ""
+
+#: index.html
+msgid "Fermer"
+msgstr "ปิด"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde"
+msgstr "กู้คืนข้อมูลสำรอง"
+
+#: index.html
+#, fuzzy
+#| msgid "Ctrl+S pour sauvegarder."
+msgid "Sauvegarder"
+msgstr "กด Ctrl+S เพื่อบันทึก"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "กู้คืนข้อมูลสำรอง"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Restaurer et redémarrer"
+msgstr "คืนค่าแท็บที่เปิดไว้เมื่อเริ่มต้น"
+
+#: index.html
 msgid "Déconnecter le profil"
 msgstr "ตัดการเชื่อมต่อโปรไฟล์"
 
@@ -212,10 +266,6 @@ msgstr "ตัดการเชื่อมต่อ"
 #: index.html
 msgid "À quoi sert chaque service, et quand l'utiliser."
 msgstr "แต่ละบริการใช้ทำอะไร และควรใช้เมื่อใด"
-
-#: index.html
-msgid "Fermer"
-msgstr "ปิด"
 
 #: index.html
 msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
@@ -943,6 +993,64 @@ msgstr[0] "นำเข้าบัญชีแล้ว {count} บัญชี
 #: assets/app.js
 msgid "Échec de l'import : {error}"
 msgstr "นำเข้าไม่สำเร็จ: {error}"
+
+#: assets/app.js
+msgid "Un mot de passe d'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés."
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect."
+msgstr "รหัสผ่านอีเมล"
+
+#: assets/app.js
+msgid "Ce fichier n'est pas une sauvegarde complète d'IAO."
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de l'import : {error}"
+msgid "Échec : {error}"
+msgstr "นำเข้าไม่สำเร็จ: {error}"
+
+#: assets/app.js
+msgid "Les deux mots de passe sont différents."
+msgstr ""
+
+#: assets/app.js
+msgid "Au moins 8 caractères."
+msgstr ""
+
+#: assets/app.js
+msgid "Sauvegarde en cours…"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "{count} compte restauré"
+#| msgid_plural "{count} comptes restaurés"
+msgid "{count} fichier sauvegardé"
+msgid_plural "{count} fichiers sauvegardés"
+msgstr[0] "กู้คืนบัญชีแล้ว {count} บัญชี"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Comptes enregistrés"
+msgid "Sauvegarde complète enregistrée"
+msgstr "บัญชีที่บันทึกไว้"
+
+#: assets/app.js
+msgid "Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d'IAO (comptes, sessions, réglages, statistiques) puis redémarre l'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données."
+msgstr ""
+
+#: assets/app.js
+msgid "Restauration en cours…"
+msgstr ""
+
+#: assets/app.js
+msgid "Redémarrage…"
+msgstr ""
 
 #: assets/app.js
 msgid "Compte supprimé"

@@ -43,6 +43,10 @@ msgid "Importer des comptes (JSON)"
 msgstr ""
 
 #: index.html
+msgid "Sauvegarde complète"
+msgstr ""
+
+#: index.html
 msgid "Ajouter un compte"
 msgstr ""
 
@@ -199,6 +203,42 @@ msgid "Remplacer et importer"
 msgstr ""
 
 #: index.html
+msgid "Comptes, sessions de connexion, réglages, statistiques et mots de passe enregistrés, dans un fichier ZIP. Les caches, les journaux et les captures HAR n'y sont pas."
+msgstr ""
+
+#: index.html
+msgid "Mot de passe de la sauvegarde"
+msgstr ""
+
+#: index.html
+msgid "Confirmer le mot de passe"
+msgstr ""
+
+#: index.html
+msgid "Au moins 8 caractères. Il chiffre les mots de passe enregistrés dans la sauvegarde et sera demandé pour la restaurer."
+msgstr ""
+
+#: index.html
+msgid "Fermer"
+msgstr ""
+
+#: index.html
+msgid "Restaurer une sauvegarde"
+msgstr ""
+
+#: index.html
+msgid "Sauvegarder"
+msgstr ""
+
+#: index.html
+msgid "Restaurer une sauvegarde complète"
+msgstr ""
+
+#: index.html
+msgid "Restaurer et redémarrer"
+msgstr ""
+
+#: index.html
 msgid "Déconnecter le profil"
 msgstr ""
 
@@ -208,10 +248,6 @@ msgstr ""
 
 #: index.html
 msgid "À quoi sert chaque service, et quand l'utiliser."
-msgstr ""
-
-#: index.html
-msgid "Fermer"
 msgstr ""
 
 #: index.html
@@ -942,6 +978,56 @@ msgstr[1] ""
 
 #: assets/app.js
 msgid "Échec de l'import : {error}"
+msgstr ""
+
+#: assets/app.js
+msgid "Un mot de passe d'au moins 8 caractères est nécessaire : des mots de passe sont enregistrés."
+msgstr ""
+
+#: assets/app.js
+msgid "Mot de passe de la sauvegarde incorrect."
+msgstr ""
+
+#: assets/app.js
+msgid "Ce fichier n'est pas une sauvegarde complète d'IAO."
+msgstr ""
+
+#: assets/app.js
+msgid "Échec : {error}"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe sont différents."
+msgstr ""
+
+#: assets/app.js
+msgid "Au moins 8 caractères."
+msgstr ""
+
+#: assets/app.js
+msgid "Sauvegarde en cours…"
+msgstr ""
+
+#: assets/app.js
+msgid "{count} fichier sauvegardé"
+msgid_plural "{count} fichiers sauvegardés"
+msgstr[0] ""
+msgstr[1] ""
+
+#: assets/app.js
+msgid "Sauvegarde complète enregistrée"
+msgstr ""
+
+#: assets/app.js
+msgid "Sauvegarde du {date}, {count} fichier(s). La restauration REMPLACE toutes les données d'IAO (comptes, sessions, réglages, statistiques) puis redémarre l'application. Les données actuelles sont gardées dans un dossier avant-restauration du dossier de données."
+msgstr ""
+
+#: assets/app.js
+msgid "Restauration en cours…"
+msgstr ""
+
+#: assets/app.js
+msgid "Redémarrage…"
 msgstr ""
 
 #: assets/app.js
