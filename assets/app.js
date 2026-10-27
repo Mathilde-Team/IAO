@@ -105,6 +105,7 @@
       if (badge) badge.classList.remove('hidden');
       const relaunch = document.getElementById('btnRelaunchDebug');
       if (relaunch) relaunch.classList.add('hidden'); // #187 : déjà en mode debug
+      document.body.classList.add('iao-debug'); // #320 : outils de dev des onglets IA
       dbg('demarrage', 'mode debug actif dans l\'interface');
     }).catch(() => { /* canal absent (ancienne version de main.js) : mode normal */ });
 
@@ -953,6 +954,7 @@
       toolbar.innerHTML = `
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
+        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.profile }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
       `;
       pane.appendChild(toolbar);
@@ -1245,6 +1247,74 @@
       if (webview) webview.reload();
     }
 
+    // Issue #320 : en mode debug, outils de développement de la page de l'IA
+    // (champ qui a le focus, sélecteurs) ; ceux de la fenêtre principale
+    // n'inspectent pas l'intérieur des <webview>.
+    function toggleTabDevTools(tabId) {
+      if (!debugMode) return false;
+      return basculerDevToolsOnglet(tabId);
+    }
+
+    // Issue #320 (relecture) : outils de développement de la page de l'IA,
+    // sans exiger le mode debug (comme ceux de la fenêtre IAO).
+    function basculerDevToolsOnglet(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      const webview = tab && tab.paneEl.querySelector('webview');
+      if (!webview) return false;
+      try {
+        if (webview.isDevToolsOpened()) webview.closeDevTools();
+        else webview.openDevTools();
+        dbg('onglet', 'outils de développement basculés', tab.accId, tab.svcId);
+        return true;
+      } catch (e) {
+        console.warn('[onglet] outils de développement indisponibles :', e.message);
+        return false;
+      }
+    }
+
+    // Issue #320 (relecture) : le bouton « outils de développement » de la barre
+    // du haut ouvre un second menu quand un onglet d'IA est actif : la fenêtre
+    // IAO ou la page de l'IA (pour voir quel champ a le focus). Sans onglet
+    // actif, il bascule directement ceux de la fenêtre IAO, comme avant.
+    window.openDevToolsMenu = function() {
+      const tab = tabs.find(t => t.id === activeTabId);
+      if (!tab || !tab.paneEl.querySelector('webview')) return window.toggleDevTools();
+      const svc = SERVICES.find(s => s.id === tab.svcId);
+      const acc = accounts.find(a => a.id === tab.accId);
+      closeContextMenu();
+      ctxMenuEl = document.createElement('div');
+      ctxMenuEl.className = 'ctx-menu';
+      ctxMenuEl.id = 'devtoolsMenu';
+      ctxMenuEl.innerHTML = `
+        <div class="ctx-menu__item" data-ctx-action="devtools-iao">
+          <span class="ic" data-icon="bug"></span>
+          <span>${escapeHtml(_('Fenêtre IAO'))}</span>
+        </div>
+        <div class="ctx-menu__item" data-ctx-action="devtools-onglet">
+          <span class="ic" data-icon="bug"></span>
+          <span>${escapeHtml(_('Page de l\'IA : {service} — {compte}', { service: svc ? svc.name : tab.svcId, compte: acc ? acc.name : '' }))}</span>
+        </div>
+      `;
+      document.body.appendChild(ctxMenuEl);
+      hydrateIcons(ctxMenuEl);
+      const btn = document.querySelector('[data-action="ui-openDevToolsMenu"]');
+      const ancre = btn ? btn.getBoundingClientRect() : { left: 0, bottom: 0 };
+      const rect = ctxMenuEl.getBoundingClientRect();
+      ctxMenuEl.style.left = Math.max(4, Math.min(ancre.left, window.innerWidth - rect.width - 4)) + 'px';
+      ctxMenuEl.style.top = (ancre.bottom + 4) + 'px';
+      const tabId = tab.id;
+      ctxMenuEl.addEventListener('click', (ev) => {
+        const item = ev.target.closest('[data-ctx-action]');
+        if (!item) return;
+        const action = item.getAttribute('data-ctx-action');
+        closeContextMenu();
+        dbg('onglet', 'menu des outils de développement :', action);
+        if (action === 'devtools-iao') window.toggleDevTools();
+        else basculerDevToolsOnglet(tabId);
+      });
+      return 'menu';
+    };
+
     function tabGoHome(tabId) {
       const tab = tabs.find(t => t.id === tabId);
       if (!tab) return;
@@ -1303,6 +1373,7 @@
       const action = el.getAttribute('data-action');
       if (action === 'tab-reload') reloadTab(tabId);
       else if (action === 'tab-home') tabGoHome(tabId);
+      else if (action === 'tab-devtools') toggleTabDevTools(tabId);
       else if (action === 'tab-disconnect') openDisconnectModal(tabId);
     });
 
@@ -3702,7 +3773,7 @@ const UI_ACTIONS = {
   'ui-toggleAllCards': 'toggleAllCards',
   'ui-toggleExplorer': 'toggleExplorer',
   'ui-toggleIdePanel': 'toggleIdePanel',
-  'ui-toggleDevTools': 'toggleDevTools',
+  'ui-openDevToolsMenu': 'openDevToolsMenu',
   'ui-relaunchDebug': 'relaunchDebug',
   'ui-relaunch': 'relaunchNormal',
   'ui-openPalette': 'openPalette',
