@@ -1,5 +1,29 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #311 (relecture du 27/10/2026) — comptes dans `profils.json` (27/10/2026)
+
+### Modifié
+- **Les comptes quittent le localStorage** : nom, adresse, profil, couleur, services,
+  cooldowns et automatisation sont dans `<userData>/profils.json`
+  (`~/.config/ai-manager`, `%APPDATA%\ai-manager`). `saveAccounts()` (création,
+  modification, suppression, import, restauration) l'écrit par le process principal ;
+  le localStorage ne garde que l'état de l'interface (onglets, étoiles, ordre, repli).
+- **`lib/profils.js`** (nouveau) : lecture tolérante (`absent` / `ok` / `corrompu` /
+  `erreur`), écriture atomique (fichier temporaire puis renommage), version précédente
+  dans `profils.json.bak`, fichier illisible mis de côté dans `profils.json.illisible`.
+- **`main.js`** : canaux synchrones `profils:lire` et `profils:ecrire` (aucun contenu de
+  compte journalisé) ; **`preload.js`** : `iaoAPI.profilsLire()` / `profilsEcrire()`.
+  Synchrones pour que les comptes soient lus avant le premier affichage et qu'un compte
+  créé juste avant une relance soit déjà sur le disque.
+- **Migration** : au premier démarrage sans `profils.json`, les comptes du localStorage
+  (`ai_accounts`) y sont recopiés, puis les anciennes clés retirées.
+- Restauration d'un `profils.json` illisible : depuis `profils.json.bak` (modale
+  existante « Données de comptes illisibles »).
+- Tests : `test/profils.test.js`, `test/main-accounts.test.js`,
+  `test/preload-sandbox.test.js` ; harnais Electron C8.0 (migration, perte du
+  localStorage sans perte de compte) et C8.1 (perte de `profils.json`).
+- README (emplacement des données), `docs/PROJECT_CONTEXT.md` §5, CLAUDE.md invariant 3.
+
 ## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
 
 ### Ajouté

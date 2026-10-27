@@ -251,8 +251,11 @@ async function run() {
     (args.length ? ', ' + args.map(a => JSON.stringify(a)).join(', ') : '') + ')'
   );
 
-  // Seed : initApp lit localStorage AU DÉMARRAGE -> on écrit puis on RECHARGE
+  // Seed : initApp lit ses comptes AU DÉMARRAGE -> on écrit puis on RECHARGE
   // la page (renderAccounts n'est pas exposée globalement, à dessein).
+  // Issue #311 : les comptes sont semés dans l'ancien emplacement
+  // (localStorage) ; le rechargement les migre dans <userData>/profils.json
+  // (vérifié par C8.0).
   // startWithLastSession est activé pour tester la restauration des onglets.
   const saved = await ipc('settings:save', { startWithLastSession: true });
   assert(saved && saved.ok, 'settings:save a échoué : ' + JSON.stringify(saved));
@@ -387,11 +390,11 @@ async function run() {
       document.getElementById('inputEmail').value = 'c319@example.com';
       document.getElementById('inputProfile').value = 'profil_319';
       saveAccount();
-      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : comptes dans profils.json
       const c = comptes.find(a => a.profile === 'profil_319');
       const services = c ? c.services.join(',') : null;
       if (c) {
-        localStorage.setItem('ai_accounts', JSON.stringify(comptes.filter(a => a.profile !== 'profil_319')));
+        window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'profil_319'));
       }
       localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
       return services;
@@ -817,10 +820,31 @@ async function run() {
   // =========================================================================
   console.log('\n--- C8 : Restauration des comptes au démarrage ---');
 
-  await test('C8.1 localStorage vidé : modale « Comptes retrouvés », restauration sans import', async () => {
+  const profilsJson = path.join(app.getPath('userData'), 'profils.json');
+  await test('C8.0 comptes dans profils.json (#311) : migration unique, localStorage vidé sans effet', async () => {
+    assert(fs.existsSync(profilsJson), 'profils.json absent après la migration du seed');
+    const fichier = JSON.parse(fs.readFileSync(profilsJson, 'utf-8'));
+    assert(JSON.stringify(fichier.map((a) => a.profile)) === JSON.stringify(seedAccounts.map((a) => a.profile)),
+      'profils.json : ' + fichier.map((a) => a.profile).join(','));
+    const anciennes = await exec(`[localStorage.getItem('ai_accounts'), localStorage.getItem('ai_accounts_backup')]`);
+    assert(anciennes[0] === null && anciennes[1] === null, 'anciennes clés de comptes encore dans le localStorage');
+    // Perte du localStorage (cas de l'issue #311) : les comptes restent.
+    await exec(`localStorage.removeItem('ai_accounts'); localStorage.removeItem('ai_accounts_backup'); localStorage.removeItem('ai_open_tabs'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const cartes = await exec(`document.querySelectorAll('#accountsList .account-card').length`);
+    assert(cartes === seedAccounts.length, 'cartes après perte du localStorage : ' + cartes);
+    const modale = await exec(`document.getElementById('snapshotRestore') !== null`);
+    assert(!modale, 'modale de restauration affichée alors que profils.json est lisible');
+  });
+
+  await test('C8.1 profils.json perdu : modale « Comptes retrouvés », restauration sans import', async () => {
     // L'instantané de l'ordonnanceur contient les comptes du seed (synchronisés
-    // au démarrage). On simule la perte du localStorage de l'interface.
+    // au démarrage). On simule la perte de profils.json et du localStorage.
     await ipc('scheduler:sync-accounts', seedAccounts);
+    fs.rmSync(profilsJson, { force: true });
+    fs.rmSync(profilsJson + '.bak', { force: true });
     await exec(`localStorage.removeItem('ai_accounts'); localStorage.removeItem('ai_accounts_backup'); localStorage.removeItem('ai_open_tabs'); 'ok'`);
     win.webContents.reload();
     await sleep(300);
@@ -837,10 +861,10 @@ async function run() {
       setTimeout(() => resolve({
         modal: document.getElementById('snapshotRestore') !== null,
         cards: document.querySelectorAll('#accountsList .account-card').length,
-        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile),
-        emails: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.email),
-        couleurs: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.color),
-        noms: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.name),
+        stored: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.profile),
+        emails: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.email),
+        couleurs: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.color),
+        noms: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.name),
         lignes: [...document.querySelectorAll('#accountsList .account-email')].map((e) => e.textContent.trim())
       }), 200);
     })`);
@@ -919,10 +943,10 @@ async function run() {
       await saveSettings();
       openSerieModal();
       const desc = document.getElementById('serieDesc').textContent;
-      const avant = JSON.parse(localStorage.getItem('ai_accounts')).length;
+      const avant = window.iaoAPI.profilsLire().comptes.length;
       document.getElementById('serieNombre').value = '2';
       await createSerie();
-      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const comptes = window.iaoAPI.profilsLire().comptes;
       return { desc, avant, apres: comptes.length, derniers: comptes.slice(-2).map(c => c.name + ' ' + c.email + ' ' + c.profile),
         ouvert: document.getElementById('serieModal').classList.contains('open'),
         webmail: document.querySelectorAll('#accountsList [data-action="open-webmail"]').length };
@@ -938,7 +962,7 @@ async function run() {
 
   await test('C9.2 Mot de passe de messagerie : généré, masqué par défaut, bouton œil', async () => {
     const r = await exec(`(() => {
-      const acc = JSON.parse(localStorage.getItem('ai_accounts')).slice(-1)[0];
+      const acc = window.iaoAPI.profilsLire().comptes.slice(-1)[0];
       openModal(acc.id);
       const pass = document.getElementById('inputMailPassword');
       const masque = pass.type;
@@ -965,7 +989,7 @@ async function run() {
         const wv = document.getElementById(t.dataset.tab).querySelector('webview');
         window.__liens310 = [];
         wv.loadURL = (u) => { window.__liens310.push(u); return Promise.resolve(); };
-        const acc = JSON.parse(localStorage.getItem('ai_accounts')).find(a => a.id === 'acc_test_1');
+        const acc = window.iaoAPI.profilsLire().comptes.find(a => a.id === 'acc_test_1');
         resolve({ tab: t.dataset.tab, svc: t.dataset.svc, profil: acc.profile });
       }, 200);
     })`);

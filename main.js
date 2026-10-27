@@ -550,6 +550,30 @@ ipc.handle('accounts:disconnect-profile', async (event, profile) => {
   }
 });
 
+// --- Issue #311 : comptes dans <userData>/profils.json ---
+// Canaux SYNCHRONES (ipcRenderer.sendSync, preload.js) : le renderer lit ses
+// comptes avant de dessiner l'interface, et chaque écriture est sur le disque
+// quand saveAccounts() rend la main. Jamais de contenu de compte dans le journal.
+const profils = require('./lib/profils');
+
+ipc.on('profils:lire', (event) => {
+  const r = profils.lireProfils(app.getPath('userData'), { fs, path });
+  if (r.status === 'ok') debug('comptes', profils.NOM_FICHIER + ' lu : ' + r.comptes.length + ' compte(s).');
+  else if (r.status === 'absent') debug('comptes', profils.NOM_FICHIER + ' absent (premier démarrage ou migration).');
+  else {
+    log('comptes', 'error', profils.NOM_FICHIER + ' illisible (' + r.status + ') : ' + r.erreur +
+      (r.sauvegarde ? ' ; sauvegarde ' + profils.NOM_SAUVEGARDE + ' de ' + r.sauvegarde.length + ' compte(s) disponible.' : ' ; aucune sauvegarde lisible.'));
+  }
+  event.returnValue = r;
+});
+
+ipc.on('profils:ecrire', (event, comptes) => {
+  const r = profils.ecrireProfils(app.getPath('userData'), comptes, { fs, path });
+  if (r.ok) debug('comptes', profils.NOM_FICHIER + ' écrit : ' + r.nombre + ' compte(s).');
+  else log('comptes', 'error', 'échec de l\'écriture de ' + profils.NOM_FICHIER + ' : ' + r.erreur);
+  event.returnValue = r;
+});
+
 // --- IPC pour les réglages utilisateur (lot 18/09/2026, FEATURES.md P2) ---
 // Persistance dans <userData>/settings.json. La normalisation/validation est
 // faite côté renderer via lib/settings.js (fonctions pures testées).

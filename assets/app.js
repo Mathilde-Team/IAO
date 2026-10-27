@@ -344,9 +344,12 @@
     // Icônes statiques du HTML (chantier D) : on remplit les <span class="ic">.
     hydrateIcons(document);
 
-    // === Stockage résilient des comptes (chantier C) ===
-    // Toute la persistance passe désormais par ces helpers : lecture tolérante
-    // aux données corrompues + une génération de backup avant chaque écrasement.
+    // === Stockage résilient des comptes (chantier C, puis issue #311) ===
+    // Issue #311 : les comptes vivent dans <userData>/profils.json (process
+    // principal, lib/profils.js : écriture atomique, version précédente dans
+    // profils.json.bak). Le localStorage ne garde que l'état de l'interface
+    // (onglets, étoiles, ordre, repli). Les deux clés ci-dessous ne sont plus
+    // que LUES, une fois, pour migrer une installation antérieure.
     const STORE_KEY = 'ai_accounts';
     const BACKUP_KEY = 'ai_accounts_backup';
     const TABS_KEY = 'ai_open_tabs'; // lot 18/09/2026 : restauration des onglets au démarrage
@@ -388,18 +391,24 @@
       return r;
     }
 
-    // Sauvegarde la liste de comptes. Avant d'écraser, on copie l'ancienne valeur
-    // dans BACKUP_KEY — mais UNIQUEMENT si elle est elle-même un JSON valide, pour
-    // ne jamais détruire un bon backup en y recopiant une valeur corrompue.
+    // Issue #311 : écriture synchrone de profils.json par le process principal
+    // (profils:ecrire). La version précédente lisible passe dans
+    // profils.json.bak ; un fichier illisible est mis de côté, jamais écrasé
+    // sans copie. Renvoie { ok, nombre } ou { ok: false, erreur }.
+    function ecrireProfils(list) {
+      try {
+        return window.iaoAPI.profilsEcrire(list) || { ok: false, erreur: 'pas de réponse' };
+      } catch (e) {
+        return { ok: false, erreur: (e && e.message) || String(e) };
+      }
+    }
+
+    // Sauvegarde la liste de comptes dans profils.json (issue #311).
     function saveAccounts(list) {
       dbg('comptes', 'enregistrement de ' + list.length + ' compte(s)');
       try {
-        const prev = localStorage.getItem(STORE_KEY);
-        if (prev != null) {
-          try { JSON.parse(prev); localStorage.setItem(BACKUP_KEY, prev); }
-          catch (_) { /* valeur actuelle illisible : on préserve le backup existant */ }
-        }
-        localStorage.setItem(STORE_KEY, JSON.stringify(list));
+        const r = ecrireProfils(list);
+        if (!r.ok) throw new Error(r.erreur);
         // Ordonnanceur (chantier E) : on pousse un instantané des comptes
         // (profil + état d'automatisation) au process principal, seul capable
         // de choisir un profil "le plus ancien" indépendamment des fenêtres
@@ -408,7 +417,7 @@
         try { ipcRenderer.invoke('scheduler:sync-accounts', list).catch(() => {}); } catch (_) { /* ignore */ }
         return true;
       } catch (e) {
-        console.error('[storage] échec écriture des comptes :', e);
+        console.error('[storage] échec écriture des comptes (profils.json) :', e);
         showToast(_('Impossible d\'enregistrer les comptes (stockage plein ?)'), 'error');
         return false;
       }
@@ -464,15 +473,41 @@
     }
 
     // Chargement initial tolérant : l'app ne plante JAMAIS au démarrage, même si
-    // ai_accounts est corrompu (le cas échéant on propose la restauration plus bas).
+    // profils.json est illisible (le cas échéant on propose la restauration plus bas).
     let dataCorrupt = false;
     let accounts = [];
     let accountsLoadStatus = 'empty'; // issue #186 : signalé à main.js pour iao.log
+    let profilsSauvegarde = null;     // issue #311 : profils.json.bak si profils.json est illisible
     (function loadAccounts() {
+      let p;
+      try { p = window.iaoAPI.profilsLire() || { status: 'erreur', erreur: 'pas de réponse' }; }
+      catch (e) { p = { status: 'erreur', erreur: (e && e.message) || String(e) }; }
+      if (p.status === 'ok') { accounts = p.comptes; accountsLoadStatus = 'ok'; return; }
+      if (p.status !== 'absent') {
+        console.error('[storage] profils.json illisible (' + p.status + ') :', p.erreur);
+        dataCorrupt = true;
+        profilsSauvegarde = Array.isArray(p.sauvegarde) ? p.sauvegarde : null;
+        accountsLoadStatus = p.status === 'corrompu' ? 'corrupt' : 'erreur';
+        return;
+      }
+      // profils.json absent : premier démarrage, ou installation antérieure
+      // à #311 dont les comptes sont encore dans le localStorage. Migration
+      // unique : les comptes lus y sont recopiés dans profils.json.
       const r = readJSON(STORE_KEY);
       accountsLoadStatus = r.status;
-      if (r.status === 'ok' && Array.isArray(r.data)) accounts = r.data;
-      else if (r.status === 'corrupt') dataCorrupt = true;
+      if (r.status === 'ok' && Array.isArray(r.data)) {
+        accounts = r.data;
+        if (accounts.length > 0) {
+          const w = ecrireProfils(accounts);
+          if (w.ok) {
+            // Les anciennes clés sont retirées : sinon, profils.json supprimé à
+            // la main, des comptes périmés reviendraient au démarrage suivant.
+            try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(BACKUP_KEY); }
+            catch (e) { console.warn('[storage] anciennes clés de comptes non retirées :', e); }
+            dbg('comptes', 'migration : ' + accounts.length + ' compte(s) du localStorage recopié(s) dans profils.json');
+          } else console.error('[storage] migration des comptes vers profils.json impossible :', w.erreur);
+        }
+      } else if (r.status === 'corrupt') dataCorrupt = true;
       // 'empty' ou JSON valide non-tableau -> accounts reste []
     })();
 
@@ -3651,16 +3686,20 @@
       document.body.appendChild(overlay);
     }
 
-    // Récupération des données (chantier C) : si ai_accounts était illisible au
+    // Récupération des données (chantier C) : si profils.json (ou, avant
+    // migration, ai_accounts) était illisible au
     // démarrage, on propose de restaurer la sauvegarde plutôt que de perdre en
     // silence les comptes de l'utilisateur.
     if (dataCorrupt) showRecoveryUI();
 
     // Construit et affiche la modale de récupération. Restaure depuis
-    // ai_accounts_backup si un backup valide existe, sinon informe simplement.
+    // profils.json.bak (ou ai_accounts_backup) si une sauvegarde valide existe,
+    // sinon informe simplement.
     // (Fonction déclarée -> hoistée, l'appel ci-dessus la voit.)
     function showRecoveryUI() {
-      const b = readJSON(BACKUP_KEY);
+      // Issue #311 : sauvegarde profils.json.bak, ou, pour une installation pas
+      // encore migrée, l'ancien ai_accounts_backup du localStorage.
+      const b = profilsSauvegarde ? { status: 'ok', data: profilsSauvegarde } : readJSON(BACKUP_KEY);
       const hasBackup = b.status === 'ok' && Array.isArray(b.data);
 
       const overlay = document.createElement('div');
