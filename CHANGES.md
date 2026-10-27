@@ -83,6 +83,27 @@
 - Tests : `test/accounts-recovery.test.js`, `test/scheduler-state-config.test.js` (format,
   repli, échec d'écriture), C8.1 vérifie aussi noms et couleurs.
 
+## Issues #317 et #318 — relance sans perte, redémarrage normal, onglets proposés (26/10/2026)
+
+### Corrigé
+- « Redémarrer en mode debug » appelait `app.exit(0)` juste après `app.relaunch()` sans
+  laisser Chromium écrire le localStorage : les comptes créés juste avant étaient perdus, et
+  au démarrage suivant l'ancienne liste écrasait l'instantané de l'ordonnanceur. **`main.js`**
+  écrit le stockage de la fenêtre principale (`session.flushStorageData()`) avant toute
+  relance ; un échec est journalisé et n'empêche pas la relance.
+
+### Ajouté
+- Bouton **« Redémarrer IAO »** (canal `app:relaunch`) : relance en mode normal, aussi pour
+  quitter le mode debug (`--iao-debug`, `--debug` et `IAO_DEBUG` retirés,
+  `normalRelaunchArgs()` dans `lib/startup-diagnostics.js`).
+- Au démarrage (relance comprise), les onglets de la session précédente sont proposés
+  (« Rouvrir les onglets précédents ? ») quand « Restaurer les onglets ouverts au démarrage »
+  est décoché ; coché, ils sont rouverts directement comme avant. Seuls les onglets d'un compte
+  encore présent comptent, et la proposition (ou la restauration) n'a lieu qu'une fois : la
+  relecture des réglages à l'ouverture de leur fenêtre ne rouvre plus les onglets.
+- Tests : `test/main-window-security.test.js`, `test/startup-diagnostics.test.js`, scénarios
+  Electron C6.5 et C8.3 ; catalogues mis à jour (en, de, es, it traduits).
+
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté

@@ -79,6 +79,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr ""
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes 9 IA à portée de main"
 msgstr ""
 
@@ -736,6 +740,14 @@ msgstr ""
 
 #: assets/app.js
 msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
+msgstr ""
+
+#: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
 msgstr ""
 
 #: assets/app.js

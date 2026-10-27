@@ -416,13 +416,32 @@
       } catch (e) { /* non bloquant */ }
     }
 
-    // Restaure les onglets sauvegardés (lot 18/09/2026).
+    // Restaure les onglets sauvegardés (lot 18/09/2026). Issue #318 : seuls les
+    // onglets d'un compte encore présent sont repris.
+    function savedOpenTabs() {
+      return deserializeOpenTabs(localStorage.getItem(TABS_KEY) || '')
+        .filter(function(tab) { return accounts.some(function(a) { return a.id === tab.accId; }); });
+    }
     function restoreOpenTabs() {
-      var raw = localStorage.getItem(TABS_KEY) || '';
-      var tabList = deserializeOpenTabs(raw);
-      tabList.forEach(function(tab) {
+      savedOpenTabs().forEach(function(tab) {
         openService(tab.accId, tab.svcId);
       });
+    }
+
+    // Issues #317/#318 : au démarrage (relance comprise), les onglets de la
+    // session précédente sont rouverts directement si « Restaurer les onglets
+    // ouverts au démarrage » est coché, sinon proposés. Une seule fois : les
+    // réglages sont relus à chaque ouverture de leur fenêtre.
+    let startupTabsHandled = false;
+    function handleStartupTabs(startWithLastSession) {
+      if (startupTabsHandled) return;
+      startupTabsHandled = true;
+      if (startWithLastSession) { restoreOpenTabs(); return; }
+      const n = savedOpenTabs().length;
+      if (n === 0) return;
+      showConfirmDialog(_('Rouvrir les onglets précédents ?'),
+        _('Onglets ouverts à la fermeture d\'IAO : {n}. Les rouvrir ?', { n: n }),
+        restoreOpenTabs);
     }
 
     // Fondation réutilisable pour une future fonctionnalité d'export/import JSON
@@ -802,6 +821,11 @@
     // Issue #187 : redémarre IAO avec --iao-debug (canal app:relaunch-debug).
     window.relaunchDebug = function() {
       return window.iaoAPI.ipcInvoke('app:relaunch-debug').catch(() => false);
+    }
+
+    // Issue #317 : redémarre IAO en mode normal (canal app:relaunch).
+    window.relaunchNormal = function() {
+      return window.iaoAPI.ipcInvoke('app:relaunch').catch(() => false);
     }
 
     window.toggleExplorer = function() { document.getElementById('fileExplorer').classList.toggle('collapsed'); }
@@ -3037,10 +3061,8 @@
         loadedLanguage = settings.language || 'auto';
         const langSelect = document.getElementById('settingsLanguage');
         if (langSelect && langSelect.querySelector('option[value="' + loadedLanguage + '"]')) langSelect.value = loadedLanguage;
-        // Restaurer les onglets si le réglage est activé (lot 18/09/2026)
-        if (settings.startWithLastSession) {
-          restoreOpenTabs();
-        }
+        // Onglets de la session précédente (lot 18/09/2026, issues #317/#318).
+        handleStartupTabs(settings.startWithLastSession === true);
       } catch (e) {
         showToast(_('Impossible de charger les réglages'), 'error');
       }
@@ -3641,6 +3663,7 @@ const UI_ACTIONS = {
   'ui-toggleIdePanel': 'toggleIdePanel',
   'ui-toggleDevTools': 'toggleDevTools',
   'ui-relaunchDebug': 'relaunchDebug',
+  'ui-relaunch': 'relaunchNormal',
   'ui-openPalette': 'openPalette',
   'ui-openModal': 'openModal',
   'ui-openHelpModal': 'openHelpModal',

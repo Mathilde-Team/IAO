@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "デバッグモードで再起動（詳細ログ）"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes 9 IA à portée de main"
 msgstr "手元に置く 9 つの AI を選ぶ"
 
@@ -740,6 +744,14 @@ msgstr "多言語対応に優れた、チャット・コード・画像分析向
 #: assets/app.js
 msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "アカウントを保存できません（ストレージがいっぱい？）"
+
+#: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
 
 #: assets/app.js
 msgid "Ctrl+S pour sauvegarder."

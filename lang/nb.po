@@ -82,6 +82,10 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Start på nytt i feilsøkingsmodus (detaljert logg)"
 
 #: index.html
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
 msgid "Choisir mes 9 IA à portée de main"
 msgstr "Velg mine 9 KI-er for hånden"
 
@@ -740,6 +744,14 @@ msgstr "Gratis alternativ for chat, kode og bildeanalyse, med god flerspråklig 
 #: assets/app.js
 msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Kan ikke lagre kontoene (lagringsplassen full?)"
+
+#: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
 
 #: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
