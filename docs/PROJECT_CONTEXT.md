@@ -463,6 +463,13 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 
 ## 13. Dernières évolutions
 
+### Premier onglet fixe (issue #338, 27/10/2026)
+
+- Réglages : case « Ouvrir un premier onglet fixe » et adresse https (`ongletFixeActif`, `ongletFixeUrl`, normalisés par `lib/settings.js` ; http refusé avant enregistrement).
+- `assets/app.js` : `appliquerOngletFixe()` crée, met à jour ou retire l'onglet à chaque chargement ou enregistrement des réglages ; il vit hors de `tabs[]` (pas de persistance des onglets, pas de statistiques, pas d'étoile, pas de fermeture) et `renderTabsBar()` le place en tête.
+- `main.js` : `estOngletFixe()` reconnaît la session `persist:onglet-fixe` dans `did-attach-webview` ; `verrouillerOngletFixe()` bloque les navigations vers un autre site (`lib/onglet-fixe.js`, même hôte ou sous-domaine, https) et charge dans l'onglet les popups du même site.
+- Limites : les redirections HTTP vers un autre site (connexion par un fournisseur tiers) ne sont pas bloquées ; Ctrl+Tab et Alt+1..9 ne parcourent que les onglets de comptes.
+
 ### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
 
 - `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans

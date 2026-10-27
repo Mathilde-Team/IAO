@@ -1058,6 +1058,68 @@ async function run() {
   const dansDeuxJoursISO = () => new Date(Date.now() + 2 * 86400000).toISOString();
 
 
+  await test('C9.4 Premier onglet fixe : réglage, en tête, ni fermeture ni déplacement, retour à l\'adresse, retrait (#338)', async () => {
+    const r = await exec(`(async () => {
+      const pause = (ms) => new Promise(r => setTimeout(r, ms));
+      const toasts = () => [...document.querySelectorAll('#toastContainer .toast')].map(t => t.textContent.trim()).join(' | ');
+      openSettingsModal();
+      await pause(200);
+      // http:// refusé : message, rien d'enregistré, pas d'onglet.
+      document.getElementById('settingsOngletFixeActif').checked = true;
+      document.getElementById('settingsOngletFixeUrl').value = 'http://127.0.0.1:9/';
+      await saveSettings();
+      const refus = toasts();
+      const ongletApresRefus = document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null;
+      const modaleOuverte = document.getElementById('settingsModal').classList.contains('open');
+      document.getElementById('settingsOngletFixeUrl').value = 'https://127.0.0.1:9/accueil';
+      await saveSettings();
+      await pause(300);
+      const bar = document.getElementById('tabsBar');
+      const fixe = bar.querySelector('[data-tab="tab_fixe"]');
+      const wv = document.querySelector('#tab_fixe webview');
+      const etat = {
+        refus, ongletApresRefus, modaleOuverte,
+        premier: bar.querySelector('.tab') ? bar.querySelector('.tab').getAttribute('data-tab') : null,
+        libelle: fixe ? fixe.querySelector('.tab__label').textContent.trim() : null,
+        fermeture: fixe ? fixe.querySelector('.tab__close') !== null : null,
+        deplacable: fixe ? fixe.getAttribute('draggable') : null,
+        partition: wv ? wv.getAttribute('partition') : null,
+        src: wv ? wv.getAttribute('src') : null
+      };
+      // Fermeture impossible, menu contextuel absent.
+      closeTab('tab_fixe');
+      fixe.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 5, clientY: 5 }));
+      etat.toujoursLa = document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null;
+      etat.menu = document.querySelector('.ctx-menu') !== null;
+      // Clic : l'onglet passe au premier plan.
+      document.querySelector('#tabsBar [data-tab="tab_fixe"]').click();
+      await pause(100);
+      etat.actif = document.getElementById('tab_fixe').classList.contains('active');
+      etat.barreActive = document.querySelector('#tabsBar [data-tab="tab_fixe"]').classList.contains('active');
+      return etat;
+    })()`);
+    assert(/https:\/\//.test(r.refus), 'message d\'adresse invalide attendu : ' + r.refus);
+    assert(!r.ongletApresRefus && r.modaleOuverte, 'adresse invalide : ni onglet ni fermeture des réglages');
+    assert(r.premier === 'tab_fixe', 'onglet fixe en tête attendu : ' + r.premier);
+    assert(r.libelle === '127.0.0.1', 'libellé : ' + r.libelle);
+    assert(r.fermeture === false && r.deplacable === 'false', 'ni croix ni glisser attendus');
+    assert(r.partition === 'persist:onglet-fixe' && r.src === 'https://127.0.0.1:9/accueil', 'webview : ' + r.partition + ' ' + r.src);
+    assert(r.toujoursLa && !r.menu, 'onglet fermé ou menu contextuel affiché');
+    assert(r.actif && r.barreActive, 'onglet fixe non activé au clic');
+    const enregistres = await ipc('settings:load');
+    assert(enregistres.ongletFixeActif === true && enregistres.ongletFixeUrl === 'https://127.0.0.1:9/accueil',
+      'réglages enregistrés : ' + JSON.stringify([enregistres.ongletFixeActif, enregistres.ongletFixeUrl]));
+    // Décoché : l'onglet disparaît.
+    const retrait = await exec(`(async () => {
+      openSettingsModal();
+      await new Promise(r => setTimeout(r, 200));
+      document.getElementById('settingsOngletFixeActif').checked = false;
+      await saveSettings();
+      return { onglet: document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null, panneau: document.getElementById('tab_fixe') !== null };
+    })()`);
+    assert(!retrait.onglet && !retrait.panneau, 'onglet fixe toujours présent après décochage');
+  });
+
   await test('C10.1 modale ordonnanceur : interface des tâches visible, liste vide', async () => {
     await exec('window.openSchedulerModal()');
     await sleep(800);
