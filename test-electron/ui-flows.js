@@ -352,6 +352,83 @@ async function run() {
     assert(/COMPTES ACTIFS\s*2/i.test(txt), 'compteur « comptes actifs » ≠ 2 : ' + txt.slice(0, 120));
   });
 
+  // Issue #319 : la sélection « mes IA à portée de main » remplace les services des cartes,
+  // sans cumul au redémarrage, et un compte créé ne reçoit qu'elle.
+  await test('C1.6 Choix des IA : remplacement immédiat, sans cumul au rechargement, appliqué aux nouveaux comptes (#319)', async () => {
+    const lire = () => exec(`(() => {
+      const cartes = [...document.querySelectorAll('#accountsList .account-card')];
+      return cartes.map(c => [...c.querySelectorAll('[data-action="open-service"]')].map(b => b.dataset.svc).join(','));
+    })()`);
+    const avant = await lire();
+    await exec(`(() => {
+      openServicesModal();
+      const cb = (id) => document.querySelector('#servicesList [data-svc-id="' + id + '"]');
+      const list = document.getElementById('servicesList');
+      cb('meshy').checked = false; list.onchange({ target: cb('meshy') });
+      cb('deepseek').checked = true; list.onchange({ target: cb('deepseek') });
+      saveServicesModal();
+      return 'ok';
+    })()`);
+    const attendu = 'claude,chatgpt,gemini,zeta,perplexity,grok,leonardo,suno,deepseek';
+    const apres = await lire();
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const recharge = await lire();
+    const nouveau = await exec(`(() => {
+      openModal();
+      document.getElementById('inputName').value = 'Compte 319';
+      document.getElementById('inputEmail').value = 'c319@example.com';
+      document.getElementById('inputProfile').value = 'profil_319';
+      saveAccount();
+      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const c = comptes.find(a => a.profile === 'profil_319');
+      const services = c ? c.services.join(',') : null;
+      if (c) {
+        localStorage.setItem('ai_accounts', JSON.stringify(comptes.filter(a => a.profile !== 'profil_319')));
+      }
+      localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
+      return services;
+    })()`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const final = await lire();
+    assert(avant.every(l => l.split(',').length === 9 && l.includes('meshy')), 'avant : ' + JSON.stringify(avant));
+    assert(apres.length === 2 && apres.every(l => l === attendu), 'après enregistrement : ' + JSON.stringify(apres));
+    assert(recharge.every(l => l === attendu), 'au rechargement (anciens + nouveaux ?) : ' + JSON.stringify(recharge));
+    assert(nouveau === attendu, 'nouveau compte : ' + nouveau);
+    assert(final.length === 2 && final.every(l => l === avant[0]), 'retour à la sélection par défaut : ' + JSON.stringify(final));
+  });
+
+  // Issue #319 (suite) : de 1 à n IA, plus de plafond à 9.
+  await test('C1.7 Choix des IA : 1 seule, puis toutes (plus de plafond à 9) (#319)', async () => {
+    const choisir = (ids) => exec(`(() => {
+      openServicesModal();
+      const list = document.getElementById('servicesList');
+      const voulus = ${JSON.stringify(ids)};
+      [...list.querySelectorAll('[data-svc-id]')].forEach((cb) => {
+        const coche = voulus === 'tous' || voulus.includes(cb.dataset.svcId);
+        if (cb.checked !== coche) { cb.checked = coche; list.onchange({ target: cb }); }
+      });
+      saveServicesModal();
+      const carte = document.querySelector('#accountsList .account-card');
+      return { boutons: carte.querySelectorAll('[data-action="open-service"]').length,
+        total: list.querySelectorAll('[data-svc-id]').length,
+        stocke: JSON.parse(localStorage.getItem('ai_active_services')).length };
+    })()`);
+    const un = await choisir(['claude']);
+    const tous = await choisir('tous');
+    await exec(`localStorage.removeItem('ai_active_services'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const defaut = await exec(`document.querySelector('#accountsList .account-card').querySelectorAll('[data-action="open-service"]').length`);
+    assert(un.boutons === 1 && un.stocke === 1, 'une seule IA : ' + JSON.stringify(un));
+    assert(tous.total > 9 && tous.boutons === tous.total && tous.stocke === tous.total, 'toutes les IA : ' + JSON.stringify(tous));
+    assert(defaut === 9, 'retour à la sélection par défaut : ' + defaut);
+  });
+
   // =========================================================================
   // C2 — Réglages et thème
   // =========================================================================

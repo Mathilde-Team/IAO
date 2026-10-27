@@ -86,8 +86,8 @@ msgid "Redémarrer IAO"
 msgstr ""
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "انتخاب ۹ هوش مصنوعی در دسترس من"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -218,8 +218,8 @@ msgid "Fermer"
 msgstr "بستن"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "۹ سرویسی را که در رابط نمایش داده می‌شوند انتخاب کنید. بقیه در راهنما در دسترس می‌مانند."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -892,16 +892,12 @@ msgid "Description à venir."
 msgstr "توضیحات به‌زودی."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "حداکثر {max} سرویس در دسترس"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "دست‌کم یک سرویس انتخاب کنید"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "سرویس‌ها به‌روز شدند ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

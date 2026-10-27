@@ -86,8 +86,8 @@ msgid "Redémarrer IAO"
 msgstr ""
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "选择常用的 9 个 AI"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -218,8 +218,8 @@ msgid "Fermer"
 msgstr "关闭"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "选择界面中显示的 9 个服务。其他服务仍可在帮助中使用。"
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -891,16 +891,12 @@ msgid "Description à venir."
 msgstr "描述即将补充。"
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "最多 {max} 个常用服务"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "请至少选择 1 个服务"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "服务已更新（{count}/{max}）"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
