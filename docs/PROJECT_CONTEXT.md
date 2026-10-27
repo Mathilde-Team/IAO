@@ -266,6 +266,11 @@ sursolliciter toujours le même compte.
   - **Registre de jobs persistant** dans `<userData>/scheduler/` : `jobs.json` (source de vérité) +
     `jobs.csv` (export, régénéré à chaque écriture), `config.json`, `accounts-snapshot.json`,
     `activity.json` (journal, 500 dernières entrées).
+  - **Copie complète des comptes** (issue #311) : `<userData>/comptes-sauvegarde.json`, écrite à
+    chaque `syncAccounts` (fichier temporaire puis renommage), format exact de l'export. Au
+    démarrage sans compte, `reportStartupAccounts` la propose en priorité (`accountsFromBackup`),
+    l'instantané partiel `accounts-snapshot.json` seulement à défaut ; l'interface restaure par
+    `importAccountsJSON`, le même chemin que le bouton « Importer ».
   - **Détection des téléchargements** : pour chaque profil connu (reçu via `syncAccounts`),
     `session.fromPartition('persist:<profil>').on('will-download', ...)` — si le fichier se termine
     en `.zip` **et que l'ordonnanceur est activé**, crée un job `DOWNLOADING` puis le fait passer à

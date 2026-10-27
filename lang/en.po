@@ -1916,8 +1916,8 @@ msgid "Comptes retrouvés"
 msgstr "Accounts found"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "No account was read at startup, but the scheduler knows {count}. Restore them? Service sessions are kept; email addresses can be filled in from “Edit account”."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr "No account was read at startup, but IAO kept a copy ({count} account(s)). Restore them? It is the same operation as importing an export file: accounts, addresses and service sessions are kept."
 
 #: assets/app.js
 msgid "Ignorer"

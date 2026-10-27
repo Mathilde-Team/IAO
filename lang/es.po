@@ -1918,8 +1918,8 @@ msgid "Comptes retrouvés"
 msgstr "Cuentas encontradas"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "Al inicio no se leyó ninguna cuenta, pero el planificador conoce {count}. ¿Restaurarlas? Las sesiones de los servicios se conservan; las direcciones de correo se completan desde «Editar la cuenta»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr "No se leyó ninguna cuenta al iniciar, pero IAO guardó una copia ({count} cuenta(s)). ¿Restaurarlas? Es la misma operación que importar un archivo de exportación: se conservan las cuentas, las direcciones y las sesiones de los servicios."
 
 #: assets/app.js
 msgid "Ignorer"

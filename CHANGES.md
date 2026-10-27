@@ -57,6 +57,32 @@
 - Tests : `test/webmail-connexion.test.js` (script exécuté dans une page Roundcube simulée,
   fenêtre simulée), `test/coffre-secrets.test.js` ; couverture 100 %.
 
+## Issue #311 — restauration des comptes : adresse e-mail perdue (26/10/2026)
+
+### Corrigé
+- L'instantané de l'ordonnanceur (`accounts-snapshot.json`) ne gardait que nom, profil et
+  automatisation : les comptes restaurés au démarrage (« Comptes retrouvés », #186) n'avaient
+  plus d'adresse et la carte affichait « • <profil> » à la place de l'adresse.
+  **`scheduler/index.js`** (`syncAccounts`) garde désormais l'adresse, et
+  **`lib/accounts-recovery.js`** (`accountsFromSnapshot`) la restaure ; un ancien instantané
+  donne toujours une adresse vide.
+- **`assets/app.js`** : sans adresse, la carte n'affiche plus que le profil (plus de
+  séparateur orphelin) ; texte de la modale de restauration ajusté (catalogues mis à jour,
+  traductions en, de, es, it revues, les autres langues en « fuzzy »).
+- Tests : `test/accounts-recovery.test.js`, `test/scheduler-state-config.test.js`, scénario
+  Electron C8.1 (adresses restaurées et ligne de la carte).
+
+### Modifié (suite de la relecture : restaurer comme l'import)
+- **Copie complète des comptes** `<userData>/comptes-sauvegarde.json`, au format exact du
+  fichier d'export, écrite par `syncAccounts` à chaque enregistrement (fichier temporaire puis
+  renommage). Elle se suffit à elle-même : nom, adresse, profil, couleur, services, cooldowns,
+  automatisation.
+- Restauration au démarrage : la copie complète d'abord (`accountsFromBackup`), l'ancien
+  instantané partiel seulement à défaut ; l'interface restaure par `importAccountsJSON`,
+  exactement comme le bouton « Importer ». Texte de la modale revu (en, de, es, it traduits).
+- Tests : `test/accounts-recovery.test.js`, `test/scheduler-state-config.test.js` (format,
+  repli, échec d'écriture), C8.1 vérifie aussi noms et couleurs.
+
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté

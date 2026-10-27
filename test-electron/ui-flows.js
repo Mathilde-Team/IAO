@@ -702,12 +702,25 @@ async function run() {
       setTimeout(() => resolve({
         modal: document.getElementById('snapshotRestore') !== null,
         cards: document.querySelectorAll('#accountsList .account-card').length,
-        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile)
+        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile),
+        emails: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.email),
+        couleurs: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.color),
+        noms: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.name),
+        lignes: [...document.querySelectorAll('#accountsList .account-email')].map((e) => e.textContent.trim())
       }), 200);
     })`);
     assert(!after.modal, 'modale toujours ouverte après restauration');
     assert(after.cards === seedAccounts.length, 'cartes après restauration : ' + after.cards);
     assert(JSON.stringify(after.stored) === JSON.stringify(seedAccounts.map((a) => a.profile)), 'profils enregistrés : ' + after.stored.join(','));
+    // Issue #311 : l'adresse revient avec le compte, à sa place sur la carte.
+    assert(JSON.stringify(after.emails) === JSON.stringify(seedAccounts.map((a) => a.email)), 'e-mails restaurés : ' + after.emails.join(','));
+    // Issue #311 (suite) : restauration = import de la copie complète, donc
+    // nom et couleur reviennent tels qu'à l'export (l'ancien instantané les perdait).
+    assert(JSON.stringify(after.noms) === JSON.stringify(seedAccounts.map((a) => a.name)), 'noms restaurés : ' + after.noms.join(','));
+    assert(JSON.stringify(after.couleurs) === JSON.stringify(seedAccounts.map((a) => a.color)), 'couleurs restaurées : ' + after.couleurs.join(','));
+    // Ordre d'affichage propre à la liste : comparaison sans ordre.
+    const attendues = seedAccounts.map((a) => a.email + ' • ' + a.profile).sort();
+    assert(JSON.stringify([...after.lignes].sort()) === JSON.stringify(attendues), 'lignes e-mail des cartes : ' + after.lignes.join(' | '));
   });
 
   await test('C8.2 comptes présents : aucune modale de restauration', async () => {
