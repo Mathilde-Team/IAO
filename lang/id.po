@@ -86,8 +86,8 @@ msgid "Redémarrer IAO"
 msgstr ""
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Pilih 9 AI favorit saya"
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -218,8 +218,8 @@ msgid "Fermer"
 msgstr "Tutup"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Pilih 9 layanan yang ditampilkan di antarmuka. Layanan lainnya tetap tersedia di bantuan."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -891,16 +891,12 @@ msgid "Description à venir."
 msgstr "Deskripsi segera hadir."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Maksimal {max} layanan favorit"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Pilih setidaknya 1 layanan"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Layanan diperbarui ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."

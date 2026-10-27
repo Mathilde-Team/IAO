@@ -214,9 +214,9 @@
 
     // Issue #42 : liste des services "à portée de main" (9 par défaut).
     // Stockée dans localStorage, modifiable via le menu de sélection.
+    // Issue #319 : de 1 à tous les services (plus de plafond à 9).
     const ACTIVE_SERVICES_KEY = 'ai_active_services';
     const DEFAULT_ACTIVE_SERVICES = ['claude','chatgpt','gemini','zeta','perplexity','grok','leonardo','suno','meshy'];
-    const MAX_ACTIVE_SERVICES = 9;
 
     function getActiveServices() {
       try {
@@ -224,16 +224,21 @@
         if (!raw) return DEFAULT_ACTIVE_SERVICES.slice();
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return DEFAULT_ACTIVE_SERVICES.slice();
-        // Filtrer les IDs invalides + limiter à MAX_ACTIVE_SERVICES
-        const valid = parsed.filter(id => SERVICES.some(s => s.id === id));
+        // Filtrer les IDs invalides et les doublons
+        const valid = parsed.filter((id, i) => SERVICES.some(s => s.id === id) && parsed.indexOf(id) === i);
         if (valid.length === 0) return DEFAULT_ACTIVE_SERVICES.slice();
-        return valid.slice(0, MAX_ACTIVE_SERVICES);
+        return valid;
       } catch (e) { return DEFAULT_ACTIVE_SERVICES.slice(); }
     }
 
     function saveActiveServices(ids) {
-      try { localStorage.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids.slice(0, MAX_ACTIVE_SERVICES))); }
+      try { localStorage.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids)); }
       catch (e) { /* non bloquant */ }
+    }
+
+    // Issue #324 : logo officiel du service (lib/service-icons.js), initiale à défaut.
+    function svcIcon(svc) {
+      return window.iaoServiceIcons.iconeService(svc.id, svc.name);
     }
 
     // Retourne les services actifs (objets complets), dans l'ordre de sélection.
@@ -536,23 +541,18 @@
     let editorMode = 'none'; // 'monaco' | 'textarea' | 'none'
     let currentOpenFilePath = null;
 
-    // Migration : convertit les anciens comptes et garantit que chaque compte
-    // possède TOUS les services + un cooldown pour chacun (répare aussi les
-    // comptes enregistrés qui n'avaient pas encore Perplexity/Zeta).
+    // Migration : convertit les anciens comptes et aligne leurs services sur
+    // la sélection « mes IA à portée de main » (issue #42), un cooldown pour chacun.
+    // Issue #319 : la liste d'un compte EST la sélection active (aucun écran ne
+    // la choisit compte par compte). Avant, les services actifs étaient ajoutés
+    // à ceux du compte : après un changement de sélection, on retrouvait au
+    // redémarrage les 9 anciens plus les nouveaux.
     function migrateOldAccounts() {
       let needsUpdate = false;
-    // Issue #42 : ALL_SERVICES utilise les services actifs (9 sélectionnés)
-    // au lieu de tous les SERVICES. Les comptes existants gardent leurs services
-    // assignés ; les nouveaux comptes obtiennent les 9 services actifs.
-    const ALL_SERVICES = getActiveServices();
+      const ALL_SERVICES = getActiveServices();
       accounts.forEach(acc => {
-        if (!Array.isArray(acc.services)) { acc.services = [...ALL_SERVICES]; needsUpdate = true; }
         if (acc.quotas && !acc.cooldowns) { delete acc.quotas; needsUpdate = true; }
-        if (!acc.cooldowns) { acc.cooldowns = {}; needsUpdate = true; }
-        ALL_SERVICES.forEach(sid => {
-          if (!acc.services.includes(sid)) { acc.services.push(sid); needsUpdate = true; }
-          if (acc.cooldowns[sid] === undefined) { acc.cooldowns[sid] = 0; needsUpdate = true; }
-        });
+        if (window.iaoServicesActifs.alignerServices(acc, ALL_SERVICES)) needsUpdate = true;
         // Ordonnanceur (chantier E, proposition externe intégrée au backlog) :
         // chaque compte porte désormais son état d'automatisation, indépendant
         // des cooldowns par service. lastUsedAt = dernière ouverture manuelle ;
@@ -729,13 +729,15 @@
           if (!svc) return '';
           const cdTime = acc.cooldowns[sid] || 0;
           const isOnCooldown = cdTime > Date.now();
-          const btnClass = isOnCooldown ? `${svc.cssClass} cooldown-active` : svc.cssClass;
+          // Issue #324 : bouton de couleur standard (plus de fond par service),
+          // logo officiel devant le nom.
+          const btnClass = isOnCooldown ? 'cooldown-active' : '';
           // svc.id vient de SERVICES (valeurs sûres codées en dur). Les actions
           // passent par des data-* lus par la délégation d'événements (chantier A) :
           // plus aucune donnée n'est injectée dans un attribut onclick.
           return `
             <div class="service-column">
-              <button class="svc-btn ${btnClass}" data-action="open-service" data-acc="${id}" data-svc="${svc.id}">${escapeHtml(svc.name)}${svcStatusDot(acc, svc.id, lastUsedBySvc)}${isTabStarredById(acc.id, svc.id) ? '<span class="svc-btn__star"><span class="ic" data-icon="star"></span></span>' : ''}</button>
+              <button class="svc-btn ${btnClass}" data-action="open-service" data-acc="${id}" data-svc="${svc.id}">${svcIcon(svc)}<span class="svc-btn__nom">${escapeHtml(svc.name)}</span>${svcStatusDot(acc, svc.id, lastUsedBySvc)}${isTabStarredById(acc.id, svc.id) ? '<span class="svc-btn__star"><span class="ic" data-icon="star"></span></span>' : ''}</button>
             </div>
           `;
         }).join('');
@@ -995,8 +997,8 @@
 
     // Réaffiche la barre d'onglets à partir de tabs[] (source de vérité unique).
     // Délégation d'événements (chantier A) : aucun onclick avec donnée interpolée.
-    // Lot 16/09/2026 : titre/sous-titre inversés (compte en gras en 1re ligne,
-    // service en 2e — cf. .tab__label/.tab__acc) + reflet visuel « inactif
+    // Issue #324 : logo du service + nom du compte (service en infobulle) ;
+    // reflet visuel « inactif
     // depuis 5 min » via isTabIdle(t.lastFocusAt) (lib/activity-status.js).
     function renderTabsBar() {
       const bar = document.getElementById('tabsBar');
@@ -1012,11 +1014,10 @@
         const starHtml = starred ? '<span class="tab__star"><span class="ic" data-icon="star"></span></span>' : '';
         return `
           <div class="${cls}" draggable="true" data-action="activate-tab" data-tab="${t.id}" data-acc="${t.accId}" data-svc="${t.svcId}" title="${escapeHtml(acc.name)} — ${escapeHtml(svc.name)}">
-            <span class="tab__dot svc-bg-${svc.id}"></span>
+            ${svcIcon(svc)}
             ${starHtml}
             <span class="tab__text">
               <span class="tab__label">${escapeHtml(acc.name)}</span>
-              <span class="tab__acc">${escapeHtml(svc.name)}</span>
             </span>
             <span class="tab__close" data-action="close-tab" data-tab="${t.id}" title="Fermer l'onglet"><span class="ic" data-icon="times-circle"></span></span>
           </div>
@@ -1496,7 +1497,7 @@
         const info = SERVICE_INFO[svc.id];
         return `
           <div class="help-entry">
-            <div class="help-entry__name"><span class="help-entry__dot svc-bg-${svc.id}"></span>${escapeHtml(svc.name)}</div>
+            <div class="help-entry__name">${svcIcon(svc)}${escapeHtml(svc.name)}</div>
             ${info ? `
               <div class="help-entry__line"><span class="help-entry__label">${escapeHtml(_('C\'est quoi ?'))}</span> ${escapeHtml(_(info.what))}</div>
               <div class="help-entry__line"><span class="help-entry__label">${escapeHtml(_('Quand l\'utiliser ?'))}</span> ${escapeHtml(_(info.when))}</div>
@@ -1527,7 +1528,7 @@
             <div class="help-entry__name">
               <label class="service-select-item">
                 <input type="checkbox" data-svc-id="${escapeHtml(svc.id)}" ${checked}>
-                <span class="help-entry__dot svc-bg-${svc.id}"></span>
+                ${svcIcon(svc)}
                 ${escapeHtml(svc.name)}
               </label>
             </div>
@@ -1540,11 +1541,6 @@
         const cb = e.target;
         if (cb && cb.dataset && cb.dataset.svcId) {
           if (cb.checked) {
-            if (pendingServices.size >= MAX_ACTIVE_SERVICES) {
-              cb.checked = false;
-              showToast(_('Maximum {max} services à portée de main', { max: MAX_ACTIVE_SERVICES }), 'error');
-              return;
-            }
             pendingServices.add(cb.dataset.svcId);
           } else {
             pendingServices.delete(cb.dataset.svcId);
@@ -1560,9 +1556,14 @@
       const ids = Array.from(pendingServices);
       if (ids.length === 0) { showToast(_('Sélectionnez au moins 1 service'), 'error'); return; }
       saveActiveServices(ids);
+      // Issue #319 : les cartes reprennent tout de suite la nouvelle sélection
+      // (avant, rien n'était appliqué aux comptes avant le redémarrage).
+      const modifies = window.iaoServicesActifs.alignerTous(accounts, getActiveServices());
+      if (modifies > 0) saveAccounts(accounts);
+      dbg('services', 'sélection enregistrée', ids.length, 'services,', modifies, 'compte(s) alignés');
       closeServicesModal();
       // Mettre à jour ALL_SERVICES et re-rendre les comptes
-      showToast(_('Services mis à jour ({count}/{max})', { count: ids.length, max: MAX_ACTIVE_SERVICES }));
+      showToast(_('IA à portée de main : {count}', { count: ids.length }));
       // Recharger pour appliquer les changements partout
       renderAccounts();
     };
@@ -1675,8 +1676,9 @@
         accounts.push({
           id: 'acc_' + Date.now(), name, email, profile,
           color: COLORS[accounts.length % COLORS.length],
-          services: SERVICES.map(s => s.id),
-          cooldowns: Object.fromEntries(SERVICES.map(s => [s.id, 0])),
+          // Issue #319 : la sélection active, pas tout le catalogue.
+          services: getActiveServices(),
+          cooldowns: Object.fromEntries(getActiveServices().map(sid => [sid, 0])),
           automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 }
         });
         showToast(_('Compte ajouté'));
@@ -1707,7 +1709,7 @@
       const s = currentSettings || {};
       const r = window.iaoComptesSerie.comptesEnSerie({
         comptes: accounts, nombre: Number(document.getElementById('serieNombre').value),
-        prefixe: s.mailPrefix, domaine: s.mailDomain, services: SERVICES.map(x => x.id), maintenant: Date.now()
+        prefixe: s.mailPrefix, domaine: s.mailDomain, services: getActiveServices(), maintenant: Date.now()
       });
       if (!r.ok) {
         return showToast(r.erreur === 'nombre'
@@ -1717,7 +1719,7 @@
       r.comptes.forEach((c) => {
         accounts.push(Object.assign(c, {
           color: COLORS[accounts.length % COLORS.length],
-          cooldowns: Object.fromEntries(SERVICES.map(x => [x.id, 0])),
+          cooldowns: Object.fromEntries(c.services.map(sid => [sid, 0])),
           automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 }
         }));
       });
