@@ -1902,10 +1902,8 @@ msgid "Comptes retrouvés"
 msgstr "Odnalezione konta"
 
 #: assets/app.js
-#, fuzzy
-#| msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services et les adresses e-mail sont conservées ; une adresse manquante se complète depuis « Modifier le compte »."
-msgstr "Przy uruchomieniu nie wczytano żadnego konta, ale harmonogram zna ich {count}. Przywrócić je? Sesje usług zostaną zachowane; adresy e-mail trzeba uzupełnić w „Edytuj konto”."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

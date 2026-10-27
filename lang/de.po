@@ -1886,8 +1886,8 @@ msgid "Comptes retrouvés"
 msgstr "Konten gefunden"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services et les adresses e-mail sont conservées ; une adresse manquante se complète depuis « Modifier le compte »."
-msgstr "Beim Start wurde kein Konto gelesen, aber der Planer kennt {count}. Wiederherstellen? Die Dienst-Sitzungen und E-Mail-Adressen bleiben erhalten; eine fehlende Adresse lässt sich über „Konto bearbeiten“ ergänzen."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr "Beim Start wurde kein Konto gelesen, aber IAO hat eine Kopie behalten ({count} Konto/Konten). Wiederherstellen? Es ist derselbe Vorgang wie das Importieren einer Exportdatei: Konten, Adressen und Dienst-Sitzungen bleiben erhalten."
 
 #: assets/app.js
 msgid "Ignorer"

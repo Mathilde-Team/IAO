@@ -1886,10 +1886,8 @@ msgid "Comptes retrouvés"
 msgstr "অ্যাকাউন্ট পাওয়া গেছে"
 
 #: assets/app.js
-#, fuzzy
-#| msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services et les adresses e-mail sont conservées ; une adresse manquante se complète depuis « Modifier le compte »."
-msgstr "চালুর সময় কোনো অ্যাকাউন্ট পড়া যায়নি, তবে সময়সূচক {count}টি অ্যাকাউন্ট জানে। সেগুলো পুনরুদ্ধার করবেন? পরিষেবার সেশন রাখা আছে; ইমেল ঠিকানা «অ্যাকাউন্ট সম্পাদনা» থেকে পূরণ করতে হবে।"
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

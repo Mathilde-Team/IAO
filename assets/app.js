@@ -3408,7 +3408,7 @@
       title.textContent = _('Comptes retrouvés');
       const desc = document.createElement('div');
       desc.className = 'modal__desc';
-      desc.textContent = _("Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services et les adresses e-mail sont conservées ; une adresse manquante se complète depuis « Modifier le compte ».", { count: restored.length });
+      desc.textContent = _("Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés.", { count: restored.length });
       const actions = document.createElement('div');
       actions.className = 'modal__actions';
       const close = () => overlay.remove();
@@ -3421,12 +3421,18 @@
       restore.setAttribute('data-role', 'snapshot-restore');
       restore.textContent = _('Restaurer les comptes');
       restore.addEventListener('click', () => {
-        accounts = restored;
-        migrateOldAccounts();   // services et cooldowns
-        saveAccounts(accounts); // resynchronise aussi l'ordonnanceur
-        renderAccounts();
         close();
-        showToast(_n('{count} compte restauré', '{count} comptes restaurés', restored.length, { count: restored.length }));
+        // Issue #311 : restaurer = importer la copie, par le même chemin que le
+        // bouton « Importer » (importAccountsJSON : migration, enregistrement,
+        // affichage). Aucun traitement propre à la restauration.
+        try {
+          const count = importAccountsJSON(JSON.stringify(restored));
+          dbg('comptes', 'restauration au démarrage : ' + count + ' compte(s) importé(s)');
+          showToast(_n('{count} compte restauré', '{count} comptes restaurés', count, { count }));
+        } catch (e) {
+          console.error('[comptes] échec de la restauration :', e);
+          showToast(_('Échec de l\'import : {error}', { error: e.message || e }), 'error');
+        }
       });
       actions.appendChild(cancel);
       actions.appendChild(restore);

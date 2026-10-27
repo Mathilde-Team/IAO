@@ -6,6 +6,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const r = require('../lib/accounts-recovery');
+const { accountsFromBackup } = r;
 
 test('accountsFromSnapshot reconstruit id, nom, profil et automatisation ; e-mail vide', () => {
   const out = r.accountsFromSnapshot([
@@ -86,4 +87,13 @@ test('startupAccountsReport : entrées invalides -> statut « inconnu », compte
     assert.match(rep.message, /: 0 \(stockage de l'interface : inconnu\) ; instantané de l'ordonnanceur : 0 /);
   }
   assert.equal(r.startupAccountsReport({ status: 'empty', count: 0 }, 0).offerRestore, false);
+});
+
+test('#311 accountsFromBackup : copie complète renvoyée telle quelle, sinon null', () => {
+  const liste = [{ id: 'a1', profile: 'profil_1', name: 'A', color: '#fff', services: ['claude'] }];
+  assert.strictEqual(accountsFromBackup(liste), liste);
+  for (const douteux of [null, undefined, {}, 'x', [], [null], [[]], ['a'],
+    [{ id: 'a1' }], [{ profile: 'p' }], [{ id: '  ', profile: 'p' }], [liste[0], { id: 'a2', profile: '' }]]) {
+    assert.strictEqual(accountsFromBackup(douteux), null, JSON.stringify(douteux));
+  }
 });

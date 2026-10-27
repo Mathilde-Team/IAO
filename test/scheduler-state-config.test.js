@@ -332,7 +332,8 @@ test('reportStartupAccounts : interface vide, instantané non vide -> warning jo
     ctx.scheduler.setLogger((scope, level, message) => lines.push([scope, level, message]), false);
     const res = ctx.scheduler.reportStartupAccounts({ status: 'empty', count: 0 });
     assert.strictEqual(res.offerRestore, true);
-    assert.deepStrictEqual(res.accounts.map(a => a.id + ':' + a.profile + ':' + a.email), ['a1:profil_1:', 'a2:profil_2:']);
+    // Issue #311 : la copie complète est renvoyée telle quelle (format export).
+    assert.deepStrictEqual(res.accounts, [{ id: 'a1', name: 'Alice', profile: 'profil_1' }, { id: 'a2', name: 'Bob', profile: 'profil_2' }]);
     assert.strictEqual(lines.length, 1);
     assert.strictEqual(lines[0][0], 'scheduler');
     assert.strictEqual(lines[0][1], 'warning');
@@ -348,5 +349,55 @@ test('reportStartupAccounts : comptes présents -> info sur la console sans logg
     assert.deepStrictEqual(res, { offerRestore: false, accounts: [] });
     const logged = console.log.mock.calls.map(c => c.arguments.join(' '));
     assert.ok(logged.some(l => /\[scheduler\] Comptes lus au démarrage : 1 \(stockage de l'interface : ok\)/.test(l)));
+  } finally { cleanup(ctx); }
+});
+
+// --- Copie complète des comptes (issue #311, suite) ---------------------------
+
+test('#311 syncAccounts : copie complète au format export, hors du dossier de l\'ordonnanceur', () => {
+  const ctx = create();
+  try {
+    const comptes = [{ id: 'a1', name: 'Alice', email: 'a@x.fr', profile: 'profil_1', color: '#123456', services: ['claude'], cooldowns: { claude: 5 } }];
+    ctx.scheduler.syncAccounts(comptes);
+    const fichier = path.join(ctx.app._tmpDir, 'comptes-sauvegarde.json');
+    assert.strictEqual(ctx.scheduler.accountsBackupPath, fichier);
+    assert.strictEqual(fs.readFileSync(fichier, 'utf-8'), JSON.stringify(comptes, null, 2));
+    assert.ok(!fs.existsSync(fichier + '.tmp'), 'fichier temporaire laissé');
+    // Relu au redémarrage, renvoyé tel quel pour l'import.
+    const relu = new Scheduler(ctx.app, createMockSession());
+    assert.deepStrictEqual(relu.reportStartupAccounts({ status: 'empty', count: 0 }).accounts, comptes);
+    // Liste vide (dernier compte supprimé) : la copie suit, rien à proposer.
+    ctx.scheduler.syncAccounts([]);
+    assert.strictEqual(fs.readFileSync(fichier, 'utf-8'), '[]');
+    // Entrée non tableau : la copie n'est pas touchée.
+    ctx.scheduler.syncAccounts(null);
+    assert.strictEqual(fs.readFileSync(fichier, 'utf-8'), '[]');
+  } finally { cleanup(ctx); }
+});
+
+test('#311 reportStartupAccounts : sans copie complète, repli sur l\'ancien instantané', () => {
+  const ctx = create();
+  try {
+    ctx.scheduler.syncAccounts([{ id: 'a1', name: 'Alice', email: 'a@x.fr', profile: 'profil_1', color: '#123456' }]);
+    fs.rmSync(ctx.scheduler.accountsBackupPath);
+    const relu = new Scheduler(ctx.app, createMockSession());
+    assert.strictEqual(relu.accountsBackup, null);
+    const res = relu.reportStartupAccounts({ status: 'empty', count: 0 });
+    // Instantané partiel : la couleur (non conservée) disparaît.
+    assert.deepStrictEqual(res.accounts.map(a => [a.id, a.name, a.email, a.profile, a.color]), [['a1', 'Alice', 'a@x.fr', 'profil_1', undefined]]);
+  } finally { cleanup(ctx); }
+});
+
+test('#311 syncAccounts : échec d\'écriture de la copie complète journalisé, instantané conservé', () => {
+  const ctx = create();
+  try {
+    // Un dossier à la place du fichier : le renommage échoue.
+    fs.mkdirSync(ctx.scheduler.accountsBackupPath);
+    fs.writeFileSync(path.join(ctx.scheduler.accountsBackupPath, 'x'), '');
+    const erreurs = test.mock.method(console, 'error', () => {});
+    ctx.scheduler.syncAccounts([{ id: 'a1', profile: 'profil_1' }]);
+    assert.ok(erreurs.mock.calls.some(c => /échec écriture de la copie complète des comptes/.test(c.arguments.join(' '))));
+    assert.strictEqual(ctx.scheduler.accountsBackup, null);
+    assert.deepStrictEqual(readJSON(ctx.scheduler.accountsPath).map(a => a.id), ['a1']);
   } finally { cleanup(ctx); }
 });

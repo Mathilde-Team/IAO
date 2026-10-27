@@ -15,6 +15,17 @@
 - Tests : `test/accounts-recovery.test.js`, `test/scheduler-state-config.test.js`, scénario
   Electron C8.1 (adresses restaurées et ligne de la carte).
 
+### Modifié (suite de la relecture : restaurer comme l'import)
+- **Copie complète des comptes** `<userData>/comptes-sauvegarde.json`, au format exact du
+  fichier d'export, écrite par `syncAccounts` à chaque enregistrement (fichier temporaire puis
+  renommage). Elle se suffit à elle-même : nom, adresse, profil, couleur, services, cooldowns,
+  automatisation.
+- Restauration au démarrage : la copie complète d'abord (`accountsFromBackup`), l'ancien
+  instantané partiel seulement à défaut ; l'interface restaure par `importAccountsJSON`,
+  exactement comme le bouton « Importer ». Texte de la modale revu (en, de, es, it traduits).
+- Tests : `test/accounts-recovery.test.js`, `test/scheduler-state-config.test.js` (format,
+  repli, échec d'écriture), C8.1 vérifie aussi noms et couleurs.
+
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté
