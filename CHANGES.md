@@ -1,5 +1,88 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
+
+### Ajouté
+- **`lib/webmail-codes.js`** : tant que la fenêtre webmail d'un compte est ouverte, le
+  process principal relève toutes les 10 s la première page de la boîte de réception,
+  dans cette fenêtre (requêtes Roundcube `_action=list` puis `_action=viewsource` de la
+  page elle-même, jeton `rcmail.env.request_token` : aucun mot de passe ni cookie ne sort
+  de la fenêtre ; 5 nouveaux messages au plus par relevé, dédoublonnés par uid). Chaque
+  message est analysé sans dépendance (multipart, quoted-printable, base64, en-têtes
+  RFC 2047, HTML -> texte) : expéditeur d'un domaine connu d'un des 21 services, reçu
+  depuis moins de 15 min, code à 6 chiffres hors liens et adresses (de préférence près de
+  « code » / « vérification »), lien de connexion https vers un domaine du même service
+  uniquement. Le journal ne contient ni le code ni le lien.
+- **Interface** : `webmail:attendre` (attente longue de 25 s, le preload n'expose que
+  `invoke`) remet les événements au renderer. Dans l'onglet du service pour ce compte
+  (ouvert s'il ne l'est pas et qu'un lien est présent), un bandeau au début de la barre
+  « recharger / accueil / déconnecter » affiche le code et un bouton Copier ; si un lien
+  est présent, il est ouvert dans l'onglet après 3 s (compte à rebours, bouton Annuler,
+  puis « Ouvrir le lien de connexion » à la main). Bandeau retiré après 5 min ou par ×.
+  Nouvelles chaînes traduites en anglais, allemand, espagnol et italien.
+
+### Corrigé
+- Tâche programmée vers un onglet déjà ouvert : l'échec de `loadURL` (réseau coupé,
+  navigation remplacée) était un rejet de promesse non géré qui affichait le bandeau
+  « IAO a rencontré un problème » ; il est maintenant journalisé (`[taches]`).
+
+### Limites
+- Relevé seulement pendant que la fenêtre webmail du compte est ouverte ; première page de
+  la boîte de réception (tri Roundcube par date décroissante supposé).
+- Testé sur des sources de mails réelles (Perplexity, Mistral) et une page Roundcube
+  simulée, pas sur un serveur Roundcube réel ; l'affichage de la source peut marquer le
+  message comme lu selon la configuration du serveur.
+
+### Tests
+- `test/webmail-codes.test.js`, `test/webmail-connexion.test.js` (relevé créé, actif
+  seulement sur l'hôte du webmail, arrêté à la fermeture), canal `webmail:attendre` dans
+  `test/main-harness.test.js` ; couverture 100 %. Harnais Electron : C9.3 (bandeau, lien
+  ouvert après 3 s, annulation, événements invalides ignorés).
+
+## Issue #310 — webmail ouvert connecté au compte (26/10/2026)
+
+### Corrigé
+- L'enveloppe d'un compte ouvrait le webmail dans le navigateur système, sans compte ni
+  mot de passe. **`lib/webmail-connexion.js`** l'ouvre désormais dans une fenêtre IAO sans
+  privilèges (sandbox, contextIsolation, partition `persist:<profil>` du compte : une session
+  Roundcube par compte, une fenêtre par profil ramenée au premier plan au second clic). Au
+  premier chargement d'une page de l'hôte des réglages, le formulaire Roundcube
+  (`#rcmloginuser`, `#rcmloginpwd`, `#rcmloginsubmit`) est rempli avec l'adresse du compte et
+  le mot de passe du coffre (#201), puis validé ; une seule tentative par fenêtre (un refus
+  ne boucle pas). Sans mot de passe enregistré, l'adresse seule est remplie.
+- **`lib/coffre-secrets.js`** : `app:open-webmail` reçoit le compte `{ profil, email }` ;
+  l'URL reste celle des réglages, le mot de passe est lu dans le coffre par le process
+  principal et n'est jamais journalisé. Compte illisible : ouverture dans le navigateur,
+  comme avant.
+- Tests : `test/webmail-connexion.test.js` (script exécuté dans une page Roundcube simulée,
+  fenêtre simulée), `test/coffre-secrets.test.js` ; couverture 100 %.
+
+## Issue #311 — restauration des comptes : adresse e-mail perdue (26/10/2026)
+
+### Corrigé
+- L'instantané de l'ordonnanceur (`accounts-snapshot.json`) ne gardait que nom, profil et
+  automatisation : les comptes restaurés au démarrage (« Comptes retrouvés », #186) n'avaient
+  plus d'adresse et la carte affichait « • <profil> » à la place de l'adresse.
+  **`scheduler/index.js`** (`syncAccounts`) garde désormais l'adresse, et
+  **`lib/accounts-recovery.js`** (`accountsFromSnapshot`) la restaure ; un ancien instantané
+  donne toujours une adresse vide.
+- **`assets/app.js`** : sans adresse, la carte n'affiche plus que le profil (plus de
+  séparateur orphelin) ; texte de la modale de restauration ajusté (catalogues mis à jour,
+  traductions en, de, es, it revues, les autres langues en « fuzzy »).
+- Tests : `test/accounts-recovery.test.js`, `test/scheduler-state-config.test.js`, scénario
+  Electron C8.1 (adresses restaurées et ligne de la carte).
+
+### Modifié (suite de la relecture : restaurer comme l'import)
+- **Copie complète des comptes** `<userData>/comptes-sauvegarde.json`, au format exact du
+  fichier d'export, écrite par `syncAccounts` à chaque enregistrement (fichier temporaire puis
+  renommage). Elle se suffit à elle-même : nom, adresse, profil, couleur, services, cooldowns,
+  automatisation.
+- Restauration au démarrage : la copie complète d'abord (`accountsFromBackup`), l'ancien
+  instantané partiel seulement à défaut ; l'interface restaure par `importAccountsJSON`,
+  exactement comme le bouton « Importer ». Texte de la modale revu (en, de, es, it traduits).
+- Tests : `test/accounts-recovery.test.js`, `test/scheduler-state-config.test.js` (format,
+  repli, échec d'écriture), C8.1 vérifie aussi noms et couleurs.
+
 ## Issues #317 et #318 — relance sans perte, redémarrage normal, onglets proposés (26/10/2026)
 
 ### Corrigé

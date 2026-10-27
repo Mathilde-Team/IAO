@@ -32,6 +32,8 @@ const diag = require('./lib/startup-diagnostics');
 const DEBUG = diag.isDebugEnabled(process.argv, process.env);
 const debugTrace = require('./lib/debug-trace');
 const { CoffreSecrets, registerComptesIPC } = require('./lib/coffre-secrets');
+const { creerOuvreurWebmail } = require('./lib/webmail-connexion');
+const { creerFileConnexions } = require('./lib/webmail-codes');
 const { IdentifiantsPartages, registerIdentifiantsIPC } = require('./lib/identifiants');
 const focusIdentifiants = require('./lib/identifiants-focus');
 const startupStorage = require('./lib/startup-storage');
@@ -574,6 +576,7 @@ ipc.handle('settings:save', async (event, rawSettings) => {
 });
 
 // --- Issue #201 : mots de passe de messagerie (chiffrés) et webmail ---
+const connexionsWebmail = creerFileConnexions();
 registerComptesIPC(ipc, {
   coffre: new CoffreSecrets({
     fichier: path.join(app.getPath('userData'), 'secrets.json'),
@@ -583,8 +586,16 @@ registerComptesIPC(ipc, {
   fichierReglages: settingsPath,
   normaliser: normalizeSettings,
   fsPromises,
-  ouvrirExterne: shell.openExternal.bind(shell)
+  ouvrirExterne: shell.openExternal.bind(shell),
+  // Issue #310 : webmail connecté au compte, dans une fenêtre sans privilèges.
+  ouvrirWebmail: creerOuvreurWebmail({
+    BrowserWindow, journal: log.bind(null, 'webmail'), debug: debug.bind(null, 'webmail'),
+    signaler: connexionsWebmail.ajouter
+  })
 });
+// Issue #310 (relecture) : codes et liens de connexion relevés dans le webmail,
+// lus par l'interface en attente longue (le preload n'expose pas ipcRenderer.on).
+ipc.handle('webmail:attendre', connexionsWebmail.attendre);
 
 // --- Identifiants partagés entre profils (issue #278) ---
 // Coffre d'identifiants de connexion (login + mot de passe, chiffrés par le

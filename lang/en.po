@@ -1014,6 +1014,38 @@ msgid "E-mail copié : {email}"
 msgstr "E-mail copied: {email}"
 
 #: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr "{service} code for {account}: {code}"
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr "Code received by email:"
+
+#: assets/app.js
+msgid "Copier"
+msgstr "Copy"
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr "Open the sign-in link"
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr "Sign-in link opened"
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr "Automatic sign-in in {seconds} s"
+
+#: assets/app.js
+msgid "Code copié"
+msgstr "Code copied"
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr "Automatic sign-in cancelled"
+
+#: assets/app.js
 msgid "Cooldown terminé"
 msgstr "Cooldown over"
 
@@ -1896,8 +1928,8 @@ msgid "Comptes retrouvés"
 msgstr "Accounts found"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "No account was read at startup, but the scheduler knows {count}. Restore them? Service sessions are kept; email addresses can be filled in from “Edit account”."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr "No account was read at startup, but IAO kept a copy ({count} account(s)). Restore them? It is the same operation as importing an export file: accounts, addresses and service sessions are kept."
 
 #: assets/app.js
 msgid "Ignorer"

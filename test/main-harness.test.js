@@ -107,7 +107,7 @@ const MAIN_CHANNELS = [
   'select-folder', 'settings:load', 'settings:save', 'stats:export',
   'stats:load', 'stats:noter-quota', 'stats:noter-reponse', 'stats:quotas', 'stats:reponses', 'stats:reset', 'stats:sync',
   'taches:delete', 'taches:dues', 'taches:history', 'taches:list', 'taches:report', 'taches:run-now',
-  'taches:save', 'taches:set-active'
+  'taches:save', 'taches:set-active', 'webmail:attendre'
 ];
 
 test('main.js se charge avec un module electron simulé et liste ses canaux IPC', (t) => {
