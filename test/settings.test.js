@@ -12,7 +12,7 @@ var settings = require('../lib/settings');
 
 test('DEFAULT_SETTINGS contient toutes les cles attendues', function() {
   var keys = Object.keys(settings.DEFAULT_SETTINGS);
-  var expected = ['editorFontSize', 'editorWordWrap', 'theme', 'confirmBeforeClose', 'showAutomationWindows', 'startWithLastSession', 'harCapture', 'language', 'mailPrefix', 'mailDomain', 'webmailUrl'];
+  var expected = ['editorFontSize', 'editorWordWrap', 'theme', 'confirmTabClose', 'showAutomationWindows', 'startWithLastSession', 'harCapture', 'language', 'mailPrefix', 'mailDomain', 'webmailUrl'];
   assert.deepStrictEqual(keys.sort(), expected.sort());
 });
 
@@ -96,7 +96,7 @@ test('normalizeSettings renvoie tous les defaults pour un objet vide', function(
   assert.strictEqual(result.editorFontSize, 14);
   assert.strictEqual(result.editorWordWrap, 'off');
   assert.strictEqual(result.theme, 'system');
-  assert.strictEqual(result.confirmBeforeClose, true);
+  assert.strictEqual(result.confirmTabClose, false); // #330 : désactivé par défaut
   assert.strictEqual(result.showAutomationWindows, false);
   assert.strictEqual(result.startWithLastSession, false);
 });
@@ -106,7 +106,7 @@ test('normalizeSettings normalise les valeurs invalides', function() {
     editorFontSize: 'abc',
     editorWordWrap: 'invalid',
     theme: 'neon',
-    confirmBeforeClose: 'yes',
+    confirmTabClose: 'yes',
     showAutomationWindows: 1,
     startWithLastSession: false
   };
@@ -114,7 +114,7 @@ test('normalizeSettings normalise les valeurs invalides', function() {
   assert.strictEqual(result.editorFontSize, 14);
   assert.strictEqual(result.editorWordWrap, 'off');
   assert.strictEqual(result.theme, 'system');
-  assert.strictEqual(result.confirmBeforeClose, false);
+  assert.strictEqual(result.confirmTabClose, false);
   assert.strictEqual(result.showAutomationWindows, true);
   assert.strictEqual(result.startWithLastSession, false);
 });
@@ -124,7 +124,7 @@ test('normalizeSettings garde les valeurs valides', function() {
     editorFontSize: 20,
     editorWordWrap: 'on',
     theme: 'dark',
-    confirmBeforeClose: false,
+    confirmTabClose: false,
     showAutomationWindows: true,
     startWithLastSession: true
   };
@@ -132,7 +132,7 @@ test('normalizeSettings garde les valeurs valides', function() {
   assert.strictEqual(result.editorFontSize, 20);
   assert.strictEqual(result.editorWordWrap, 'on');
   assert.strictEqual(result.theme, 'dark');
-  assert.strictEqual(result.confirmBeforeClose, false);
+  assert.strictEqual(result.confirmTabClose, false);
   assert.strictEqual(result.showAutomationWindows, true);
   assert.strictEqual(result.startWithLastSession, true);
 });
@@ -216,4 +216,16 @@ test('#305 normalizeSettings : réglage harCapture (booléen, défaut false)', f
   assert.strictEqual(settings.normalizeSettings({ harCapture: 'faux' }).harCapture, false);
   assert.strictEqual(settings.normalizeSettings({ harCapture: 1 }).harCapture, true);
   assert.strictEqual(settings.normalizeSettings({ harCapture: null }).harCapture, false);
+});
+
+// Issue #330 : l'ancienne clé « confirmBeforeClose » (activée d'office) n'est
+// pas reprise ; seule la nouvelle case cochée active la confirmation.
+test('#330 : confirmBeforeClose ancien ignoré, confirmTabClose désactivé', function() {
+  var result = settings.normalizeSettings({ confirmBeforeClose: true });
+  assert.strictEqual(result.confirmTabClose, false);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(result, 'confirmBeforeClose'), false);
+});
+
+test('#330 : confirmTabClose coché -> conservé', function() {
+  assert.strictEqual(settings.normalizeSettings({ confirmTabClose: true }).confirmTabClose, true);
 });
