@@ -817,6 +817,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Zpět na úvodní stránku {service}"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Odhlásit se z profilu „{profile}“"
 
@@ -851,6 +855,14 @@ msgstr "Karta označena hvězdičkou"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "Hvězdička odebrána"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"
