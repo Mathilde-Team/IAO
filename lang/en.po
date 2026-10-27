@@ -814,6 +814,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Back to the {service} home page"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr "Tab developer tools (debug mode)"
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Sign out of profile \"{profile}\""
 
@@ -848,6 +852,14 @@ msgstr "Tab starred"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "Star removed"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr "IAO window"
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr "AI page: {service} — {compte}"
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"

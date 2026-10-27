@@ -420,6 +420,9 @@
   .tab-code__btn[hidden] { display: none; }
   .tab-code__fermer { border: none; background: transparent; color: var(--fg-muted); font-size: 15px; padding: 0 6px; }
   .tab-toolbar__btn--danger:hover { background: var(--danger-dim); color: var(--danger); }
+  /* Issue #320 : outils de développement de l'onglet, en mode debug seulement. */
+  .tab-toolbar__btn--debug { display: none; }
+  body.iao-debug .tab-toolbar__btn--debug { display: flex; }
   .tabs-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--fg-dim); gap: 16px; pointer-events: none; }
   .tabs-empty .ic { font-size: 32px; color: var(--border-active); }
   /* État de chargement d'un onglet (retiré à dom-ready : l'animation ne tourne

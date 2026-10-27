@@ -54,6 +54,13 @@ test('executerEtape : page pas prête -> nouvelles tentatives, puis succès', as
   assert.deepEqual(d.appels.at(-1), ['taches:report', 'tache-1', 'a', { ok: true }]);
 });
 
+test('executerEtape : champ de saisie absent à l\'écriture -> nouvelle tentative (#320)', async () => {
+  const d = deps([{ ok: false, error: 'chat_input_not_found' }, { ok: true }]);
+  await r.executerEtape(PLAN, PLAN.etapes[0], d);
+  assert.deepEqual(d.attentes, [r.PAUSE_TENTATIVE_MS]);
+  assert.deepEqual(d.appels.at(-1), ['taches:report', 'tache-1', 'a', { ok: true }]);
+});
+
 test('executerEtape : abandon après TENTATIVES ; autre erreur sans nouvelle tentative', async () => {
   const jamais = Array(r.TENTATIVES + 2).fill({ error: 'element_not_found' });
   const d = deps(jamais);

@@ -816,6 +816,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "{service} के होम पर लौटें"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "प्रोफ़ाइल «{profile}» से साइन आउट करें"
 
@@ -850,6 +854,14 @@ msgstr "टैब तारांकित"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "तारा हटाया गया"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"
