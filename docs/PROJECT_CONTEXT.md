@@ -402,6 +402,14 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Logo (`.app-brand__icon`) : dégradé **rose → violet** (`var(--rose)` → `var(--accent)`).
 - Stats : « Comptes actifs » en violet, « IA disponibles » en rose.
 - Les couleurs de marque des IA (Claude/ChatGPT/Gemini/Perplexity/Grok) sont **conservées** pour la reconnaissance ; Z.ai est violet et s'intègre au thème ; Leonardo AI est magenta (`--leonardo: #d946ef`), distinct du violet Z.ai et du rose du thème. Suno est **orange-rouge** (`--suno: #f8441b` — sa marque officielle est noir/blanc, on reprend le pôle orange du dégradé signature rose→orange de son app, le rose étant trop proche de Leonardo) ; Meshy AI est **vert lime** (`--meshy: #c5f955`, couleur dominante relevée sur meshy.ai).
+- **Logos des IA** (issue #324) : `lib/service-icons.js` (`iconeService(id, nom)`, SVG inline,
+  tracés Lobe Icons MIT et Simple Icons CC0, revalidés avant rendu) affiche le logo officiel
+  devant le nom dans les boutons des cartes, la fenêtre « Comprendre les IA », la fenêtre de
+  choix des IA et chaque onglet. Les boutons des cartes ont désormais une **couleur standard**
+  (fond neutre du thème) : le logo suffit à reconnaître le service. Un onglet = logo + nom du
+  compte (le service est dans l'infobulle). Logos monochromes en `currentColor` (lisibles en
+  sombre et en clair), Gemini, Kling, Wolfram et NotebookLM teintés par `--<service>`. Leonardo AI
+  et Elicit (pas de logo libre) : initiale du nom sur la pastille de couleur du service.
 - Polices et icônes **désormais 100% locales** (`assets/fonts/` + `assets/icons.js`) — plus aucune dépendance Internet pour l'ossature visuelle. Monaco est local. Les `@font-face` sont dans le `<style>` d'`index.html` avec des chemins **relatifs** (valables en dev ET en `.exe`).
 
 ## 9. Comportements par défaut importants

@@ -88,6 +88,12 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
 
 ## Fait
 
+- **Logos officiels des IA, boutons de couleur standard (issue #324, 27/10/2026)**
+  Nouveau `lib/service-icons.js` : logo SVG inline (hors ligne, sans dépendance) devant le nom
+  du service dans les cartes de comptes, l'aide, le choix des IA et les onglets ; boutons
+  neutres ; onglet = logo + nom du compte. Leonardo AI et Elicit : initiale (pas de logo libre).
+  Licences : `docs/THIRD-PARTY-NOTICES.md`. Tests : `test/service-icons.test.js`, Electron C5.3.
+
 - **Analyse de ZIP sans shell : injection de commande corrigée (issue #275, 21/10/2026)**
   `analyzeCompleteness` lisait le FEATURES.md du ZIP livré par `unzip` / PowerShell, via
   des commandes construites en concaténant le chemin du ZIP (nom donné par le service IA)

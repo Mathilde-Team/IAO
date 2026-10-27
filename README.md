@@ -232,7 +232,7 @@ iao/
 ├── install.bat             # Installeur Windows (menu Démarrer, raccourcis, /uninstall) — créé lot 9
 ├── index.html              # HTML pur (CSS extrait vers assets/app.css, JS vers assets/app.js + pre-monaco.js). ~356 lignes.
 ├── main.js                 # Process principal Electron : fenêtre, IPC fichiers, durcissement navigation/popups, ordonnanceur
-├── lib/                    # Fonctions pures extraites (escapeHtml, politique popups decidePopup, statuts d'activité, actions d'onglet, recherche, cooldown, claude-adapter, settings) — testées par node --test
+├── lib/                    # Fonctions pures extraites (escapeHtml, politique popups decidePopup, statuts d'activité, actions d'onglet, recherche, cooldown, claude-adapter, settings, logos des IA service-icons) — testées par node --test
 ├── scheduler/               # Ordonnanceur IA : registre de jobs, détection des ZIP livrés, reprise par profil, automatisation Claude
 ├── test/                   # Tests unitaires (node --test, 332 tests)
 ├── test-electron/          # Tests d'intégration Electron réels (popups, Continuer, Monaco sous CSP, fumée binaire) — 14 + 3 tests
@@ -288,7 +288,7 @@ Règles du projet : JS vanilla sans dépendance nouvelle, toute donnée utilisat
 <!-- --8<-- [end:developpement] -->
 ## Licence
 
-[MIT](LICENSE). Composants tiers (polices OFL, icônes Font Awesome CC BY 4.0, Monaco MIT) : voir [docs/THIRD-PARTY-NOTICES.md](docs/THIRD-PARTY-NOTICES.md).
+[MIT](LICENSE). Composants tiers (polices OFL, icônes Font Awesome CC BY 4.0, logos des IA Lobe Icons MIT et Simple Icons CC0, Monaco MIT) : voir [docs/THIRD-PARTY-NOTICES.md](docs/THIRD-PARTY-NOTICES.md).
 
 ## Crédits
 

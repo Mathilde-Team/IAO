@@ -236,6 +236,11 @@
       catch (e) { /* non bloquant */ }
     }
 
+    // Issue #324 : logo officiel du service (lib/service-icons.js), initiale à défaut.
+    function svcIcon(svc) {
+      return window.iaoServiceIcons.iconeService(svc.id, svc.name);
+    }
+
     // Retourne les services actifs (objets complets), dans l'ordre de sélection.
     function activeServices() {
       const ids = getActiveServices();
@@ -710,13 +715,15 @@
           if (!svc) return '';
           const cdTime = acc.cooldowns[sid] || 0;
           const isOnCooldown = cdTime > Date.now();
-          const btnClass = isOnCooldown ? `${svc.cssClass} cooldown-active` : svc.cssClass;
+          // Issue #324 : bouton de couleur standard (plus de fond par service),
+          // logo officiel devant le nom.
+          const btnClass = isOnCooldown ? 'cooldown-active' : '';
           // svc.id vient de SERVICES (valeurs sûres codées en dur). Les actions
           // passent par des data-* lus par la délégation d'événements (chantier A) :
           // plus aucune donnée n'est injectée dans un attribut onclick.
           return `
             <div class="service-column">
-              <button class="svc-btn ${btnClass}" data-action="open-service" data-acc="${id}" data-svc="${svc.id}">${escapeHtml(svc.name)}${svcStatusDot(acc, svc.id, lastUsedBySvc)}${isTabStarredById(acc.id, svc.id) ? '<span class="svc-btn__star"><span class="ic" data-icon="star"></span></span>' : ''}</button>
+              <button class="svc-btn ${btnClass}" data-action="open-service" data-acc="${id}" data-svc="${svc.id}">${svcIcon(svc)}<span class="svc-btn__nom">${escapeHtml(svc.name)}</span>${svcStatusDot(acc, svc.id, lastUsedBySvc)}${isTabStarredById(acc.id, svc.id) ? '<span class="svc-btn__star"><span class="ic" data-icon="star"></span></span>' : ''}</button>
             </div>
           `;
         }).join('');
@@ -968,8 +975,8 @@
 
     // Réaffiche la barre d'onglets à partir de tabs[] (source de vérité unique).
     // Délégation d'événements (chantier A) : aucun onclick avec donnée interpolée.
-    // Lot 16/09/2026 : titre/sous-titre inversés (compte en gras en 1re ligne,
-    // service en 2e — cf. .tab__label/.tab__acc) + reflet visuel « inactif
+    // Issue #324 : logo du service + nom du compte (service en infobulle) ;
+    // reflet visuel « inactif
     // depuis 5 min » via isTabIdle(t.lastFocusAt) (lib/activity-status.js).
     function renderTabsBar() {
       const bar = document.getElementById('tabsBar');
@@ -985,11 +992,10 @@
         const starHtml = starred ? '<span class="tab__star"><span class="ic" data-icon="star"></span></span>' : '';
         return `
           <div class="${cls}" draggable="true" data-action="activate-tab" data-tab="${t.id}" data-acc="${t.accId}" data-svc="${t.svcId}" title="${escapeHtml(acc.name)} — ${escapeHtml(svc.name)}">
-            <span class="tab__dot svc-bg-${svc.id}"></span>
+            ${svcIcon(svc)}
             ${starHtml}
             <span class="tab__text">
               <span class="tab__label">${escapeHtml(acc.name)}</span>
-              <span class="tab__acc">${escapeHtml(svc.name)}</span>
             </span>
             <span class="tab__close" data-action="close-tab" data-tab="${t.id}" title="Fermer l'onglet"><span class="ic" data-icon="times-circle"></span></span>
           </div>
@@ -1469,7 +1475,7 @@
         const info = SERVICE_INFO[svc.id];
         return `
           <div class="help-entry">
-            <div class="help-entry__name"><span class="help-entry__dot svc-bg-${svc.id}"></span>${escapeHtml(svc.name)}</div>
+            <div class="help-entry__name">${svcIcon(svc)}${escapeHtml(svc.name)}</div>
             ${info ? `
               <div class="help-entry__line"><span class="help-entry__label">${escapeHtml(_('C\'est quoi ?'))}</span> ${escapeHtml(_(info.what))}</div>
               <div class="help-entry__line"><span class="help-entry__label">${escapeHtml(_('Quand l\'utiliser ?'))}</span> ${escapeHtml(_(info.when))}</div>
@@ -1500,7 +1506,7 @@
             <div class="help-entry__name">
               <label class="service-select-item">
                 <input type="checkbox" data-svc-id="${escapeHtml(svc.id)}" ${checked}>
-                <span class="help-entry__dot svc-bg-${svc.id}"></span>
+                ${svcIcon(svc)}
                 ${escapeHtml(svc.name)}
               </label>
             </div>
