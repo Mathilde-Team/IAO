@@ -143,9 +143,8 @@ iao/
 
 Deux endroits distincts, à ne pas confondre :
 
-1. **Métadonnées des comptes** → `localStorage` du renderer.
-   - Clé `ai_accounts` : tableau JSON de comptes.
-   - Clé `ai_accounts_backup` : **copie de sauvegarde** (1 seule génération) écrite automatiquement avant chaque écrasement de `ai_accounts` — sert à la récupération si `ai_accounts` est corrompu (voir §7, chantier C).
+1. **Métadonnées des comptes** → `<userData>/profils.json` (issue #311, `lib/profils.js`), écrit par le process principal via le canal synchrone `profils:ecrire` (écriture atomique ; version précédente dans `profils.json.bak`, fichier illisible mis de côté dans `profils.json.illisible`). Lu au démarrage par `profils:lire`. État de l'interface → `localStorage` du renderer :
+   - Clés `ai_accounts` / `ai_accounts_backup` : anciens emplacements des comptes, lus une seule fois pour migrer vers `profils.json` puis retirés.
    - Clés `ide_w`, `explorer_w` : largeurs mémorisées des colonnes.
    - Clé `collapsed_accounts` : tableau JSON des ids de comptes dont la carte est **repliée** (vue compacte). Lecture/écriture défensives (`try/catch`), purgée des ids de comptes supprimés à chaque écriture (`saveCollapsed()`).
    - **Stocké EN CLAIR** (pas de chiffrement — un mot de passe maître avait été prototypé puis retiré à la demande de l'utilisateur).

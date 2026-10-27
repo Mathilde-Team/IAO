@@ -163,7 +163,9 @@ ajout d'une langue et CI : [docs/i18n.md](docs/i18n.md) (issue #51).
 | Linux | `~/.config/ai-manager` |
 | Windows | `%APPDATA%\ai-manager` |
 
-Une copie complète de la liste des comptes (issue #311) est tenue à jour dans `comptes-sauvegarde.json` de ce dossier, au format exact du bouton « Exporter » : si l'interface ne retrouve aucun compte au démarrage, IAO propose de la restaurer, ce qui revient à l'importer. Ce fichier peut aussi être importé à la main.
+Les comptes (nom, adresse, profil, couleur, services, cooldowns, automatisation) sont dans `profils.json` de ce dossier (issue #311), au format exact du bouton « Exporter ». Créer, modifier, supprimer ou importer un compte écrit ce fichier ; la version précédente est gardée dans `profils.json.bak`, proposée à la restauration si `profils.json` devient illisible (un fichier illisible est mis de côté dans `profils.json.illisible`, jamais écrasé sans copie). Le stockage interne de l'interface (`localStorage`) ne garde plus que les onglets ouverts et l'affichage : le vider, ou réinstaller IAO, ne fait plus perdre de compte. Au premier lancement de cette version, les comptes qui y étaient encore sont recopiés une fois dans `profils.json`.
+
+L'ordonnanceur tient aussi une copie dans `scheduler/comptes-sauvegarde.json` : si `profils.json` a disparu et qu'aucun compte n'est lu au démarrage, IAO propose de la restaurer, ce qui revient à l'importer.
 
 Les mots de passe de messagerie (issue #201) sont dans `secrets.json` de ce dossier, chiffrés par le trousseau du système (DPAPI sous Windows, libsecret/KWallet sous Linux) : ils ne sont pas lisibles sur une autre machine ni par un autre utilisateur.
 
@@ -266,7 +268,7 @@ Transparence complète — ce qui est fait, et ce qui ne l'est pas :
 
 **Limites assumées (à connaître avant d'utiliser) :**
 - Le renderer tourne avec **`nodeIntegration: true` et `contextIsolation: false`** : la page hôte a un accès complet à Node/OS. C'est la principale dette de sécurité du projet ; la migration vers `contextIsolation` + preload est un chantier identifié mais non réalisé. Les webviews des services, elles, tournent sans privilèges Node.
-- **Les sessions IA (cookies) et les métadonnées de comptes sont stockées en clair** dans le dossier de données (voir tableau ci-dessus) et le `localStorage`. Aucun chiffrement au repos. Règle simple : **une session utilisateur = une personne** — n'utilisez pas l'app dans un compte partagé.
+- **Les sessions IA (cookies) et les métadonnées de comptes sont stockées en clair** dans le dossier de données (voir tableau ci-dessus) (`profils.json`). Aucun chiffrement au repos. Règle simple : **une session utilisateur = une personne** — n'utilisez pas l'app dans un compte partagé.
 - Les binaires distribués ne sont **pas signés** (avertissement SmartScreen sous Windows ; aucun dépôt APT signé côté Linux).
 - Une installation utilisateur sous Linux tourne **sans le sandbox Chromium** (voir la note ci-dessus) : c'est une protection en moins pour les pages web affichées dans les onglets. Le `.deb` et l'installation `--system` n'ont pas cette limite.
 - Pas de CSP sur `index.html` (prérequis faits — zéro ressource distante — mais l'en-tête n'est pas encore posé).
