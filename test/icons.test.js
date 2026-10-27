@@ -129,3 +129,32 @@ test('hydrateIcons ne fait rien quand aucun span n\'est à traiter', () => {
   win.hydrateIcons(root);
   assert.equal(root.selectors.length, 1);
 });
+
+// Issue #325 : « file-export » portait le tracé de la flèche vers le BAS
+// (download) et « file-import » celui de la flèche vers le HAUT (upload) :
+// icônes inversées. Export = fichier flèche vers le haut, import = vers le bas.
+test('#325 : export flèche vers le haut, import flèche vers le bas', () => {
+  const { IAO_ICONS } = loadIcons();
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const icone = (action) => {
+    const m = html.match(new RegExp('data-action="' + action + '"[^>]*><span class="ic" data-icon="([^"]+)"'));
+    return m && m[1];
+  };
+  assert.equal(icone('ui-exportAccountsToFile'), 'file-arrow-up');
+  assert.equal(icone('ui-importAccountsFromFile'), 'file-arrow-down');
+  // Tracés Font Awesome 6.5.1 : la flèche de file-arrow-up monte (« V408 »
+  // en bas), celle de file-arrow-down descend (« l-72 72 » en bas).
+  assert.match(IAO_ICONS['file-arrow-up'].p, /V305\.9l-31 31/);
+  assert.match(IAO_ICONS['file-arrow-down'].p, /l-72 72/);
+  assert.equal(IAO_ICONS['file-export'], undefined, 'ancienne icône inversée retirée');
+  assert.equal(IAO_ICONS['file-import'], undefined, 'ancienne icône inversée retirée');
+});
+
+test('toute icône utilisée par index.html et assets/app.js est déclarée', () => {
+  const { IAO_ICONS } = loadIcons();
+  const racine = path.join(__dirname, '..');
+  const sources = ['index.html', 'assets/app.js'].map(f => fs.readFileSync(path.join(racine, f), 'utf8')).join('\n');
+  const utilisees = new Set([...sources.matchAll(/data-icon="([a-z0-9-]+)"/g)].map(m => m[1]));
+  assert.ok(utilisees.size > 10);
+  for (const nom of utilisees) assert.ok(IAO_ICONS[nom], 'icône non déclarée : ' + nom);
+});
