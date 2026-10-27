@@ -23,6 +23,15 @@ const fs = require('fs');
 const os = require('os');
 const v8cov = require('./v8-coverage');
 
+// Les runners auto-hébergés tournent en conteneur, avec un /dev/shm de 64 Mo
+// (valeur par défaut de Docker). Chromium y place la mémoire partagée de ses
+// processus de rendu : mesuré en local avec la même limite, le harnais monte
+// déjà à 58 Mo sur dev et la dépasse dès que la page s'alourdit (logos de
+// #324) ; le renderer s'arrête alors (« crashed », code 133), comme dans les
+// crashs intermittents de #283. Option Chromium prévue pour les conteneurs :
+// la mémoire partagée passe par le dossier temporaire au lieu de /dev/shm.
+app.commandLine.appendSwitch('disable-dev-shm-usage');
+
 // Issue #51, lot 3 : sans demande explicite, l'interface suit la langue du
 // système. Les scénarios vérifient les libellés français (langue source) :
 // on l'impose, sauf dans C7.2/C7.3 qui changent la langue eux-mêmes.
@@ -545,6 +554,47 @@ async function run() {
   await test('C5.2 Aucun onclick généré dans la barre d\'onglets ni les cartes (invariant 2)', async () => {
     const n = await exec('document.querySelectorAll("#tabsBar [onclick], #accountsList [onclick]").length');
     assert(n === 0, n + ' attribut(s) onclick généré(s)');
+  });
+
+  // Issue #324 : logos officiels devant le nom (boutons, aide, choix des IA),
+  // boutons de couleur standard, onglet = logo + nom du compte.
+  await test('C5.3 Logos des IA : boutons standard, onglet logo + compte, aide et choix des IA (#324)', async () => {
+    const r = await exec(`(() => {
+      const boutons = [...document.querySelectorAll('#accountsList .svc-btn')];
+      const onglets = [...document.querySelectorAll('#tabsBar .tab')];
+      openHelpModal();
+      const aide = [...document.querySelectorAll('#helpModal .help-entry__name')];
+      const resAide = { n: aide.length, logos: aide.filter(e => e.querySelector('.svc-ic')).length };
+      document.getElementById('helpModal').classList.remove('open');
+      openServicesModal();
+      const choix = [...document.querySelectorAll('#servicesList .service-select-item')];
+      const resChoix = { n: choix.length, logos: choix.filter(e => e.querySelector('.svc-ic')).length };
+      return {
+        boutons: boutons.length,
+        avecLogo: boutons.filter(b => b.querySelector('.svc-ic svg, .svc-ic--lettre')).length,
+        colores: boutons.filter(b => [...b.classList].some(c => /^svc-(?!btn)/.test(c))).length,
+        fondClaude: getComputedStyle(document.querySelector('#accountsList .svc-btn[data-svc="claude"]')).backgroundColor,
+        fondGrok: getComputedStyle(document.querySelector('#accountsList .svc-btn[data-svc="grok"]')).backgroundColor,
+        onglets: onglets.length,
+        ongletsOk: onglets.filter(t => t.querySelector('.svc-ic') && !t.querySelector('.tab__acc') && t.title.includes('—')).length,
+        aide: resAide, choix: resChoix
+      };
+    })()`);
+    if (process.env.IAO_CAPTURES_DIR) {
+      const dossier = require('./rtl-visuel').dossierCaptures(process.env.IAO_CAPTURES_DIR);
+      fs.writeFileSync(path.join(dossier, 'logos-choix.png'), (await win.webContents.capturePage()).toPNG());
+      await exec(`closeServicesModal(); openHelpModal(); 'ok'`);
+      fs.writeFileSync(path.join(dossier, 'logos-aide.png'), (await win.webContents.capturePage()).toPNG());
+      await exec(`document.getElementById('helpModal').classList.remove('open'); 'ok'`);
+      fs.writeFileSync(path.join(dossier, 'logos-cartes.png'), (await win.webContents.capturePage()).toPNG());
+    }
+    await exec(`closeServicesModal(); document.getElementById('helpModal').classList.remove('open'); 'ok'`);
+    assert(r.boutons > 0 && r.avecLogo === r.boutons, 'boutons sans logo : ' + JSON.stringify(r));
+    assert(r.colores === 0, 'boutons encore colorés par service : ' + r.colores);
+    assert(r.fondClaude === r.fondGrok, 'fonds différents : ' + r.fondClaude + ' / ' + r.fondGrok);
+    assert(r.onglets > 0 && r.ongletsOk === r.onglets, 'onglets : ' + JSON.stringify(r));
+    assert(r.aide.n > 9 && r.aide.logos === r.aide.n, 'aide : ' + JSON.stringify(r.aide));
+    assert(r.choix.n > 9 && r.choix.logos === r.choix.n, 'choix des IA : ' + JSON.stringify(r.choix));
   });
 
   // =========================================================================

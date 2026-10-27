@@ -118,6 +118,37 @@
   à portée de main ») ; libellés et catalogues mis à jour (en, de, es, it traduits).
 - Tests : `test/services-actifs.test.js`, scénarios Electron C1.6 et C1.7.
 
+## Issue #324 — logos des IA, boutons de couleur standard (27/10/2026)
+
+### Ajouté
+- **`lib/service-icons.js`** : module pur `iconeService(id, nom, logos?)` qui rend le logo
+  officiel d'un service en SVG inline (`aria-hidden`, le nom reste écrit). Tracés repris de
+  Lobe Icons (`@lobehub/icons-static-svg` 1.101.0, MIT) et, pour Wolfram, de Simple Icons
+  16.36.0 (CC0). Chaque tracé, couleur, opacité, règle de remplissage et `viewBox` est revalidé
+  avant rendu ; une valeur inattendue fait refuser le logo. Repli : initiale du nom sur la
+  pastille de couleur du service (Leonardo AI et Elicit, sans logo sous licence libre).
+- **`docs/THIRD-PARTY-NOTICES.md`** : page des composants tiers (référencée par le README mais
+  absente jusqu'ici), ajoutée à la navigation mkdocs.
+
+### Modifié
+- Boutons des cartes de comptes : **couleur standard** (fond neutre du thème, plus de couleur
+  par service), logo devant le nom (`assets/app.js` `svcIcon`, `assets/app.css` `.svc-ic*`).
+- Onglets : logo + nom du compte ; le service passe dans l'infobulle (`.tab__dot` et
+  `.tab__acc` supprimés).
+- Fenêtres « Comprendre les IA » et « Choisir mes IA » : logo à la place du point de couleur.
+
+### Tests
+- `test/service-icons.test.js` (7 tests, 100 % lignes, branches, fonctions) ; harnais
+  Electron C5.3 (logos dans boutons, onglets, aide et choix ; boutons de même fond) ;
+  `test/activity-status.test.js` adapté au `<span class="svc-btn__nom">`.
+
+### Corrigé (CI)
+- Harnais Electron : le renderer s'arrêtait (« crashed », code 133) pendant C7.5 sur les
+  runners. Cause mesurée en local avec un `/dev/shm` de 64 Mo (taille par défaut d'un
+  conteneur Docker) : la mémoire partagée de Chromium culmine à 58 Mo sur dev et dépasse
+  64 Mo avec les logos (3 crashs sur 3). `test-electron/ui-flows.js` active
+  `disable-dev-shm-usage` (option Chromium pour les conteneurs) : 0 crash, 57/57.
+
 ## Issue #305 — capture HAR des 15 premières minutes d'une connexion (25/10/2026)
 
 ### Ajouté
