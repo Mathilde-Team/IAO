@@ -88,6 +88,12 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
 
 ## Fait
 
+- **Logos officiels des IA, boutons de couleur standard (issue #324, 27/10/2026)**
+  Nouveau `lib/service-icons.js` : logo SVG inline (hors ligne, sans dépendance) devant le nom
+  du service dans les cartes de comptes, l'aide, le choix des IA et les onglets ; boutons
+  neutres ; onglet = logo + nom du compte. Leonardo AI et Elicit : initiale (pas de logo libre).
+  Licences : `docs/THIRD-PARTY-NOTICES.md`. Tests : `test/service-icons.test.js`, Electron C5.3.
+
 - **Analyse de ZIP sans shell : injection de commande corrigée (issue #275, 21/10/2026)**
   `analyzeCompleteness` lisait le FEATURES.md du ZIP livré par `unzip` / PowerShell, via
   des commandes construites en concaténant le chemin du ZIP (nom donné par le service IA)
@@ -127,6 +133,16 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
   du bureau (`prefers-color-scheme`, relayé par Electron `nativeTheme`) et bascule en direct
   quand le bureau change. `resolveTheme()` pure dans `lib/settings.js`. Les réglages déjà
   enregistrés (`iao`, `light`, `dark`) sont conservés. Tests : `test/theme-system.test.js`.
+
+- **Webmail connecté au compte (issue #310, 26/10/2026)**
+  `lib/webmail-connexion.js` : l'enveloppe ouvre l'URL des réglages dans une fenêtre sans
+  privilèges (sandbox, contextIsolation, partition `persist:<profil>` du compte, une fenêtre
+  par profil) ; au premier chargement sur l'hôte du webmail, `#rcmloginuser`/`#rcmloginpwd`
+  reçoivent l'adresse et le mot de passe du coffre, puis le formulaire est validé (une seule
+  tentative, mot de passe jamais journalisé). Le renderer ne transmet que `{ profil, email }`.
+  Relecture du 27/10/2026 : `lib/webmail-codes.js` relève toutes les 10 s les nouveaux mails
+  de la fenêtre ouverte ; code à 6 chiffres affiché dans un bandeau sous l'onglet du service
+  (Copier), lien de connexion du même service ouvert automatiquement après 3 s (Annuler).
 
 - **Comptes en série, mot de passe de messagerie, webmail (issue #201, 18/10/2026)**
   `lib/comptes-serie.js` (numéros suivants, adresses, mot de passe aléatoire sans biais),

@@ -105,6 +105,7 @@
       if (badge) badge.classList.remove('hidden');
       const relaunch = document.getElementById('btnRelaunchDebug');
       if (relaunch) relaunch.classList.add('hidden'); // #187 : déjà en mode debug
+      document.body.classList.add('iao-debug'); // #320 : outils de dev des onglets IA
       dbg('demarrage', 'mode debug actif dans l\'interface');
     }).catch(() => { /* canal absent (ancienne version de main.js) : mode normal */ });
 
@@ -214,9 +215,9 @@
 
     // Issue #42 : liste des services "à portée de main" (9 par défaut).
     // Stockée dans localStorage, modifiable via le menu de sélection.
+    // Issue #319 : de 1 à tous les services (plus de plafond à 9).
     const ACTIVE_SERVICES_KEY = 'ai_active_services';
     const DEFAULT_ACTIVE_SERVICES = ['claude','chatgpt','gemini','zeta','perplexity','grok','leonardo','suno','meshy'];
-    const MAX_ACTIVE_SERVICES = 9;
 
     function getActiveServices() {
       try {
@@ -224,16 +225,21 @@
         if (!raw) return DEFAULT_ACTIVE_SERVICES.slice();
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return DEFAULT_ACTIVE_SERVICES.slice();
-        // Filtrer les IDs invalides + limiter à MAX_ACTIVE_SERVICES
-        const valid = parsed.filter(id => SERVICES.some(s => s.id === id));
+        // Filtrer les IDs invalides et les doublons
+        const valid = parsed.filter((id, i) => SERVICES.some(s => s.id === id) && parsed.indexOf(id) === i);
         if (valid.length === 0) return DEFAULT_ACTIVE_SERVICES.slice();
-        return valid.slice(0, MAX_ACTIVE_SERVICES);
+        return valid;
       } catch (e) { return DEFAULT_ACTIVE_SERVICES.slice(); }
     }
 
     function saveActiveServices(ids) {
-      try { localStorage.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids.slice(0, MAX_ACTIVE_SERVICES))); }
+      try { localStorage.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids)); }
       catch (e) { /* non bloquant */ }
+    }
+
+    // Issue #324 : logo officiel du service (lib/service-icons.js), initiale à défaut.
+    function svcIcon(svc) {
+      return window.iaoServiceIcons.iconeService(svc.id, svc.name);
     }
 
     // Retourne les services actifs (objets complets), dans l'ordre de sélection.
@@ -338,9 +344,12 @@
     // Icônes statiques du HTML (chantier D) : on remplit les <span class="ic">.
     hydrateIcons(document);
 
-    // === Stockage résilient des comptes (chantier C) ===
-    // Toute la persistance passe désormais par ces helpers : lecture tolérante
-    // aux données corrompues + une génération de backup avant chaque écrasement.
+    // === Stockage résilient des comptes (chantier C, puis issue #311) ===
+    // Issue #311 : les comptes vivent dans <userData>/profils.json (process
+    // principal, lib/profils.js : écriture atomique, version précédente dans
+    // profils.json.bak). Le localStorage ne garde que l'état de l'interface
+    // (onglets, étoiles, ordre, repli). Les deux clés ci-dessous ne sont plus
+    // que LUES, une fois, pour migrer une installation antérieure.
     const STORE_KEY = 'ai_accounts';
     const BACKUP_KEY = 'ai_accounts_backup';
     const TABS_KEY = 'ai_open_tabs'; // lot 18/09/2026 : restauration des onglets au démarrage
@@ -382,18 +391,24 @@
       return r;
     }
 
-    // Sauvegarde la liste de comptes. Avant d'écraser, on copie l'ancienne valeur
-    // dans BACKUP_KEY — mais UNIQUEMENT si elle est elle-même un JSON valide, pour
-    // ne jamais détruire un bon backup en y recopiant une valeur corrompue.
+    // Issue #311 : écriture synchrone de profils.json par le process principal
+    // (profils:ecrire). La version précédente lisible passe dans
+    // profils.json.bak ; un fichier illisible est mis de côté, jamais écrasé
+    // sans copie. Renvoie { ok, nombre } ou { ok: false, erreur }.
+    function ecrireProfils(list) {
+      try {
+        return window.iaoAPI.profilsEcrire(list) || { ok: false, erreur: 'pas de réponse' };
+      } catch (e) {
+        return { ok: false, erreur: (e && e.message) || String(e) };
+      }
+    }
+
+    // Sauvegarde la liste de comptes dans profils.json (issue #311).
     function saveAccounts(list) {
       dbg('comptes', 'enregistrement de ' + list.length + ' compte(s)');
       try {
-        const prev = localStorage.getItem(STORE_KEY);
-        if (prev != null) {
-          try { JSON.parse(prev); localStorage.setItem(BACKUP_KEY, prev); }
-          catch (_) { /* valeur actuelle illisible : on préserve le backup existant */ }
-        }
-        localStorage.setItem(STORE_KEY, JSON.stringify(list));
+        const r = ecrireProfils(list);
+        if (!r.ok) throw new Error(r.erreur);
         // Ordonnanceur (chantier E) : on pousse un instantané des comptes
         // (profil + état d'automatisation) au process principal, seul capable
         // de choisir un profil "le plus ancien" indépendamment des fenêtres
@@ -402,7 +417,7 @@
         try { ipcRenderer.invoke('scheduler:sync-accounts', list).catch(() => {}); } catch (_) { /* ignore */ }
         return true;
       } catch (e) {
-        console.error('[storage] échec écriture des comptes :', e);
+        console.error('[storage] échec écriture des comptes (profils.json) :', e);
         showToast(_('Impossible d\'enregistrer les comptes (stockage plein ?)'), 'error');
         return false;
       }
@@ -416,13 +431,32 @@
       } catch (e) { /* non bloquant */ }
     }
 
-    // Restaure les onglets sauvegardés (lot 18/09/2026).
+    // Restaure les onglets sauvegardés (lot 18/09/2026). Issue #318 : seuls les
+    // onglets d'un compte encore présent sont repris.
+    function savedOpenTabs() {
+      return deserializeOpenTabs(localStorage.getItem(TABS_KEY) || '')
+        .filter(function(tab) { return accounts.some(function(a) { return a.id === tab.accId; }); });
+    }
     function restoreOpenTabs() {
-      var raw = localStorage.getItem(TABS_KEY) || '';
-      var tabList = deserializeOpenTabs(raw);
-      tabList.forEach(function(tab) {
+      savedOpenTabs().forEach(function(tab) {
         openService(tab.accId, tab.svcId);
       });
+    }
+
+    // Issues #317/#318 : au démarrage (relance comprise), les onglets de la
+    // session précédente sont rouverts directement si « Restaurer les onglets
+    // ouverts au démarrage » est coché, sinon proposés. Une seule fois : les
+    // réglages sont relus à chaque ouverture de leur fenêtre.
+    let startupTabsHandled = false;
+    function handleStartupTabs(startWithLastSession) {
+      if (startupTabsHandled) return;
+      startupTabsHandled = true;
+      if (startWithLastSession) { restoreOpenTabs(); return; }
+      const n = savedOpenTabs().length;
+      if (n === 0) return;
+      showConfirmDialog(_('Rouvrir les onglets précédents ?'),
+        _('Onglets ouverts à la fermeture d\'IAO : {n}. Les rouvrir ?', { n: n }),
+        restoreOpenTabs);
     }
 
     // Fondation réutilisable pour une future fonctionnalité d'export/import JSON
@@ -439,15 +473,41 @@
     }
 
     // Chargement initial tolérant : l'app ne plante JAMAIS au démarrage, même si
-    // ai_accounts est corrompu (le cas échéant on propose la restauration plus bas).
+    // profils.json est illisible (le cas échéant on propose la restauration plus bas).
     let dataCorrupt = false;
     let accounts = [];
     let accountsLoadStatus = 'empty'; // issue #186 : signalé à main.js pour iao.log
+    let profilsSauvegarde = null;     // issue #311 : profils.json.bak si profils.json est illisible
     (function loadAccounts() {
+      let p;
+      try { p = window.iaoAPI.profilsLire() || { status: 'erreur', erreur: 'pas de réponse' }; }
+      catch (e) { p = { status: 'erreur', erreur: (e && e.message) || String(e) }; }
+      if (p.status === 'ok') { accounts = p.comptes; accountsLoadStatus = 'ok'; return; }
+      if (p.status !== 'absent') {
+        console.error('[storage] profils.json illisible (' + p.status + ') :', p.erreur);
+        dataCorrupt = true;
+        profilsSauvegarde = Array.isArray(p.sauvegarde) ? p.sauvegarde : null;
+        accountsLoadStatus = p.status === 'corrompu' ? 'corrupt' : 'erreur';
+        return;
+      }
+      // profils.json absent : premier démarrage, ou installation antérieure
+      // à #311 dont les comptes sont encore dans le localStorage. Migration
+      // unique : les comptes lus y sont recopiés dans profils.json.
       const r = readJSON(STORE_KEY);
       accountsLoadStatus = r.status;
-      if (r.status === 'ok' && Array.isArray(r.data)) accounts = r.data;
-      else if (r.status === 'corrupt') dataCorrupt = true;
+      if (r.status === 'ok' && Array.isArray(r.data)) {
+        accounts = r.data;
+        if (accounts.length > 0) {
+          const w = ecrireProfils(accounts);
+          if (w.ok) {
+            // Les anciennes clés sont retirées : sinon, profils.json supprimé à
+            // la main, des comptes périmés reviendraient au démarrage suivant.
+            try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(BACKUP_KEY); }
+            catch (e) { console.warn('[storage] anciennes clés de comptes non retirées :', e); }
+            dbg('comptes', 'migration : ' + accounts.length + ' compte(s) du localStorage recopié(s) dans profils.json');
+          } else console.error('[storage] migration des comptes vers profils.json impossible :', w.erreur);
+        }
+      } else if (r.status === 'corrupt') dataCorrupt = true;
       // 'empty' ou JSON valide non-tableau -> accounts reste []
     })();
 
@@ -517,23 +577,18 @@
     let editorMode = 'none'; // 'monaco' | 'textarea' | 'none'
     let currentOpenFilePath = null;
 
-    // Migration : convertit les anciens comptes et garantit que chaque compte
-    // possède TOUS les services + un cooldown pour chacun (répare aussi les
-    // comptes enregistrés qui n'avaient pas encore Perplexity/Zeta).
+    // Migration : convertit les anciens comptes et aligne leurs services sur
+    // la sélection « mes IA à portée de main » (issue #42), un cooldown pour chacun.
+    // Issue #319 : la liste d'un compte EST la sélection active (aucun écran ne
+    // la choisit compte par compte). Avant, les services actifs étaient ajoutés
+    // à ceux du compte : après un changement de sélection, on retrouvait au
+    // redémarrage les 9 anciens plus les nouveaux.
     function migrateOldAccounts() {
       let needsUpdate = false;
-    // Issue #42 : ALL_SERVICES utilise les services actifs (9 sélectionnés)
-    // au lieu de tous les SERVICES. Les comptes existants gardent leurs services
-    // assignés ; les nouveaux comptes obtiennent les 9 services actifs.
-    const ALL_SERVICES = getActiveServices();
+      const ALL_SERVICES = getActiveServices();
       accounts.forEach(acc => {
-        if (!Array.isArray(acc.services)) { acc.services = [...ALL_SERVICES]; needsUpdate = true; }
         if (acc.quotas && !acc.cooldowns) { delete acc.quotas; needsUpdate = true; }
-        if (!acc.cooldowns) { acc.cooldowns = {}; needsUpdate = true; }
-        ALL_SERVICES.forEach(sid => {
-          if (!acc.services.includes(sid)) { acc.services.push(sid); needsUpdate = true; }
-          if (acc.cooldowns[sid] === undefined) { acc.cooldowns[sid] = 0; needsUpdate = true; }
-        });
+        if (window.iaoServicesActifs.alignerServices(acc, ALL_SERVICES)) needsUpdate = true;
         // Ordonnanceur (chantier E, proposition externe intégrée au backlog) :
         // chaque compte porte désormais son état d'automatisation, indépendant
         // des cooldowns par service. lastUsedAt = dernière ouverture manuelle ;
@@ -710,13 +765,15 @@
           if (!svc) return '';
           const cdTime = acc.cooldowns[sid] || 0;
           const isOnCooldown = cdTime > Date.now();
-          const btnClass = isOnCooldown ? `${svc.cssClass} cooldown-active` : svc.cssClass;
+          // Issue #324 : bouton de couleur standard (plus de fond par service),
+          // logo officiel devant le nom.
+          const btnClass = isOnCooldown ? 'cooldown-active' : '';
           // svc.id vient de SERVICES (valeurs sûres codées en dur). Les actions
           // passent par des data-* lus par la délégation d'événements (chantier A) :
           // plus aucune donnée n'est injectée dans un attribut onclick.
           return `
             <div class="service-column">
-              <button class="svc-btn ${btnClass}" data-action="open-service" data-acc="${id}" data-svc="${svc.id}">${escapeHtml(svc.name)}${svcStatusDot(acc, svc.id, lastUsedBySvc)}${isTabStarredById(acc.id, svc.id) ? '<span class="svc-btn__star"><span class="ic" data-icon="star"></span></span>' : ''}</button>
+              <button class="svc-btn ${btnClass}" data-action="open-service" data-acc="${id}" data-svc="${svc.id}">${svcIcon(svc)}<span class="svc-btn__nom">${escapeHtml(svc.name)}</span>${svcStatusDot(acc, svc.id, lastUsedBySvc)}${isTabStarredById(acc.id, svc.id) ? '<span class="svc-btn__star"><span class="ic" data-icon="star"></span></span>' : ''}</button>
             </div>
           `;
         }).join('');
@@ -730,7 +787,7 @@
               <div class="account-avatar" data-avatar-color="${color}">${initials}</div>
               <div class="account-info">
                 <div class="account-name">${escapeHtml(acc.name)} ${isActive ? '<span class="active-dot"></span>' : ''}</div>
-                <div class="account-email"><span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span> • ${escapeHtml(acc.profile)}</div>
+                <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span> • ` : ''}${escapeHtml(acc.profile)}</div>
               </div>
               <div class="account-actions">
                 ${currentSettings && currentSettings.webmailUrl ? `<button class="btn btn--icon" data-action="open-webmail" data-acc="${id}" title="${escapeHtml(_('Ouvrir le webmail (adresse copiée)'))}"><span class="ic" data-icon="envelope"></span></button>` : ''}
@@ -804,6 +861,11 @@
       return window.iaoAPI.ipcInvoke('app:relaunch-debug').catch(() => false);
     }
 
+    // Issue #317 : redémarre IAO en mode normal (canal app:relaunch).
+    window.relaunchNormal = function() {
+      return window.iaoAPI.ipcInvoke('app:relaunch').catch(() => false);
+    }
+
     window.toggleExplorer = function() { document.getElementById('fileExplorer').classList.toggle('collapsed'); }
     window.toggleIdePanel = function() {
       const p = document.getElementById('idePanel');
@@ -823,7 +885,10 @@
       openService(acc.id, svcId);
       const wv = avant && url && avant.paneEl ? avant.paneEl.querySelector('webview') : null;
       if (wv) {
-        try { wv.loadURL(url); } catch (e) { dbg('taches', 'nouvelle session impossible', e && e.message); }
+        // loadURL renvoie une promesse : un échec de chargement (réseau coupé,
+        // navigation remplacée) était un rejet non géré -> bandeau d'erreur.
+        Promise.resolve().then(() => wv.loadURL(url))
+          .catch((e) => dbg('taches', 'nouvelle session impossible', e && e.message));
       }
       return !!tabs.find(t => t.accId === acc.id && t.svcId === svcId);
     }
@@ -889,6 +954,7 @@
       toolbar.innerHTML = `
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
+        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.profile }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
       `;
       pane.appendChild(toolbar);
@@ -968,8 +1034,8 @@
 
     // Réaffiche la barre d'onglets à partir de tabs[] (source de vérité unique).
     // Délégation d'événements (chantier A) : aucun onclick avec donnée interpolée.
-    // Lot 16/09/2026 : titre/sous-titre inversés (compte en gras en 1re ligne,
-    // service en 2e — cf. .tab__label/.tab__acc) + reflet visuel « inactif
+    // Issue #324 : logo du service + nom du compte (service en infobulle) ;
+    // reflet visuel « inactif
     // depuis 5 min » via isTabIdle(t.lastFocusAt) (lib/activity-status.js).
     function renderTabsBar() {
       const bar = document.getElementById('tabsBar');
@@ -985,11 +1051,10 @@
         const starHtml = starred ? '<span class="tab__star"><span class="ic" data-icon="star"></span></span>' : '';
         return `
           <div class="${cls}" draggable="true" data-action="activate-tab" data-tab="${t.id}" data-acc="${t.accId}" data-svc="${t.svcId}" title="${escapeHtml(acc.name)} — ${escapeHtml(svc.name)}">
-            <span class="tab__dot svc-bg-${svc.id}"></span>
+            ${svcIcon(svc)}
             ${starHtml}
             <span class="tab__text">
               <span class="tab__label">${escapeHtml(acc.name)}</span>
-              <span class="tab__acc">${escapeHtml(svc.name)}</span>
             </span>
             <span class="tab__close" data-action="close-tab" data-tab="${t.id}" title="Fermer l'onglet"><span class="ic" data-icon="times-circle"></span></span>
           </div>
@@ -1182,6 +1247,74 @@
       if (webview) webview.reload();
     }
 
+    // Issue #320 : en mode debug, outils de développement de la page de l'IA
+    // (champ qui a le focus, sélecteurs) ; ceux de la fenêtre principale
+    // n'inspectent pas l'intérieur des <webview>.
+    function toggleTabDevTools(tabId) {
+      if (!debugMode) return false;
+      return basculerDevToolsOnglet(tabId);
+    }
+
+    // Issue #320 (relecture) : outils de développement de la page de l'IA,
+    // sans exiger le mode debug (comme ceux de la fenêtre IAO).
+    function basculerDevToolsOnglet(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      const webview = tab && tab.paneEl.querySelector('webview');
+      if (!webview) return false;
+      try {
+        if (webview.isDevToolsOpened()) webview.closeDevTools();
+        else webview.openDevTools();
+        dbg('onglet', 'outils de développement basculés', tab.accId, tab.svcId);
+        return true;
+      } catch (e) {
+        console.warn('[onglet] outils de développement indisponibles :', e.message);
+        return false;
+      }
+    }
+
+    // Issue #320 (relecture) : le bouton « outils de développement » de la barre
+    // du haut ouvre un second menu quand un onglet d'IA est actif : la fenêtre
+    // IAO ou la page de l'IA (pour voir quel champ a le focus). Sans onglet
+    // actif, il bascule directement ceux de la fenêtre IAO, comme avant.
+    window.openDevToolsMenu = function() {
+      const tab = tabs.find(t => t.id === activeTabId);
+      if (!tab || !tab.paneEl.querySelector('webview')) return window.toggleDevTools();
+      const svc = SERVICES.find(s => s.id === tab.svcId);
+      const acc = accounts.find(a => a.id === tab.accId);
+      closeContextMenu();
+      ctxMenuEl = document.createElement('div');
+      ctxMenuEl.className = 'ctx-menu';
+      ctxMenuEl.id = 'devtoolsMenu';
+      ctxMenuEl.innerHTML = `
+        <div class="ctx-menu__item" data-ctx-action="devtools-iao">
+          <span class="ic" data-icon="bug"></span>
+          <span>${escapeHtml(_('Fenêtre IAO'))}</span>
+        </div>
+        <div class="ctx-menu__item" data-ctx-action="devtools-onglet">
+          <span class="ic" data-icon="bug"></span>
+          <span>${escapeHtml(_('Page de l\'IA : {service} — {compte}', { service: svc ? svc.name : tab.svcId, compte: acc ? acc.name : '' }))}</span>
+        </div>
+      `;
+      document.body.appendChild(ctxMenuEl);
+      hydrateIcons(ctxMenuEl);
+      const btn = document.querySelector('[data-action="ui-openDevToolsMenu"]');
+      const ancre = btn ? btn.getBoundingClientRect() : { left: 0, bottom: 0 };
+      const rect = ctxMenuEl.getBoundingClientRect();
+      ctxMenuEl.style.left = Math.max(4, Math.min(ancre.left, window.innerWidth - rect.width - 4)) + 'px';
+      ctxMenuEl.style.top = (ancre.bottom + 4) + 'px';
+      const tabId = tab.id;
+      ctxMenuEl.addEventListener('click', (ev) => {
+        const item = ev.target.closest('[data-ctx-action]');
+        if (!item) return;
+        const action = item.getAttribute('data-ctx-action');
+        closeContextMenu();
+        dbg('onglet', 'menu des outils de développement :', action);
+        if (action === 'devtools-iao') window.toggleDevTools();
+        else basculerDevToolsOnglet(tabId);
+      });
+      return 'menu';
+    };
+
     function tabGoHome(tabId) {
       const tab = tabs.find(t => t.id === tabId);
       if (!tab) return;
@@ -1240,6 +1373,7 @@
       const action = el.getAttribute('data-action');
       if (action === 'tab-reload') reloadTab(tabId);
       else if (action === 'tab-home') tabGoHome(tabId);
+      else if (action === 'tab-devtools') toggleTabDevTools(tabId);
       else if (action === 'tab-disconnect') openDisconnectModal(tabId);
     });
 
@@ -1469,7 +1603,7 @@
         const info = SERVICE_INFO[svc.id];
         return `
           <div class="help-entry">
-            <div class="help-entry__name"><span class="help-entry__dot svc-bg-${svc.id}"></span>${escapeHtml(svc.name)}</div>
+            <div class="help-entry__name">${svcIcon(svc)}${escapeHtml(svc.name)}</div>
             ${info ? `
               <div class="help-entry__line"><span class="help-entry__label">${escapeHtml(_('C\'est quoi ?'))}</span> ${escapeHtml(_(info.what))}</div>
               <div class="help-entry__line"><span class="help-entry__label">${escapeHtml(_('Quand l\'utiliser ?'))}</span> ${escapeHtml(_(info.when))}</div>
@@ -1500,7 +1634,7 @@
             <div class="help-entry__name">
               <label class="service-select-item">
                 <input type="checkbox" data-svc-id="${escapeHtml(svc.id)}" ${checked}>
-                <span class="help-entry__dot svc-bg-${svc.id}"></span>
+                ${svcIcon(svc)}
                 ${escapeHtml(svc.name)}
               </label>
             </div>
@@ -1513,11 +1647,6 @@
         const cb = e.target;
         if (cb && cb.dataset && cb.dataset.svcId) {
           if (cb.checked) {
-            if (pendingServices.size >= MAX_ACTIVE_SERVICES) {
-              cb.checked = false;
-              showToast(_('Maximum {max} services à portée de main', { max: MAX_ACTIVE_SERVICES }), 'error');
-              return;
-            }
             pendingServices.add(cb.dataset.svcId);
           } else {
             pendingServices.delete(cb.dataset.svcId);
@@ -1533,9 +1662,14 @@
       const ids = Array.from(pendingServices);
       if (ids.length === 0) { showToast(_('Sélectionnez au moins 1 service'), 'error'); return; }
       saveActiveServices(ids);
+      // Issue #319 : les cartes reprennent tout de suite la nouvelle sélection
+      // (avant, rien n'était appliqué aux comptes avant le redémarrage).
+      const modifies = window.iaoServicesActifs.alignerTous(accounts, getActiveServices());
+      if (modifies > 0) saveAccounts(accounts);
+      dbg('services', 'sélection enregistrée', ids.length, 'services,', modifies, 'compte(s) alignés');
       closeServicesModal();
       // Mettre à jour ALL_SERVICES et re-rendre les comptes
-      showToast(_('Services mis à jour ({count}/{max})', { count: ids.length, max: MAX_ACTIVE_SERVICES }));
+      showToast(_('IA à portée de main : {count}', { count: ids.length }));
       // Recharger pour appliquer les changements partout
       renderAccounts();
     };
@@ -1648,8 +1782,9 @@
         accounts.push({
           id: 'acc_' + Date.now(), name, email, profile,
           color: COLORS[accounts.length % COLORS.length],
-          services: SERVICES.map(s => s.id),
-          cooldowns: Object.fromEntries(SERVICES.map(s => [s.id, 0])),
+          // Issue #319 : la sélection active, pas tout le catalogue.
+          services: getActiveServices(),
+          cooldowns: Object.fromEntries(getActiveServices().map(sid => [sid, 0])),
           automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 }
         });
         showToast(_('Compte ajouté'));
@@ -1680,7 +1815,7 @@
       const s = currentSettings || {};
       const r = window.iaoComptesSerie.comptesEnSerie({
         comptes: accounts, nombre: Number(document.getElementById('serieNombre').value),
-        prefixe: s.mailPrefix, domaine: s.mailDomain, services: SERVICES.map(x => x.id), maintenant: Date.now()
+        prefixe: s.mailPrefix, domaine: s.mailDomain, services: getActiveServices(), maintenant: Date.now()
       });
       if (!r.ok) {
         return showToast(r.erreur === 'nombre'
@@ -1690,7 +1825,7 @@
       r.comptes.forEach((c) => {
         accounts.push(Object.assign(c, {
           color: COLORS[accounts.length % COLORS.length],
-          cooldowns: Object.fromEntries(SERVICES.map(x => [x.id, 0])),
+          cooldowns: Object.fromEntries(c.services.map(sid => [sid, 0])),
           automation: { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 }
         }));
       });
@@ -1709,10 +1844,14 @@
     };
 
     // Issue #201 : webmail (URL des réglages, ouverte par le process principal) ;
-    // l'adresse du compte est copiée pour la saisir dans Roundcube.
+    // l'adresse du compte est copiée. Issue #310 : le process principal ouvre le
+    // webmail dans la partition du compte et s'y connecte avec l'adresse et le
+    // mot de passe du coffre (le renderer ne transmet que profil et adresse).
     function openWebmail(accId) {
       copyAccountEmail(accId);
-      ipcRenderer.invoke('app:open-webmail').then((ok) => {
+      const acc = accounts.find(a => a.id === accId);
+      const compte = acc ? { profil: acc.profile, email: acc.email || '' } : null;
+      ipcRenderer.invoke('app:open-webmail', compte).then((ok) => {
         if (ok !== true) showToast(_('Adresse du webmail non configurée dans les réglages'), 'warning');
       }).catch(() => showToast(_('Ouverture du webmail impossible'), 'error'));
     }
@@ -1727,6 +1866,112 @@
         showToast(ok ? _('E-mail copié : {email}', { email: acc.email }) : _('Copie impossible dans le presse-papiers'), ok ? 'success' : 'error');
       });
     }
+
+    // Issue #310 (relecture) : codes et liens de connexion relevés par le
+    // process principal dans la fenêtre du webmail d'un compte (lib/webmail-codes).
+    // Affichés dans la barre de l'onglet du service pour ce compte (à côté de
+    // recharger / accueil / déconnexion) ; le lien est ouvert dans l'onglet
+    // après 3 s, sauf « Annuler ». Le code reste affiché 5 minutes (sa durée de vie).
+    const CONNEXION_DELAI_S = 3;
+    const CONNEXION_AFFICHAGE_MS = 5 * 60 * 1000;
+    function afficherConnexionWebmail(ev) {
+      if (!ev || typeof ev !== 'object') return;
+      const acc = accounts.find(a => a.profile === ev.profil);
+      const svc = SERVICES.find(s => s.id === ev.service);
+      if (!acc || !svc) { dbg('webmail', 'connexion reçue sans compte ou service connu', ev.profil, ev.service); return; }
+      const code = /^\d{6}$/.test(ev.code || '') ? ev.code : '';
+      const lien = typeof ev.lien === 'string' && ev.lien.startsWith('https://') ? ev.lien : '';
+      let tab = tabs.find(t => t.accId === acc.id && t.svcId === svc.id);
+      if (!tab && lien) {
+        // Onglet fermé : on l'ouvre pour y suivre le lien.
+        window.openService(acc.id, svc.id);
+        tab = tabs.find(t => t.accId === acc.id && t.svcId === svc.id);
+      }
+      dbg('webmail', 'connexion reçue', acc.profile, svc.id, code ? 'code' : 'sans code', lien ? 'lien' : 'sans lien', tab ? tab.id : 'sans onglet');
+      if (code) showToast(_('Code {service} pour {account} : {code}', { service: svc.name, account: acc.name, code }));
+      if (!tab) return;
+      const toolbar = tab.paneEl.querySelector('.tab-toolbar');
+      if (!toolbar) return;
+      const ancien = toolbar.querySelector('.tab-code');
+      if (ancien) { clearInterval(Number(ancien.dataset.minuterie)); ancien.remove(); }
+      const bandeau = document.createElement('div');
+      bandeau.className = 'tab-code';
+      bandeau.setAttribute('role', 'status');
+      bandeau.innerHTML = `
+        ${code ? `<span class="tab-code__libelle">${escapeHtml(_('Code reçu par mail :'))}</span><strong class="tab-code__valeur">${escapeHtml(code)}</strong>
+        <button type="button" class="tab-code__btn" data-code-action="copier">${escapeHtml(_('Copier'))}</button>` : ''}
+        ${lien ? `<span class="tab-code__etat"></span>
+        <button type="button" class="tab-code__btn" data-code-action="annuler">${escapeHtml(_('Annuler'))}</button>
+        <button type="button" class="tab-code__btn" data-code-action="ouvrir" hidden>${escapeHtml(_('Ouvrir le lien de connexion'))}</button>` : ''}
+        <button type="button" class="tab-code__btn tab-code__fermer" data-code-action="fermer" title="${escapeHtml(_('Fermer'))}">×</button>`;
+      toolbar.insertBefore(bandeau, toolbar.firstChild);
+      const etat = bandeau.querySelector('.tab-code__etat');
+      const btnAnnuler = bandeau.querySelector('[data-code-action="annuler"]');
+      const btnOuvrir = bandeau.querySelector('[data-code-action="ouvrir"]');
+      let reste = CONNEXION_DELAI_S;
+      let minuterie = 0;
+      const ouvrirLien = () => {
+        clearInterval(minuterie);
+        const webview = tab.paneEl.querySelector('webview');
+        if (webview) {
+          webview.loadURL(lien).catch((e) => dbg('webmail', 'ouverture du lien interrompue', tab.id, e && e.message));
+          dbg('webmail', 'lien de connexion ouvert dans l\'onglet', tab.id);
+        }
+        if (etat) etat.textContent = _('Lien de connexion ouvert');
+        if (btnAnnuler) btnAnnuler.hidden = true;
+        if (btnOuvrir) btnOuvrir.hidden = true;
+      };
+      if (lien) {
+        etat.textContent = _('Connexion automatique dans {seconds} s', { seconds: reste });
+        minuterie = setInterval(() => {
+          reste -= 1;
+          if (reste <= 0) ouvrirLien();
+          else etat.textContent = _('Connexion automatique dans {seconds} s', { seconds: reste });
+        }, 1000);
+        bandeau.dataset.minuterie = String(minuterie);
+      }
+      const fin = setTimeout(() => { clearInterval(minuterie); bandeau.remove(); }, CONNEXION_AFFICHAGE_MS);
+      bandeau.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-code-action]');
+        if (!b) return;
+        const action = b.getAttribute('data-code-action');
+        if (action === 'copier') {
+          copyText(code, { clipboard: navigator.clipboard, document }).then(ok => {
+            showToast(ok ? _('Code copié') : _('Copie impossible dans le presse-papiers'), ok ? 'success' : 'error');
+          });
+        } else if (action === 'annuler') {
+          clearInterval(minuterie);
+          etat.textContent = _('Connexion automatique annulée');
+          btnAnnuler.hidden = true;
+          btnOuvrir.hidden = false;
+        } else if (action === 'ouvrir') {
+          ouvrirLien();
+        } else {
+          clearInterval(minuterie);
+          clearTimeout(fin);
+          bandeau.remove();
+        }
+      });
+    }
+    window.afficherConnexionWebmail = afficherConnexionWebmail;
+
+    // Attente longue (canal webmail:attendre) : le process principal répond dès
+    // qu'un mail de connexion est relevé, ou par une liste vide au bout de 25 s.
+    async function boucleConnexionsWebmail() {
+      for (;;) {
+        let lot = [];
+        try {
+          lot = await ipcRenderer.invoke('webmail:attendre');
+        } catch (e) {
+          console.warn('[webmail] attente des mails de connexion interrompue :', e && e.message);
+          await new Promise(r => setTimeout(r, 5000));
+        }
+        for (const ev of Array.isArray(lot) ? lot : []) {
+          try { afficherConnexionWebmail(ev); } catch (e) { console.error('[webmail] affichage du code impossible :', e); }
+        }
+      }
+    }
+    boucleConnexionsWebmail();
 
     function showToast(msg, type = 'success') {
       const toast = document.createElement('div');
@@ -2924,10 +3169,8 @@
         loadedLanguage = settings.language || 'auto';
         const langSelect = document.getElementById('settingsLanguage');
         if (langSelect && langSelect.querySelector('option[value="' + loadedLanguage + '"]')) langSelect.value = loadedLanguage;
-        // Restaurer les onglets si le réglage est activé (lot 18/09/2026)
-        if (settings.startWithLastSession) {
-          restoreOpenTabs();
-        }
+        // Onglets de la session précédente (lot 18/09/2026, issues #317/#318).
+        handleStartupTabs(settings.startWithLastSession === true);
       } catch (e) {
         showToast(_('Impossible de charger les réglages'), 'error');
       }
@@ -3408,7 +3651,7 @@
       title.textContent = _('Comptes retrouvés');
       const desc = document.createElement('div');
       desc.className = 'modal__desc';
-      desc.textContent = _("Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte ».", { count: restored.length });
+      desc.textContent = _("Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés.", { count: restored.length });
       const actions = document.createElement('div');
       actions.className = 'modal__actions';
       const close = () => overlay.remove();
@@ -3421,12 +3664,18 @@
       restore.setAttribute('data-role', 'snapshot-restore');
       restore.textContent = _('Restaurer les comptes');
       restore.addEventListener('click', () => {
-        accounts = restored;
-        migrateOldAccounts();   // services et cooldowns
-        saveAccounts(accounts); // resynchronise aussi l'ordonnanceur
-        renderAccounts();
         close();
-        showToast(_n('{count} compte restauré', '{count} comptes restaurés', restored.length, { count: restored.length }));
+        // Issue #311 : restaurer = importer la copie, par le même chemin que le
+        // bouton « Importer » (importAccountsJSON : migration, enregistrement,
+        // affichage). Aucun traitement propre à la restauration.
+        try {
+          const count = importAccountsJSON(JSON.stringify(restored));
+          dbg('comptes', 'restauration au démarrage : ' + count + ' compte(s) importé(s)');
+          showToast(_n('{count} compte restauré', '{count} comptes restaurés', count, { count }));
+        } catch (e) {
+          console.error('[comptes] échec de la restauration :', e);
+          showToast(_('Échec de l\'import : {error}', { error: e.message || e }), 'error');
+        }
       });
       actions.appendChild(cancel);
       actions.appendChild(restore);
@@ -3437,16 +3686,20 @@
       document.body.appendChild(overlay);
     }
 
-    // Récupération des données (chantier C) : si ai_accounts était illisible au
+    // Récupération des données (chantier C) : si profils.json (ou, avant
+    // migration, ai_accounts) était illisible au
     // démarrage, on propose de restaurer la sauvegarde plutôt que de perdre en
     // silence les comptes de l'utilisateur.
     if (dataCorrupt) showRecoveryUI();
 
     // Construit et affiche la modale de récupération. Restaure depuis
-    // ai_accounts_backup si un backup valide existe, sinon informe simplement.
+    // profils.json.bak (ou ai_accounts_backup) si une sauvegarde valide existe,
+    // sinon informe simplement.
     // (Fonction déclarée -> hoistée, l'appel ci-dessus la voit.)
     function showRecoveryUI() {
-      const b = readJSON(BACKUP_KEY);
+      // Issue #311 : sauvegarde profils.json.bak, ou, pour une installation pas
+      // encore migrée, l'ancien ai_accounts_backup du localStorage.
+      const b = profilsSauvegarde ? { status: 'ok', data: profilsSauvegarde } : readJSON(BACKUP_KEY);
       const hasBackup = b.status === 'ok' && Array.isArray(b.data);
 
       const overlay = document.createElement('div');
@@ -3520,8 +3773,9 @@ const UI_ACTIONS = {
   'ui-toggleAllCards': 'toggleAllCards',
   'ui-toggleExplorer': 'toggleExplorer',
   'ui-toggleIdePanel': 'toggleIdePanel',
-  'ui-toggleDevTools': 'toggleDevTools',
+  'ui-openDevToolsMenu': 'openDevToolsMenu',
   'ui-relaunchDebug': 'relaunchDebug',
+  'ui-relaunch': 'relaunchNormal',
   'ui-openPalette': 'openPalette',
   'ui-openModal': 'openModal',
   'ui-openHelpModal': 'openHelpModal',

@@ -1,5 +1,14 @@
 # CLAUDE.md — règles de travail sur ce dépôt
 
+
+## Mission
+
+Avant toute intervention autonome sur ce dépôt : lire et appliquer la
+mission d'équipe :
+https://github.com/Mathilde-Team/.github/blob/dev/MISSION.md
+(le socle qualité, SOCLE.md, prime sur la mission en cas de conflit ; si
+le fichier est absent sur `dev`, le chercher sur `main`).
+
 Instructions destinées à Claude (ou à toute IA) travaillant sur **IAO**.
 Contexte complet et historique : `docs/PROJECT_CONTEXT.md`. Backlog : `FEATURES.md`.
 
@@ -60,8 +69,11 @@ Il n'existe **pas** de `npm build` : la commande est `npm run dist` (ou `dist:li
 2. **Aucun `onclick` généré** contenant une donnée. Les listes cliquables passent par la **délégation
    d'événements** sur un conteneur stable (`data-action` / `data-acc` / `data-svc` / `data-path`).
    Les `onclick` statiques codés en dur, sans donnée, sont tolérés.
-3. **Toute écriture de comptes passe par `saveAccounts()`** — jamais `localStorage.setItem('ai_accounts', …)`
-   en direct (le backup `ai_accounts_backup` en dépend). Toute lecture JSON passe par `readJSON()`.
+3. **Toute écriture de comptes passe par `saveAccounts()`**, qui écrit `<userData>/profils.json` par le
+   process principal (`lib/profils.js`, canal synchrone `profils:ecrire`, version précédente dans
+   `profils.json.bak`) — issue #311. Les comptes ne sont plus dans le localStorage : les clés
+   `ai_accounts` / `ai_accounts_backup` ne sont lues qu'une fois, pour migrer une installation antérieure,
+   puis retirées. Toute lecture JSON du localStorage passe par `readJSON()`.
 4. **Unicité du champ `profile`** entre comptes : deux comptes qui partagent un profil partagent leur
    partition Electron, donc leurs cookies. Vérifié dans `saveAccount()` / `openModal()`.
 5. **Chemins relatifs** dans `index.html` (polices, Monaco) : l'app tourne aussi packagée. Monaco est

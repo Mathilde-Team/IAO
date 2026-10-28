@@ -143,9 +143,8 @@ iao/
 
 Deux endroits distincts, à ne pas confondre :
 
-1. **Métadonnées des comptes** → `localStorage` du renderer.
-   - Clé `ai_accounts` : tableau JSON de comptes.
-   - Clé `ai_accounts_backup` : **copie de sauvegarde** (1 seule génération) écrite automatiquement avant chaque écrasement de `ai_accounts` — sert à la récupération si `ai_accounts` est corrompu (voir §7, chantier C).
+1. **Métadonnées des comptes** → `<userData>/profils.json` (issue #311, `lib/profils.js`), écrit par le process principal via le canal synchrone `profils:ecrire` (écriture atomique ; version précédente dans `profils.json.bak`, fichier illisible mis de côté dans `profils.json.illisible`). Lu au démarrage par `profils:lire`. État de l'interface → `localStorage` du renderer :
+   - Clés `ai_accounts` / `ai_accounts_backup` : anciens emplacements des comptes, lus une seule fois pour migrer vers `profils.json` puis retirés.
    - Clés `ide_w`, `explorer_w` : largeurs mémorisées des colonnes.
    - Clé `collapsed_accounts` : tableau JSON des ids de comptes dont la carte est **repliée** (vue compacte). Lecture/écriture défensives (`try/catch`), purgée des ids de comptes supprimés à chaque écriture (`saveCollapsed()`).
    - **Stocké EN CLAIR** (pas de chiffrement — un mot de passe maître avait été prototypé puis retiré à la demande de l'utilisateur).
@@ -227,7 +226,7 @@ Les boutons de service d'une carte sont posés dans `.services-grid`, une **gril
   - `escapeHtml(str)` — échappe `& < > " '`. À utiliser **partout** où une donnée utilisateur (nom/email/profil de compte, nom de fichier) est injectée en `innerHTML`. Critique car le renderer tourne en `nodeIntegration:true`.
   - **Délégation d'événements** : un seul listener `click` par conteneur stable (`#accountsList`, `#paletteResults`, `#fileList`) lit `data-action`/`data-acc`/`data-svc`/`data-path`. Plus aucune donnée n'est injectée dans un attribut `onclick` généré. (Les `onclick` **statiques** codés en dur, sans donnée utilisateur, sont conservés.)
   - `readJSON(key)` / `saveAccounts(list)` / `exportAccountsJSON()` / `importAccountsJSON(text)` / `showRecoveryUI()` — stockage résilient. `saveAccounts` ne recopie l'ancienne valeur dans le backup que si elle est un JSON **valide** (ne détruit jamais un bon backup).
-- **Import/export JSON des comptes (17/09/2026)** : deux boutons dans l'en-tête « Comptes enregistrés » (icônes `file-export`/`file-import`). `exportAccountsToFile()` appelle l'IPC `accounts:export` (→ `dialog.showSaveDialog` côté `main.js`, nom de fichier horodaté) puis écrit `exportAccountsJSON()`. `importAccountsFromFile()` appelle l'IPC `accounts:import` (→ `dialog.showOpenDialog`), valide le JSON lu (`JSON.parse` + vérification de tableau), puis ouvre `#importConfirmModal` (calquée sur `#deleteModal`) annonçant le nombre de comptes du fichier avant d'écraser la liste actuelle ; `confirmImport()` appelle alors `importAccountsJSON(text)` (déjà existante, inchangée). `pendingImportContent` porte le contenu en attente de confirmation, remis à `null` à la fermeture (bouton, Échap ou confirmation) pour ne jamais persister au-delà de la modale.
+- **Import/export JSON des comptes (17/09/2026)** : deux boutons dans l'en-tête « Comptes enregistrés » (icônes `file-arrow-up` pour exporter et `file-arrow-down` pour importer ; issue #325 : les anciennes `file-export`/`file-import` avaient leurs tracés inversés). `exportAccountsToFile()` appelle l'IPC `accounts:export` (→ `dialog.showSaveDialog` côté `main.js`, nom de fichier horodaté) puis écrit `exportAccountsJSON()`. `importAccountsFromFile()` appelle l'IPC `accounts:import` (→ `dialog.showOpenDialog`), valide le JSON lu (`JSON.parse` + vérification de tableau), puis ouvre `#importConfirmModal` (calquée sur `#deleteModal`) annonçant le nombre de comptes du fichier avant d'écraser la liste actuelle ; `confirmImport()` appelle alors `importAccountsJSON(text)` (déjà existante, inchangée). `pendingImportContent` porte le contenu en attente de confirmation, remis à `null` à la fermeture (bouton, Échap ou confirmation) pour ne jamais persister au-delà de la modale.
 - **Icônes** : `hydrateIcons(root)` (dans `assets/icons.js`) remplace chaque `<span class="ic" data-icon="NOM">` par son SVG. Appelé au démarrage (HTML statique) et après chaque `innerHTML` dynamique. Ajouter une icône = ajouter une entrée `{vb, p}` dans `window.IAO_ICONS` (viewBox + path).
 
 ## 7bis. Ordonnanceur IA (`scheduler/`, panneau « Ordonnanceur IA ») — ANCIEN FLUX
@@ -266,6 +265,11 @@ sursolliciter toujours le même compte.
   - **Registre de jobs persistant** dans `<userData>/scheduler/` : `jobs.json` (source de vérité) +
     `jobs.csv` (export, régénéré à chaque écriture), `config.json`, `accounts-snapshot.json`,
     `activity.json` (journal, 500 dernières entrées).
+  - **Copie complète des comptes** (issue #311) : `<userData>/comptes-sauvegarde.json`, écrite à
+    chaque `syncAccounts` (fichier temporaire puis renommage), format exact de l'export. Au
+    démarrage sans compte, `reportStartupAccounts` la propose en priorité (`accountsFromBackup`),
+    l'instantané partiel `accounts-snapshot.json` seulement à défaut ; l'interface restaure par
+    `importAccountsJSON`, le même chemin que le bouton « Importer ».
   - **Détection des téléchargements** : pour chaque profil connu (reçu via `syncAccounts`),
     `session.fromPartition('persist:<profil>').on('will-download', ...)` — si le fichier se termine
     en `.zip` **et que l'ordonnanceur est activé**, crée un job `DOWNLOADING` puis le fait passer à
@@ -402,6 +406,14 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Logo (`.app-brand__icon`) : dégradé **rose → violet** (`var(--rose)` → `var(--accent)`).
 - Stats : « Comptes actifs » en violet, « IA disponibles » en rose.
 - Les couleurs de marque des IA (Claude/ChatGPT/Gemini/Perplexity/Grok) sont **conservées** pour la reconnaissance ; Z.ai est violet et s'intègre au thème ; Leonardo AI est magenta (`--leonardo: #d946ef`), distinct du violet Z.ai et du rose du thème. Suno est **orange-rouge** (`--suno: #f8441b` — sa marque officielle est noir/blanc, on reprend le pôle orange du dégradé signature rose→orange de son app, le rose étant trop proche de Leonardo) ; Meshy AI est **vert lime** (`--meshy: #c5f955`, couleur dominante relevée sur meshy.ai).
+- **Logos des IA** (issue #324) : `lib/service-icons.js` (`iconeService(id, nom)`, SVG inline,
+  tracés Lobe Icons MIT et Simple Icons CC0, revalidés avant rendu) affiche le logo officiel
+  devant le nom dans les boutons des cartes, la fenêtre « Comprendre les IA », la fenêtre de
+  choix des IA et chaque onglet. Les boutons des cartes ont désormais une **couleur standard**
+  (fond neutre du thème) : le logo suffit à reconnaître le service. Un onglet = logo + nom du
+  compte (le service est dans l'infobulle). Logos monochromes en `currentColor` (lisibles en
+  sombre et en clair), Gemini, Kling, Wolfram et NotebookLM teintés par `--<service>`. Leonardo AI
+  et Elicit (pas de logo libre) : initiale du nom sur la pastille de couleur du service.
 - Polices et icônes **désormais 100% locales** (`assets/fonts/` + `assets/icons.js`) — plus aucune dépendance Internet pour l'ossature visuelle. Monaco est local. Les `@font-face` sont dans le `<style>` d'`index.html` avec des chemins **relatifs** (valables en dev ET en `.exe`).
 
 ## 9. Comportements par défaut importants
@@ -450,6 +462,20 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Notifications quand un cooldown se termine.
 
 ## 13. Dernières évolutions
+
+### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
+
+- `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans
+  privilèges, partition `persist:<profil>`, et s'y connecte avec le mot de passe du coffre.
+- `lib/webmail-codes.js` : `creerReleveur` (créé par fenêtre, actif seulement sur l'hôte du
+  webmail, arrêté à la fermeture) exécute toutes les 10 s `scriptReleve(apresUid)` dans la
+  page (`_action=list` puis `_action=viewsource`, jeton `rcmail.env.request_token`) ;
+  `analyserMail` garde les mails d'un domaine de service connu (`DOMAINES`), récents
+  (15 min), et en extrait le code à 6 chiffres et le lien de connexion du même service.
+- `creerFileConnexions` + canal `webmail:attendre` (attente longue 25 s) : le renderer
+  (`boucleConnexionsWebmail`, `afficherConnexionWebmail`) affiche le bandeau `.tab-code` au
+  début de `.tab-toolbar` de l'onglet (compte par profil, service), ouvre le lien après 3 s
+  sauf Annuler. Ni le code ni le lien ne sont journalisés.
 
 ### Stockage : un localStorage cassé ne tue plus le renderer (issues #52/#186, 25/10/2026)
 

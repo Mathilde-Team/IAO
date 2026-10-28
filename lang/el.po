@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Επανεκκίνηση σε λειτουργία αποσφαλμάτωσης (λεπτομερές αρχείο)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Επιλογή των 9 ΤΝ μου σε άμεση πρόσβαση"
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "Κλείσιμο"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Επιλέξτε τις 9 υπηρεσίες που εμφανίζονται στη διεπαφή. Οι υπόλοιπες παραμένουν διαθέσιμες στη βοήθεια."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Αδυναμία αποθήκευσης λογαριασμών (γεμάτος χώρος;)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S για αποθήκευση."
 
@@ -804,6 +816,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Επιστροφή στην αρχική του {service}"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Αποσύνδεση από το προφίλ «{profile}»"
 
@@ -838,6 +854,14 @@ msgstr "Προστέθηκε αστέρι στην καρτέλα"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "Το αστέρι αφαιρέθηκε"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"
@@ -880,16 +904,12 @@ msgid "Description à venir."
 msgstr "Η περιγραφή έρχεται σύντομα."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Έως {max} υπηρεσίες σε άμεση πρόσβαση"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Επιλέξτε τουλάχιστον 1 υπηρεσία"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Οι υπηρεσίες ενημερώθηκαν ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1002,6 +1022,38 @@ msgstr "Αδυναμία αντιγραφής στο πρόχειρο"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "Το email αντιγράφηκε: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1886,8 +1938,8 @@ msgid "Comptes retrouvés"
 msgstr "Βρέθηκαν λογαριασμοί"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "Δεν διαβάστηκε κανένας λογαριασμός κατά την εκκίνηση, αλλά ο χρονοπρογραμματιστής γνωρίζει {count}. Να επαναφερθούν; Οι συνεδρίες των υπηρεσιών διατηρούνται· οι διευθύνσεις email πρέπει να συμπληρωθούν από την «Επεξεργασία λογαριασμού»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

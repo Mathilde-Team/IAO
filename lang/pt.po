@@ -82,8 +82,12 @@ msgid "Redémarrer en mode debug (journal détaillé)"
 msgstr "Reiniciar em modo de depuração (registo detalhado)"
 
 #: index.html
-msgid "Choisir mes 9 IA à portée de main"
-msgstr "Escolher as minhas 9 IA à mão"
+msgid "Redémarrer IAO"
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
 
 #: index.html
 msgid "Comprendre les IA disponibles"
@@ -214,8 +218,8 @@ msgid "Fermer"
 msgstr "Fechar"
 
 #: index.html
-msgid "Sélectionnez les 9 services affichés dans l'interface. Les autres restent disponibles dans l'aide."
-msgstr "Selecione os 9 serviços mostrados na interface. Os outros continuam disponíveis na ajuda."
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -742,6 +746,14 @@ msgid "Impossible d'enregistrer les comptes (stockage plein ?)"
 msgstr "Não foi possível guardar as contas (armazenamento cheio?)"
 
 #: assets/app.js
+msgid "Rouvrir les onglets précédents ?"
+msgstr ""
+
+#: assets/app.js
+msgid "Onglets ouverts à la fermeture d'IAO : {n}. Les rouvrir ?"
+msgstr ""
+
+#: assets/app.js
 msgid "Ctrl+S pour sauvegarder."
 msgstr "Ctrl+S para guardar."
 
@@ -804,6 +816,10 @@ msgid "Revenir à l'accueil de {service}"
 msgstr "Voltar à página inicial de {service}"
 
 #: assets/app.js
+msgid "Outils de développement de l'onglet (mode debug)"
+msgstr ""
+
+#: assets/app.js
 msgid "Se déconnecter du profil « {profile} »"
 msgstr "Terminar a sessão do perfil «{profile}»"
 
@@ -838,6 +854,14 @@ msgstr "Separador com estrela"
 #: assets/app.js
 msgid "Étoile retirée"
 msgstr "Estrela removida"
+
+#: assets/app.js
+msgid "Fenêtre IAO"
+msgstr ""
+
+#: assets/app.js
+msgid "Page de l'IA : {service} — {compte}"
+msgstr ""
 
 #: assets/app.js
 msgid "Échec de la déconnexion du profil"
@@ -880,16 +904,12 @@ msgid "Description à venir."
 msgstr "Descrição a chegar."
 
 #: assets/app.js
-msgid "Maximum {max} services à portée de main"
-msgstr "Máximo de {max} serviços à mão"
-
-#: assets/app.js
 msgid "Sélectionnez au moins 1 service"
 msgstr "Selecione pelo menos 1 serviço"
 
 #: assets/app.js
-msgid "Services mis à jour ({count}/{max})"
-msgstr "Serviços atualizados ({count}/{max})"
+msgid "IA à portée de main : {count}"
+msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1002,6 +1022,38 @@ msgstr "Não foi possível copiar para a área de transferência"
 #: assets/app.js
 msgid "E-mail copié : {email}"
 msgstr "E-mail copiado: {email}"
+
+#: assets/app.js
+msgid "Code {service} pour {account} : {code}"
+msgstr ""
+
+#: assets/app.js
+msgid "Code reçu par mail :"
+msgstr ""
+
+#: assets/app.js
+msgid "Copier"
+msgstr ""
+
+#: assets/app.js
+msgid "Ouvrir le lien de connexion"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien de connexion ouvert"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique dans {seconds} s"
+msgstr ""
+
+#: assets/app.js
+msgid "Code copié"
+msgstr ""
+
+#: assets/app.js
+msgid "Connexion automatique annulée"
+msgstr ""
 
 #: assets/app.js
 msgid "Cooldown terminé"
@@ -1886,8 +1938,8 @@ msgid "Comptes retrouvés"
 msgstr "Contas reencontradas"
 
 #: assets/app.js
-msgid "Aucun compte n'a été lu au démarrage, mais l'ordonnanceur en connaît {count}. Les restaurer ? Les sessions des services sont conservées ; les adresses e-mail sont à compléter depuis « Modifier le compte »."
-msgstr "No arranque não foi lida nenhuma conta, mas o planificador conhece {count}. Restaurá-las? As sessões dos serviços são conservadas; os endereços de e-mail devem ser completados em «Editar a conta»."
+msgid "Aucun compte n'a été lu au démarrage, mais IAO en a gardé une copie ({count} compte(s)). Les restaurer ? C'est la même opération qu'importer un fichier d'export : comptes, adresses et sessions des services sont conservés."
+msgstr ""
 
 #: assets/app.js
 msgid "Ignorer"

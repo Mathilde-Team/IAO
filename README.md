@@ -27,7 +27,7 @@ Publié ici pour quiconque en a l'usage.
 - **Actions rapides sur un onglet ouvert** : recharger la page, revenir à l'accueil du service, ou se
   déconnecter du profil (purge des cookies/session du compte, avec confirmation — action destructive).
 - **Suivi de quota (« cooldown »)** par service et par compte : un service en cooldown apparaît estompé et se réactive automatiquement à l'expiration (le bouton manuel « Épuiser (24h) » a été retiré, issue #136).
-- **Comptes en série** (bouton « personnes », issue #201) : crée N comptes d'un coup, nommés par numéro à la suite du plus grand existant (`239`, `240`…), profil `profil_<numéro>`, e-mail `<préfixe><numéro>@<domaine>` (préfixe et domaine dans les réglages). Chaque compte reçoit un **mot de passe de messagerie aléatoire**, chiffré par le trousseau du système (`safeStorage`, jamais en clair ; refusé si aucun trousseau n'est disponible), masqué dans la fenêtre du compte avec un bouton pour l'afficher. Si l'adresse du webmail (Roundcube) est réglée, un bouton enveloppe sur chaque carte l'ouvre dans le navigateur et copie l'adresse du compte. La création des boîtes sur le serveur de messagerie n'est pas encore branchée.
+- **Comptes en série** (bouton « personnes », issue #201) : crée N comptes d'un coup, nommés par numéro à la suite du plus grand existant (`239`, `240`…), profil `profil_<numéro>`, e-mail `<préfixe><numéro>@<domaine>` (préfixe et domaine dans les réglages). Chaque compte reçoit un **mot de passe de messagerie aléatoire**, chiffré par le trousseau du système (`safeStorage`, jamais en clair ; refusé si aucun trousseau n'est disponible), masqué dans la fenêtre du compte avec un bouton pour l'afficher. Si l'adresse du webmail (Roundcube) est réglée, un bouton enveloppe sur chaque carte l'ouvre dans une fenêtre IAO, dans la session du compte, et s'y connecte avec l'adresse et le mot de passe du compte (formulaire Roundcube rempli et validé, une seule tentative ; issue #310) ; l'adresse est aussi copiée. Tant que cette fenêtre est ouverte, les mails reçus d'un service d'IA sont relevés toutes les 10 s : le code à 6 chiffres s'affiche dans un bandeau sous l'onglet du service (bouton Copier) et le lien de connexion y est ouvert automatiquement après 3 s (bouton Annuler). La création des boîtes sur le serveur de messagerie n'est pas encore branchée.
 - **Palette rapide (Ctrl+K)** : ouvrir n'importe quel service avec n'importe quel compte au clavier.
 - **Raccourcis d'onglets** : `Ctrl+Tab` / `Ctrl+Maj+Tab` pour circuler entre les onglets, `Alt+1` à `Alt+9` pour aller directement au Nᵉ. (Quand le focus est à l'intérieur d'une page IA, cliquez d'abord hors de celle-ci — Electron ne fait pas remonter les touches depuis une webview.)
 - **Page d'aide intégrée** (bouton `?`) : description et cas d'usage de chaque IA, pour les utilisateurs qui ne les connaissent pas toutes.
@@ -163,6 +163,10 @@ ajout d'une langue et CI : [docs/i18n.md](docs/i18n.md) (issue #51).
 | Linux | `~/.config/ai-manager` |
 | Windows | `%APPDATA%\ai-manager` |
 
+Les comptes (nom, adresse, profil, couleur, services, cooldowns, automatisation) sont dans `profils.json` de ce dossier (issue #311), au format exact du bouton « Exporter ». Créer, modifier, supprimer ou importer un compte écrit ce fichier ; la version précédente est gardée dans `profils.json.bak`, proposée à la restauration si `profils.json` devient illisible (un fichier illisible est mis de côté dans `profils.json.illisible`, jamais écrasé sans copie). Le stockage interne de l'interface (`localStorage`) ne garde plus que les onglets ouverts et l'affichage : le vider, ou réinstaller IAO, ne fait plus perdre de compte. Au premier lancement de cette version, les comptes qui y étaient encore sont recopiés une fois dans `profils.json`.
+
+L'ordonnanceur tient aussi une copie dans `scheduler/comptes-sauvegarde.json` : si `profils.json` a disparu et qu'aucun compte n'est lu au démarrage, IAO propose de la restaurer, ce qui revient à l'importer.
+
 Les mots de passe de messagerie (issue #201) sont dans `secrets.json` de ce dossier, chiffrés par le trousseau du système (DPAPI sous Windows, libsecret/KWallet sous Linux) : ils ne sont pas lisibles sur une autre machine ni par un autre utilisateur.
 
 Les statistiques d'utilisation (issue #206, bouton « graphique » de la barre du haut) sont dans `stats/` de ce dossier : `sessions.jsonl` (une ligne par session d'onglet : profil, service, début, fin, temps actif ; 90 jours conservés) et `en-cours.json` (onglets ouverts, récupérés au lancement suivant si IAO a été fermé brutalement). Elles ne quittent jamais l'ordinateur ; le bouton « Remettre à zéro » de la page (ou la suppression de `stats/`) les efface, et « Exporter CSV / JSON » les enregistre dans un fichier de votre choix.
@@ -176,6 +180,23 @@ Le réglage « Enregistrer en HAR les 15 premières minutes de chaque connexion 
 - Les fichiers sont écrits dans `<dossier de données>/har/<hôte>-<horodatage>.har` (HAR 1.2, 2 000 entrées maximum, un corps de réponse conservé jusqu'à 512 Ko).
 - La capture s'arrête d'elle-même : 15 minutes écoulées, quota d'entrées atteint, onglet fermé.
 - **Confidentialité** : un HAR contient cookies et jetons de session en clair — n'activez le réglage que pour capturer, désactivez-le ensuite, et ne partagez un `.har` qu'avec une personne de confiance. La capture s'arrête aussi si le débogueur ne peut pas être attaché (outils de développement ouverts sur cet onglet, par exemple) : un avertissement est alors journalisé dans `iao.log`.
+
+### Capture HAR manuelle (issue #315)
+
+Pour enregistrer un HAR à la main, au moment choisi et sans limite de 15 minutes :
+
+1. Lancer IAO en **mode debug** (voir plus bas) et ouvrir l'onglet IA voulu.
+2. Cliquer sur **Outils de développement de l'onglet** (icône insecte de la barre de l'onglet).
+   Les outils de la fenêtre principale (Ctrl+Maj+I) ne voient pas le trafic des onglets IA.
+3. Onglet **Network** (Réseau) : cocher **Preserve log** (Conserver le journal), puis faire les
+   manipulations à enregistrer dans la page.
+4. Icône de téléchargement (flèche vers le bas) de la barre Network, ou clic droit dans la liste
+   des requêtes : **Export HAR (sanitized)** enregistre sans cookies ni en-têtes d'authentification ;
+   **Export HAR (with sensitive data)** les garde (option à autoriser dans les réglages des outils,
+   Preferences > Network). Choisir l'emplacement du fichier `.har`.
+
+Tant que ces outils sont ouverts sur un onglet, la capture automatique ci-dessus ne peut pas
+s'attacher à cet onglet. Les mêmes règles de confidentialité s'appliquent.
 
 ## Dépannage au démarrage
 
@@ -193,6 +214,9 @@ Le réglage « Enregistrer en HAR les 15 premières minutes de chaque connexion 
     du workspace, ou bouton **Relancer en mode debug** du bandeau rouge, qui affiche aussi le
     chemin du journal.
   - Un badge **DEBUG** s'affiche alors à côté du nom de l'application.
+  - Chaque onglet IA gagne un bouton **Outils de développement de l'onglet** (insecte, barre
+    de l'onglet) : inspecteur de la page de l'IA elle-même (champ qui a le focus, sélecteurs),
+    que les outils de la fenêtre principale n'atteignent pas (issue #320).
   - Sont ajoutés au journal : versions (Electron, Chrome, Node) et options de lancement ;
     chaque appel IPC (canal, durée, succès ou erreur) ; tous les messages de l'interface
     (ouverture, activation et fermeture d'onglets, enregistrement des comptes) ; pour chaque
@@ -232,7 +256,7 @@ iao/
 ├── install.bat             # Installeur Windows (menu Démarrer, raccourcis, /uninstall) — créé lot 9
 ├── index.html              # HTML pur (CSS extrait vers assets/app.css, JS vers assets/app.js + pre-monaco.js). ~356 lignes.
 ├── main.js                 # Process principal Electron : fenêtre, IPC fichiers, durcissement navigation/popups, ordonnanceur
-├── lib/                    # Fonctions pures extraites (escapeHtml, politique popups decidePopup, statuts d'activité, actions d'onglet, recherche, cooldown, claude-adapter, settings) — testées par node --test
+├── lib/                    # Fonctions pures extraites (escapeHtml, politique popups decidePopup, statuts d'activité, actions d'onglet, recherche, cooldown, claude-adapter, settings, logos des IA service-icons) — testées par node --test
 ├── scheduler/               # Ordonnanceur IA : registre de jobs, détection des ZIP livrés, reprise par profil, automatisation Claude
 ├── test/                   # Tests unitaires (node --test, 332 tests)
 ├── test-electron/          # Tests d'intégration Electron réels (popups, Continuer, Monaco sous CSP, fumée binaire) — 14 + 3 tests
@@ -264,7 +288,7 @@ Transparence complète — ce qui est fait, et ce qui ne l'est pas :
 
 **Limites assumées (à connaître avant d'utiliser) :**
 - Le renderer tourne avec **`nodeIntegration: true` et `contextIsolation: false`** : la page hôte a un accès complet à Node/OS. C'est la principale dette de sécurité du projet ; la migration vers `contextIsolation` + preload est un chantier identifié mais non réalisé. Les webviews des services, elles, tournent sans privilèges Node.
-- **Les sessions IA (cookies) et les métadonnées de comptes sont stockées en clair** dans le dossier de données (voir tableau ci-dessus) et le `localStorage`. Aucun chiffrement au repos. Règle simple : **une session utilisateur = une personne** — n'utilisez pas l'app dans un compte partagé.
+- **Les sessions IA (cookies) et les métadonnées de comptes sont stockées en clair** dans le dossier de données (voir tableau ci-dessus) (`profils.json`). Aucun chiffrement au repos. Règle simple : **une session utilisateur = une personne** — n'utilisez pas l'app dans un compte partagé.
 - Les binaires distribués ne sont **pas signés** (avertissement SmartScreen sous Windows ; aucun dépôt APT signé côté Linux).
 - Une installation utilisateur sous Linux tourne **sans le sandbox Chromium** (voir la note ci-dessus) : c'est une protection en moins pour les pages web affichées dans les onglets. Le `.deb` et l'installation `--system` n'ont pas cette limite.
 - Pas de CSP sur `index.html` (prérequis faits — zéro ressource distante — mais l'en-tête n'est pas encore posé).
@@ -288,7 +312,7 @@ Règles du projet : JS vanilla sans dépendance nouvelle, toute donnée utilisat
 <!-- --8<-- [end:developpement] -->
 ## Licence
 
-[MIT](LICENSE). Composants tiers (polices OFL, icônes Font Awesome CC BY 4.0, Monaco MIT) : voir [docs/THIRD-PARTY-NOTICES.md](docs/THIRD-PARTY-NOTICES.md).
+[MIT](LICENSE). Composants tiers (polices OFL, icônes Font Awesome CC BY 4.0, logos des IA Lobe Icons MIT et Simple Icons CC0, Monaco MIT) : voir [docs/THIRD-PARTY-NOTICES.md](docs/THIRD-PARTY-NOTICES.md).
 
 ## Crédits
 

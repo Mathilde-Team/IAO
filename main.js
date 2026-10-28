@@ -32,6 +32,8 @@ const diag = require('./lib/startup-diagnostics');
 const DEBUG = diag.isDebugEnabled(process.argv, process.env);
 const debugTrace = require('./lib/debug-trace');
 const { CoffreSecrets, registerComptesIPC } = require('./lib/coffre-secrets');
+const { creerOuvreurWebmail } = require('./lib/webmail-connexion');
+const { creerFileConnexions } = require('./lib/webmail-codes');
 const { IdentifiantsPartages, registerIdentifiantsIPC } = require('./lib/identifiants');
 const focusIdentifiants = require('./lib/identifiants-focus');
 const startupStorage = require('./lib/startup-storage');
@@ -326,9 +328,11 @@ function createWindow() {
     try {
       const profile = scheduler.resolveProfileFromSession(guestContents.session);
       if (profile) {
-        scheduler.registerWebview(profile, guestContents);
+        // Issue #320 : chargement suivi (écriture une fois la page prête) ;
+        // la fermeture n'oublie que CET onglet, pas les autres du compte.
+        scheduler.registerWebview(profile, guestContents, { suivreChargement: true });
         guestContents.on('destroyed', () => {
-          try { scheduler.unregisterWebview(profile); } catch (_) {}
+          try { scheduler.unregisterWebview(profile, guestContents); } catch (_) {}
         });
       }
     } catch (e) {
@@ -376,12 +380,29 @@ ipc.handle('app:is-debug', () => DEBUG);
 // d'erreur de démarrage, bouton de la barre du workspace). Réservé à la fenêtre
 // principale, comme app:toggle-devtools. app.relaunch() n'arrête pas l'app :
 // app.exit(0) ensuite (documentation Electron, app.relaunch).
-ipc.handle('app:relaunch-debug', (event) => {
+// Issue #317 : app.exit() n'attend pas que Chromium écrive le localStorage
+// (comptes, onglets ouverts) ; les comptes créés juste avant la relance étaient
+// perdus. Le stockage de la fenêtre principale est donc écrit avant de relancer.
+// « Redémarrer IAO » (app:relaunch) relance en mode normal, même depuis le mode
+// debug : options et variable IAO_DEBUG retirées.
+function relancer(event, args, motif) {
   if (!mainWindow || event.sender !== mainWindow.webContents) return false;
-  log('demarrage', 'info', 'Relance en mode debug demandée depuis l\'interface.');
-  app.relaunch({ args: diag.debugRelaunchArgs(process.argv) });
+  log('demarrage', 'info', motif);
+  try {
+    event.sender.session.flushStorageData();
+    debug('demarrage', 'stockage de la fenêtre principale écrit avant relance');
+  } catch (e) {
+    log('demarrage', 'warning', 'Écriture du stockage avant relance impossible (' + e.message + ').');
+  }
+  app.relaunch({ args });
   app.exit(0);
   return true;
+}
+ipc.handle('app:relaunch-debug', (event) =>
+  relancer(event, diag.debugRelaunchArgs(process.argv), 'Relance en mode debug demandée depuis l\'interface.'));
+ipc.handle('app:relaunch', (event) => {
+  delete process.env.IAO_DEBUG; // hérité par le process relancé
+  return relancer(event, diag.normalRelaunchArgs(process.argv), 'Relance en mode normal demandée depuis l\'interface.');
 });
 
 // Issue #187 : chemin du journal, affiché dans le bandeau d'erreur.
@@ -529,6 +550,30 @@ ipc.handle('accounts:disconnect-profile', async (event, profile) => {
   }
 });
 
+// --- Issue #311 : comptes dans <userData>/profils.json ---
+// Canaux SYNCHRONES (ipcRenderer.sendSync, preload.js) : le renderer lit ses
+// comptes avant de dessiner l'interface, et chaque écriture est sur le disque
+// quand saveAccounts() rend la main. Jamais de contenu de compte dans le journal.
+const profils = require('./lib/profils');
+
+ipc.on('profils:lire', (event) => {
+  const r = profils.lireProfils(app.getPath('userData'), { fs, path });
+  if (r.status === 'ok') debug('comptes', profils.NOM_FICHIER + ' lu : ' + r.comptes.length + ' compte(s).');
+  else if (r.status === 'absent') debug('comptes', profils.NOM_FICHIER + ' absent (premier démarrage ou migration).');
+  else {
+    log('comptes', 'error', profils.NOM_FICHIER + ' illisible (' + r.status + ') : ' + r.erreur +
+      (r.sauvegarde ? ' ; sauvegarde ' + profils.NOM_SAUVEGARDE + ' de ' + r.sauvegarde.length + ' compte(s) disponible.' : ' ; aucune sauvegarde lisible.'));
+  }
+  event.returnValue = r;
+});
+
+ipc.on('profils:ecrire', (event, comptes) => {
+  const r = profils.ecrireProfils(app.getPath('userData'), comptes, { fs, path });
+  if (r.ok) debug('comptes', profils.NOM_FICHIER + ' écrit : ' + r.nombre + ' compte(s).');
+  else log('comptes', 'error', 'échec de l\'écriture de ' + profils.NOM_FICHIER + ' : ' + r.erreur);
+  event.returnValue = r;
+});
+
 // --- IPC pour les réglages utilisateur (lot 18/09/2026, FEATURES.md P2) ---
 // Persistance dans <userData>/settings.json. La normalisation/validation est
 // faite côté renderer via lib/settings.js (fonctions pures testées).
@@ -557,6 +602,7 @@ ipc.handle('settings:save', async (event, rawSettings) => {
 });
 
 // --- Issue #201 : mots de passe de messagerie (chiffrés) et webmail ---
+const connexionsWebmail = creerFileConnexions();
 registerComptesIPC(ipc, {
   coffre: new CoffreSecrets({
     fichier: path.join(app.getPath('userData'), 'secrets.json'),
@@ -566,8 +612,16 @@ registerComptesIPC(ipc, {
   fichierReglages: settingsPath,
   normaliser: normalizeSettings,
   fsPromises,
-  ouvrirExterne: shell.openExternal.bind(shell)
+  ouvrirExterne: shell.openExternal.bind(shell),
+  // Issue #310 : webmail connecté au compte, dans une fenêtre sans privilèges.
+  ouvrirWebmail: creerOuvreurWebmail({
+    BrowserWindow, journal: log.bind(null, 'webmail'), debug: debug.bind(null, 'webmail'),
+    signaler: connexionsWebmail.ajouter
+  })
 });
+// Issue #310 (relecture) : codes et liens de connexion relevés dans le webmail,
+// lus par l'interface en attente longue (le preload n'expose pas ipcRenderer.on).
+ipc.handle('webmail:attendre', connexionsWebmail.attendre);
 
 // --- Identifiants partagés entre profils (issue #278) ---
 // Coffre d'identifiants de connexion (login + mot de passe, chiffrés par le

@@ -23,6 +23,15 @@ const fs = require('fs');
 const os = require('os');
 const v8cov = require('./v8-coverage');
 
+// Les runners auto-hébergés tournent en conteneur, avec un /dev/shm de 64 Mo
+// (valeur par défaut de Docker). Chromium y place la mémoire partagée de ses
+// processus de rendu : mesuré en local avec la même limite, le harnais monte
+// déjà à 58 Mo sur dev et la dépasse dès que la page s'alourdit (logos de
+// #324) ; le renderer s'arrête alors (« crashed », code 133), comme dans les
+// crashs intermittents de #283. Option Chromium prévue pour les conteneurs :
+// la mémoire partagée passe par le dossier temporaire au lieu de /dev/shm.
+app.commandLine.appendSwitch('disable-dev-shm-usage');
+
 // Issue #51, lot 3 : sans demande explicite, l'interface suit la langue du
 // système. Les scénarios vérifient les libellés français (langue source) :
 // on l'impose, sauf dans C7.2/C7.3 qui changent la langue eux-mêmes.
@@ -242,8 +251,11 @@ async function run() {
     (args.length ? ', ' + args.map(a => JSON.stringify(a)).join(', ') : '') + ')'
   );
 
-  // Seed : initApp lit localStorage AU DÉMARRAGE -> on écrit puis on RECHARGE
+  // Seed : initApp lit ses comptes AU DÉMARRAGE -> on écrit puis on RECHARGE
   // la page (renderAccounts n'est pas exposée globalement, à dessein).
+  // Issue #311 : les comptes sont semés dans l'ancien emplacement
+  // (localStorage) ; le rechargement les migre dans <userData>/profils.json
+  // (vérifié par C8.0).
   // startWithLastSession est activé pour tester la restauration des onglets.
   const saved = await ipc('settings:save', { startWithLastSession: true });
   assert(saved && saved.ok, 'settings:save a échoué : ' + JSON.stringify(saved));
@@ -347,6 +359,83 @@ async function run() {
   await test('C1.5 Les statistiques reflètent les comptes seedés', async () => {
     const txt = await exec('document.querySelector(".dashboard").innerText');
     assert(/COMPTES ACTIFS\s*2/i.test(txt), 'compteur « comptes actifs » ≠ 2 : ' + txt.slice(0, 120));
+  });
+
+  // Issue #319 : la sélection « mes IA à portée de main » remplace les services des cartes,
+  // sans cumul au redémarrage, et un compte créé ne reçoit qu'elle.
+  await test('C1.6 Choix des IA : remplacement immédiat, sans cumul au rechargement, appliqué aux nouveaux comptes (#319)', async () => {
+    const lire = () => exec(`(() => {
+      const cartes = [...document.querySelectorAll('#accountsList .account-card')];
+      return cartes.map(c => [...c.querySelectorAll('[data-action="open-service"]')].map(b => b.dataset.svc).join(','));
+    })()`);
+    const avant = await lire();
+    await exec(`(() => {
+      openServicesModal();
+      const cb = (id) => document.querySelector('#servicesList [data-svc-id="' + id + '"]');
+      const list = document.getElementById('servicesList');
+      cb('meshy').checked = false; list.onchange({ target: cb('meshy') });
+      cb('deepseek').checked = true; list.onchange({ target: cb('deepseek') });
+      saveServicesModal();
+      return 'ok';
+    })()`);
+    const attendu = 'claude,chatgpt,gemini,zeta,perplexity,grok,leonardo,suno,deepseek';
+    const apres = await lire();
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const recharge = await lire();
+    const nouveau = await exec(`(() => {
+      openModal();
+      document.getElementById('inputName').value = 'Compte 319';
+      document.getElementById('inputEmail').value = 'c319@example.com';
+      document.getElementById('inputProfile').value = 'profil_319';
+      saveAccount();
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : comptes dans profils.json
+      const c = comptes.find(a => a.profile === 'profil_319');
+      const services = c ? c.services.join(',') : null;
+      if (c) {
+        window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'profil_319'));
+      }
+      localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
+      return services;
+    })()`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const final = await lire();
+    assert(avant.every(l => l.split(',').length === 9 && l.includes('meshy')), 'avant : ' + JSON.stringify(avant));
+    assert(apres.length === 2 && apres.every(l => l === attendu), 'après enregistrement : ' + JSON.stringify(apres));
+    assert(recharge.every(l => l === attendu), 'au rechargement (anciens + nouveaux ?) : ' + JSON.stringify(recharge));
+    assert(nouveau === attendu, 'nouveau compte : ' + nouveau);
+    assert(final.length === 2 && final.every(l => l === avant[0]), 'retour à la sélection par défaut : ' + JSON.stringify(final));
+  });
+
+  // Issue #319 (suite) : de 1 à n IA, plus de plafond à 9.
+  await test('C1.7 Choix des IA : 1 seule, puis toutes (plus de plafond à 9) (#319)', async () => {
+    const choisir = (ids) => exec(`(() => {
+      openServicesModal();
+      const list = document.getElementById('servicesList');
+      const voulus = ${JSON.stringify(ids)};
+      [...list.querySelectorAll('[data-svc-id]')].forEach((cb) => {
+        const coche = voulus === 'tous' || voulus.includes(cb.dataset.svcId);
+        if (cb.checked !== coche) { cb.checked = coche; list.onchange({ target: cb }); }
+      });
+      saveServicesModal();
+      const carte = document.querySelector('#accountsList .account-card');
+      return { boutons: carte.querySelectorAll('[data-action="open-service"]').length,
+        total: list.querySelectorAll('[data-svc-id]').length,
+        stocke: JSON.parse(localStorage.getItem('ai_active_services')).length };
+    })()`);
+    const un = await choisir(['claude']);
+    const tous = await choisir('tous');
+    await exec(`localStorage.removeItem('ai_active_services'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const defaut = await exec(`document.querySelector('#accountsList .account-card').querySelectorAll('[data-action="open-service"]').length`);
+    assert(un.boutons === 1 && un.stocke === 1, 'une seule IA : ' + JSON.stringify(un));
+    assert(tous.total > 9 && tous.boutons === tous.total && tous.stocke === tous.total, 'toutes les IA : ' + JSON.stringify(tous));
+    assert(defaut === 9, 'retour à la sélection par défaut : ' + defaut);
   });
 
   // =========================================================================
@@ -470,6 +559,47 @@ async function run() {
     assert(n === 0, n + ' attribut(s) onclick généré(s)');
   });
 
+  // Issue #324 : logos officiels devant le nom (boutons, aide, choix des IA),
+  // boutons de couleur standard, onglet = logo + nom du compte.
+  await test('C5.3 Logos des IA : boutons standard, onglet logo + compte, aide et choix des IA (#324)', async () => {
+    const r = await exec(`(() => {
+      const boutons = [...document.querySelectorAll('#accountsList .svc-btn')];
+      const onglets = [...document.querySelectorAll('#tabsBar .tab')];
+      openHelpModal();
+      const aide = [...document.querySelectorAll('#helpModal .help-entry__name')];
+      const resAide = { n: aide.length, logos: aide.filter(e => e.querySelector('.svc-ic')).length };
+      document.getElementById('helpModal').classList.remove('open');
+      openServicesModal();
+      const choix = [...document.querySelectorAll('#servicesList .service-select-item')];
+      const resChoix = { n: choix.length, logos: choix.filter(e => e.querySelector('.svc-ic')).length };
+      return {
+        boutons: boutons.length,
+        avecLogo: boutons.filter(b => b.querySelector('.svc-ic svg, .svc-ic--lettre')).length,
+        colores: boutons.filter(b => [...b.classList].some(c => /^svc-(?!btn)/.test(c))).length,
+        fondClaude: getComputedStyle(document.querySelector('#accountsList .svc-btn[data-svc="claude"]')).backgroundColor,
+        fondGrok: getComputedStyle(document.querySelector('#accountsList .svc-btn[data-svc="grok"]')).backgroundColor,
+        onglets: onglets.length,
+        ongletsOk: onglets.filter(t => t.querySelector('.svc-ic') && !t.querySelector('.tab__acc') && t.title.includes('—')).length,
+        aide: resAide, choix: resChoix
+      };
+    })()`);
+    if (process.env.IAO_CAPTURES_DIR) {
+      const dossier = require('./rtl-visuel').dossierCaptures(process.env.IAO_CAPTURES_DIR);
+      fs.writeFileSync(path.join(dossier, 'logos-choix.png'), (await win.webContents.capturePage()).toPNG());
+      await exec(`closeServicesModal(); openHelpModal(); 'ok'`);
+      fs.writeFileSync(path.join(dossier, 'logos-aide.png'), (await win.webContents.capturePage()).toPNG());
+      await exec(`document.getElementById('helpModal').classList.remove('open'); 'ok'`);
+      fs.writeFileSync(path.join(dossier, 'logos-cartes.png'), (await win.webContents.capturePage()).toPNG());
+    }
+    await exec(`closeServicesModal(); document.getElementById('helpModal').classList.remove('open'); 'ok'`);
+    assert(r.boutons > 0 && r.avecLogo === r.boutons, 'boutons sans logo : ' + JSON.stringify(r));
+    assert(r.colores === 0, 'boutons encore colorés par service : ' + r.colores);
+    assert(r.fondClaude === r.fondGrok, 'fonds différents : ' + r.fondClaude + ' / ' + r.fondGrok);
+    assert(r.onglets > 0 && r.ongletsOk === r.onglets, 'onglets : ' + JSON.stringify(r));
+    assert(r.aide.n > 9 && r.aide.logos === r.aide.n, 'aide : ' + JSON.stringify(r.aide));
+    assert(r.choix.n > 9 && r.choix.logos === r.choix.n, 'choix des IA : ' + JSON.stringify(r.choix));
+  });
+
   // =========================================================================
   // C6. Issue #149 : menu natif masqué, barre du workspace, bouton Ctrl+K
   // =========================================================================
@@ -490,7 +620,7 @@ async function run() {
     assert(r.brand === 'IAO', 'nom de l\'app absent de la barre : ' + r.brand);
     const i = r.actions.indexOf('ui-toggleIdePanel');
     assert(r.actions.indexOf('ui-toggleExplorer') >= 0 && i >= 0, 'Explorateur/Éditeur absents : ' + r.actions);
-    assert(r.actions[i + 1] === 'ui-toggleDevTools', 'outils de dév. pas à côté de l\'Éditeur : ' + r.actions);
+    assert(r.actions[i + 1] === 'ui-openDevToolsMenu', 'outils de dév. pas à côté de l\'Éditeur : ' + r.actions);
     assert(r.ancien === false, 'ancien en-tête encore présent dans la barre latérale');
   });
 
@@ -532,6 +662,14 @@ async function run() {
     assert(r.action === 'ui-relaunchDebug', 'data-action : ' + r.action);
     assert(r.hidden === false, 'bouton masqué hors mode debug');
     assert(r.fn === 'function', 'window.relaunchDebug absente');
+    // Issue #317 : « Redémarrer IAO » (mode normal), toujours visible.
+    const n = await exec(`(() => {
+      const b = document.getElementById('btnRelaunch');
+      return { exists: !!b, action: b && b.getAttribute('data-action'), hidden: b ? b.classList.contains('hidden') : null,
+        fn: typeof window.relaunchNormal };
+    })()`);
+    assert(n.exists && n.action === 'ui-relaunch' && n.hidden === false, 'bouton Redémarrer IAO : ' + JSON.stringify(n));
+    assert(n.fn === 'function', 'window.relaunchNormal absente');
     const logPath = await ipc('app:log-path');
     assert(typeof logPath === 'string' && /logs[\\/]iao\.log$/.test(logPath), 'chemin du journal : ' + logPath);
   });
@@ -682,10 +820,31 @@ async function run() {
   // =========================================================================
   console.log('\n--- C8 : Restauration des comptes au démarrage ---');
 
-  await test('C8.1 localStorage vidé : modale « Comptes retrouvés », restauration sans import', async () => {
+  const profilsJson = path.join(app.getPath('userData'), 'profils.json');
+  await test('C8.0 comptes dans profils.json (#311) : migration unique, localStorage vidé sans effet', async () => {
+    assert(fs.existsSync(profilsJson), 'profils.json absent après la migration du seed');
+    const fichier = JSON.parse(fs.readFileSync(profilsJson, 'utf-8'));
+    assert(JSON.stringify(fichier.map((a) => a.profile)) === JSON.stringify(seedAccounts.map((a) => a.profile)),
+      'profils.json : ' + fichier.map((a) => a.profile).join(','));
+    const anciennes = await exec(`[localStorage.getItem('ai_accounts'), localStorage.getItem('ai_accounts_backup')]`);
+    assert(anciennes[0] === null && anciennes[1] === null, 'anciennes clés de comptes encore dans le localStorage');
+    // Perte du localStorage (cas de l'issue #311) : les comptes restent.
+    await exec(`localStorage.removeItem('ai_accounts'); localStorage.removeItem('ai_accounts_backup'); localStorage.removeItem('ai_open_tabs'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const cartes = await exec(`document.querySelectorAll('#accountsList .account-card').length`);
+    assert(cartes === seedAccounts.length, 'cartes après perte du localStorage : ' + cartes);
+    const modale = await exec(`document.getElementById('snapshotRestore') !== null`);
+    assert(!modale, 'modale de restauration affichée alors que profils.json est lisible');
+  });
+
+  await test('C8.1 profils.json perdu : modale « Comptes retrouvés », restauration sans import', async () => {
     // L'instantané de l'ordonnanceur contient les comptes du seed (synchronisés
-    // au démarrage). On simule la perte du localStorage de l'interface.
+    // au démarrage). On simule la perte de profils.json et du localStorage.
     await ipc('scheduler:sync-accounts', seedAccounts);
+    fs.rmSync(profilsJson, { force: true });
+    fs.rmSync(profilsJson + '.bak', { force: true });
     await exec(`localStorage.removeItem('ai_accounts'); localStorage.removeItem('ai_accounts_backup'); localStorage.removeItem('ai_open_tabs'); 'ok'`);
     win.webContents.reload();
     await sleep(300);
@@ -702,12 +861,25 @@ async function run() {
       setTimeout(() => resolve({
         modal: document.getElementById('snapshotRestore') !== null,
         cards: document.querySelectorAll('#accountsList .account-card').length,
-        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile)
+        stored: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.profile),
+        emails: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.email),
+        couleurs: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.color),
+        noms: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.name),
+        lignes: [...document.querySelectorAll('#accountsList .account-email')].map((e) => e.textContent.trim())
       }), 200);
     })`);
     assert(!after.modal, 'modale toujours ouverte après restauration');
     assert(after.cards === seedAccounts.length, 'cartes après restauration : ' + after.cards);
     assert(JSON.stringify(after.stored) === JSON.stringify(seedAccounts.map((a) => a.profile)), 'profils enregistrés : ' + after.stored.join(','));
+    // Issue #311 : l'adresse revient avec le compte, à sa place sur la carte.
+    assert(JSON.stringify(after.emails) === JSON.stringify(seedAccounts.map((a) => a.email)), 'e-mails restaurés : ' + after.emails.join(','));
+    // Issue #311 (suite) : restauration = import de la copie complète, donc
+    // nom et couleur reviennent tels qu'à l'export (l'ancien instantané les perdait).
+    assert(JSON.stringify(after.noms) === JSON.stringify(seedAccounts.map((a) => a.name)), 'noms restaurés : ' + after.noms.join(','));
+    assert(JSON.stringify(after.couleurs) === JSON.stringify(seedAccounts.map((a) => a.color)), 'couleurs restaurées : ' + after.couleurs.join(','));
+    // Ordre d'affichage propre à la liste : comparaison sans ordre.
+    const attendues = seedAccounts.map((a) => a.email + ' • ' + a.profile).sort();
+    assert(JSON.stringify([...after.lignes].sort()) === JSON.stringify(attendues), 'lignes e-mail des cartes : ' + after.lignes.join(' | '));
   });
 
   await test('C8.2 comptes présents : aucune modale de restauration', async () => {
@@ -716,6 +888,46 @@ async function run() {
     await waitLoaded();
     await sleep(300);
     assert(await exec(`document.getElementById('snapshotRestore') === null`), 'modale affichée alors que les comptes sont présents');
+  });
+
+  await test('C8.3 onglets de la session précédente proposés au démarrage (#317, #318)', async () => {
+    // Le harnais démarre avec « Restaurer les onglets » coché : la proposition
+    // n'a lieu que décoché. Réglage et onglets mémorisés remis à la fin du test
+    // (sinon l'onglet Claude rouvert plus tard perturbe C10 et C12).
+    const reglages = await ipc('settings:load');
+    const ongletsAvant = await exec(`localStorage.getItem('ai_open_tabs')`);
+    try {
+      const sansRestauration = await ipc('settings:save', Object.assign({}, reglages, { startWithLastSession: false }));
+      assert(sansRestauration && sansRestauration.ok, 'settings:save : ' + JSON.stringify(sansRestauration));
+      await exec(`localStorage.setItem('ai_open_tabs', JSON.stringify([{ accId: 'acc_test_1', svcId: 'claude' }, { accId: 'inconnu', svcId: 'claude' }])); 'ok'`);
+      win.webContents.reload();
+      await sleep(300);
+      await waitLoaded();
+      await sleep(500);
+      const r = await exec(`(() => {
+        const m = document.getElementById('confirmModal');
+        return { open: m.classList.contains('open'), title: m.querySelector('.confirm-title').textContent,
+          msg: m.querySelector('.confirm-msg').textContent };
+      })()`);
+      assert(r.open, 'proposition de réouverture absente');
+      assert(r.title === 'Rouvrir les onglets précédents ?', 'titre : ' + r.title);
+      assert(/^Onglets ouverts à la fermeture d'IAO : 1\./.test(r.msg), 'onglet d\'un compte inconnu compté : ' + r.msg);
+      // Réglages rouverts : pas de seconde proposition. Refus : rien n'est ouvert.
+      const apres = await exec(`(async () => {
+        document.getElementById('confirmModalNo').click();
+        openSettingsModal();
+        await new Promise((r) => setTimeout(r, 300));
+        closeSettingsModal();
+        return { open: document.getElementById('confirmModal').classList.contains('open'),
+          onglets: document.querySelectorAll('#tabsBar .tab').length };
+      })()`);
+      assert(!apres.open, 'proposition réaffichée à l\'ouverture des réglages');
+      assert(apres.onglets === 0, 'refus : aucun onglet attendu, trouvé ' + apres.onglets);
+    } finally {
+      await ipc('settings:save', reglages);
+      await exec(ongletsAvant === null ? `localStorage.removeItem('ai_open_tabs'); 'ok'`
+        : `localStorage.setItem('ai_open_tabs', ${JSON.stringify(ongletsAvant)}); 'ok'`);
+    }
   });
 
   // =========================================================================
@@ -731,10 +943,10 @@ async function run() {
       await saveSettings();
       openSerieModal();
       const desc = document.getElementById('serieDesc').textContent;
-      const avant = JSON.parse(localStorage.getItem('ai_accounts')).length;
+      const avant = window.iaoAPI.profilsLire().comptes.length;
       document.getElementById('serieNombre').value = '2';
       await createSerie();
-      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const comptes = window.iaoAPI.profilsLire().comptes;
       return { desc, avant, apres: comptes.length, derniers: comptes.slice(-2).map(c => c.name + ' ' + c.email + ' ' + c.profile),
         ouvert: document.getElementById('serieModal').classList.contains('open'),
         webmail: document.querySelectorAll('#accountsList [data-action="open-webmail"]').length };
@@ -750,7 +962,7 @@ async function run() {
 
   await test('C9.2 Mot de passe de messagerie : généré, masqué par défaut, bouton œil', async () => {
     const r = await exec(`(() => {
-      const acc = JSON.parse(localStorage.getItem('ai_accounts')).slice(-1)[0];
+      const acc = window.iaoAPI.profilsLire().comptes.slice(-1)[0];
       openModal(acc.id);
       const pass = document.getElementById('inputMailPassword');
       const masque = pass.type;
@@ -764,6 +976,69 @@ async function run() {
     assert(r.masque === 'password', 'masqué par défaut attendu, trouvé ' + r.masque);
     assert(r.apres.type === 'text' && r.apres.longueur === 20, 'mot de passe généré visible de 20 caractères : ' + JSON.stringify(r.apres));
     assert(r.final === 'password' && r.titre === 'Afficher le mot de passe', 'bouton œil : ' + JSON.stringify(r));
+  });
+
+  await test('C9.3 Code et lien de connexion reçus par mail : bannière de l\'onglet, lien ouvert après 3 s, annulation (#310)', async () => {
+    // Un onglet du compte acc_test_1 (ouvert plus haut ou ici).
+    const cible = await exec(`new Promise((resolve) => {
+      const trouver = () => document.querySelector('#tabsBar .tab[data-acc="acc_test_1"]');
+      if (!trouver()) openService('acc_test_1', 'claude');
+      setTimeout(() => {
+        const t = trouver();
+        t.click();
+        const wv = document.getElementById(t.dataset.tab).querySelector('webview');
+        window.__liens310 = [];
+        wv.loadURL = (u) => { window.__liens310.push(u); return Promise.resolve(); };
+        const acc = window.iaoAPI.profilsLire().comptes.find(a => a.id === 'acc_test_1');
+        resolve({ tab: t.dataset.tab, svc: t.dataset.svc, profil: acc.profile });
+      }, 200);
+    })`);
+    const ev = JSON.stringify({ profil: cible.profil, service: cible.svc, code: '482913', lien: 'https://exemple.invalid/auth/callback?token=482913' });
+    const r1 = await exec(`(() => {
+      afficherConnexionWebmail(${ev});
+      const b = document.querySelector('#${cible.tab} .tab-toolbar .tab-code');
+      return b ? { code: b.querySelector('.tab-code__valeur').textContent, etat: b.querySelector('.tab-code__etat').textContent,
+        boutons: [...b.querySelectorAll('[data-code-action]')].filter(x => !x.hidden).map(x => x.dataset.codeAction),
+        premier: b.parentNode.firstElementChild === b, largeur: b.getBoundingClientRect().width } : null;
+    })()`);
+    assert(r1 && r1.code === '482913' && r1.premier && r1.largeur > 100, 'bannière : ' + JSON.stringify(r1));
+    assert(/3/.test(r1.etat), 'compte à rebours : ' + r1.etat);
+    assert(JSON.stringify(r1.boutons) === JSON.stringify(['copier', 'annuler', 'fermer']), 'boutons : ' + r1.boutons);
+    if (process.env.IAO_CAPTURES_DIR) {
+      await sleep(300);
+      const dossier = require('./rtl-visuel').dossierCaptures(process.env.IAO_CAPTURES_DIR);
+      fs.writeFileSync(path.join(dossier, 'code-mail-onglet.png'), (await win.webContents.capturePage()).toPNG());
+    }
+    await sleep(3400);
+    const r2 = await exec(`({ liens: window.__liens310, etat: document.querySelector('#${cible.tab} .tab-code__etat').textContent })`);
+    assert(r2.liens.length === 1 && r2.liens[0].endsWith('token=482913'), 'lien non ouvert : ' + JSON.stringify(r2));
+    // Second mail : « Annuler » arrête l'ouverture, « Ouvrir le lien » la fait à la main.
+    const r3 = await exec(`(() => {
+      afficherConnexionWebmail(${ev.replace('482913', '135790')});
+      document.querySelector('#${cible.tab} [data-code-action="annuler"]').click();
+      return document.querySelectorAll('#${cible.tab} .tab-code').length;
+    })()`);
+    assert(r3 === 1, 'une seule bannière attendue : ' + r3);
+    await sleep(3400);
+    const r4 = await exec(`(() => {
+      const n = window.__liens310.length;
+      document.querySelector('#${cible.tab} [data-code-action="ouvrir"]').click();
+      const apres = window.__liens310.length;
+      document.querySelector('#${cible.tab} [data-code-action="fermer"]').click();
+      return { n, apres, reste: document.querySelectorAll('#${cible.tab} .tab-code').length };
+    })()`);
+    assert(r4.n === 1 && r4.apres === 2 && r4.reste === 0, 'annulation / ouverture / fermeture : ' + JSON.stringify(r4));
+    // Compte ou service inconnu, lien non https : rien.
+    const r5 = await exec(`(() => {
+      afficherConnexionWebmail({ profil: 'inconnu', service: 'claude', code: '111111' });
+      afficherConnexionWebmail(null);
+      afficherConnexionWebmail(${ev.replace('https://', 'http://').replace('482913', '999999')});
+      const b = document.querySelector('#${cible.tab} .tab-code');
+      return { bandeau: !!b, lien: !!(b && b.querySelector('[data-code-action="annuler"]')) };
+    })()`);
+    assert(r5.bandeau && !r5.lien, 'lien non https accepté : ' + JSON.stringify(r5));
+    // La doublure de loadURL est retirée : l'onglet resservira (C13).
+    await exec(`(() => { document.querySelector('#${cible.tab} [data-code-action="fermer"]').click(); delete document.getElementById('${cible.tab}').querySelector('webview').loadURL; return 'ok'; })()`);
   });
 
   // =========================================================================
@@ -1354,6 +1629,70 @@ async function run() {
     assert(duree >= 1500 && duree < 5000, 'durée incohérente : ' + duree + ' ms');
     const brut = fs.readFileSync(fichier, 'utf-8');
     assert(!brut.includes('secrète'), 'aucun texte de question ni de réponse ne doit sortir de la page');
+  });
+
+  // Issue #320 : le script d'écriture de l'ordonnanceur, exécuté dans une
+  // vraie page qui imite l'éditeur : le bouton d'envoi ne s'active que sur un
+  // événement « input » natif (isTrusted, comme une frappe ou insertText) ;
+  // l'ancienne méthode (textContent + événement synthétique) le laissait
+  // grisé : rien n'était envoyé.
+  await test('C13.2 Ordonnanceur : prompt écrit dans un éditeur type ProseMirror puis envoyé (#320)', async () => {
+    const page = '<div contenteditable="true" class="ProseMirror" id="e"></div>' +
+      '<button data-testid="send-button" id="b" disabled>Send</button><script>' +
+      'var e=document.getElementById("e"),b=document.getElementById("b");window.envoye="";' +
+      'e.addEventListener("input",function(ev){if(ev.isTrusted)b.disabled=!e.innerText.trim();});' +
+      'b.addEventListener("click",function(){window.envoye=e.innerText;});</' + 'script>';
+    await exec(`window.__c13.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(${JSON.stringify(page)})); 'ok'`);
+    let pret = false;
+    for (let i = 0; i < 40 && !pret; i++) {
+      await sleep(150);
+      pret = await exec(`window.__c13.executeJavaScript('!!document.getElementById("b")').catch(() => false)`);
+    }
+    assert(pret, 'page d\'essai non chargée');
+    const script = require('../lib/claude-adapter').buildPromptInjectionScript("Bonjour l'IA\nligne 2");
+    const brut = await exec(`window.__c13.executeJavaScript(${JSON.stringify(script)})`);
+    const res = JSON.parse(brut);
+    const envoye = await exec(`window.__c13.executeJavaScript('window.envoye')`);
+    assert(res.ok && res.method === 'send_button' && res.written === 'insert_text', 'résultat : ' + brut);
+    assert(/Bonjour l'IA/.test(envoye) && /ligne 2/.test(envoye), 'texte envoyé : ' + JSON.stringify(envoye));
+  });
+
+  await test('C13.3 Bouton « outils de développement » de l\'onglet masqué hors mode debug (#320)', async () => {
+    const r = await exec(`(() => {
+      const b = document.querySelector('#tabsContent [data-action="tab-devtools"]');
+      return { existe: !!b, visible: !!b && getComputedStyle(b).display !== 'none', debug: document.body.classList.contains('iao-debug') };
+    })()`);
+    assert(r.existe, 'bouton tab-devtools absent de la barre d\'onglet');
+    assert(r.visible === r.debug, 'visibilité incohérente avec le mode debug : ' + JSON.stringify(r));
+  });
+
+  await test('C13.4 Outils de développement : second menu fenêtre IAO / page de l\'IA, hors mode debug (#320)', async () => {
+    // Un onglet d'IA est actif (C13) : le bouton de la barre ouvre le menu.
+    const menu = await exec(`(() => {
+      document.querySelector('[data-action="ui-openDevToolsMenu"]').click();
+      const m = document.getElementById('devtoolsMenu');
+      return m ? [...m.querySelectorAll('[data-ctx-action]')].map(e => e.getAttribute('data-ctx-action') + '=' + e.textContent.trim()) : null;
+    })()`);
+    assert(menu && menu.length === 2 && menu[0].startsWith('devtools-iao=') && /^devtools-onglet=.+ — /.test(menu[1]), 'menu : ' + JSON.stringify(menu));
+    const wvId = await exec(`(() => {
+      document.querySelector('#devtoolsMenu [data-ctx-action="devtools-onglet"]').click();
+      const t = document.querySelector('#tabsBar .tab--active');
+      const wv = document.querySelector('#tabsContent .tab-pane.active webview') || document.querySelector('#tabsContent webview');
+      return { ferme: document.getElementById('devtoolsMenu') === null, id: wv ? wv.getWebContentsId() : null, tab: !!t };
+    })()`);
+    assert(wvId.ferme && wvId.id, 'menu non refermé ou webview absente : ' + JSON.stringify(wvId));
+    const { webContents } = require('electron');
+    const wc = webContents.fromId(wvId.id);
+    for (let i = 0; i < 30 && !wc.isDevToolsOpened(); i++) await sleep(100);
+    assert(wc.isDevToolsOpened(), 'outils de développement de la page de l\'IA non ouverts');
+    assert(!win.webContents.isDevToolsOpened(), 'outils de la fenêtre IAO ouverts à tort');
+    wc.closeDevTools();
+    // Entrée « Fenêtre IAO » : ceux de la fenêtre principale.
+    await exec(`document.querySelector('[data-action="ui-openDevToolsMenu"]').click(); document.querySelector('#devtoolsMenu [data-ctx-action="devtools-iao"]').click(); 'ok'`);
+    for (let i = 0; i < 30 && !win.webContents.isDevToolsOpened(); i++) await sleep(100);
+    assert(win.webContents.isDevToolsOpened(), 'outils de la fenêtre IAO non ouverts');
+    await exec('window.toggleDevTools()');
+    for (let i = 0; i < 30 && win.webContents.isDevToolsOpened(); i++) await sleep(100);
   });
 
   // =========================================================================
