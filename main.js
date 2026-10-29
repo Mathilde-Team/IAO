@@ -33,6 +33,11 @@ const diag = require('./lib/startup-diagnostics');
 const DEBUG = diag.isDebugEnabled(process.argv, process.env);
 const debugTrace = require('./lib/debug-trace');
 const { CoffreSecrets, registerComptesIPC } = require('./lib/coffre-secrets');
+// Sauvegarde complète (issue #329) : fonctions pures testées (node --test).
+const sauvegarde = require('./lib/sauvegarde-complete');
+const { ecrireZip, nomSure } = require('./lib/ecriture-zip');
+const lectureZip = require('./lib/lecture-zip');
+const crypto = require('node:crypto');
 const { creerOuvreurWebmail } = require('./lib/webmail-connexion');
 const { creerFileConnexions } = require('./lib/webmail-codes');
 const { IdentifiantsPartages, registerIdentifiantsIPC } = require('./lib/identifiants');
@@ -534,6 +539,141 @@ ipc.handle('accounts:import', async () => {
   } catch (error) {
     console.error('Erreur import comptes:', error);
     return { canceled: false, error: 'read_failed' };
+  }
+});
+
+// --- IPC pour la sauvegarde complète (issue #329) ---
+// Le renderer ne peut ni parcourir le dossier de données, ni chiffrer avec le
+// trousseau : main.js le fait, avec les fonctions pures de
+// lib/sauvegarde-complete.js (chemins retenus, secrets transportables) et
+// lib/ecriture-zip.js / lib/lecture-zip.js (zip sans dépendance npm).
+// Le mot de passe ne transite que par l'IPC (jamais dans iao.log) et chiffre
+// les secrets du zip en AES-256-GCM : sans lui, la sauvegarde ne livre que
+// des données de comptes sans mots de passe.
+
+// Liste récursive des fichiers du dossier de données, en chemins relatifs.
+function listerFichiersDonnees(dossier, sousDossier = '') {
+  const resultat = [];
+  let entrees;
+  try {
+    entrees = fs.readdirSync(path.join(dossier, sousDossier), { withFileTypes: true });
+  } catch (_) {
+    return resultat; // dossier absent ou illisible : rien à sauvegarder dedans
+  }
+  for (const entree of entrees) {
+    const relatif = sousDossier ? sousDossier + '/' + entree.name : entree.name;
+    if (entree.isDirectory()) {
+      resultat.push(...listerFichiersDonnees(dossier, relatif));
+    } else if (entree.isFile()) {
+      resultat.push(relatif);
+    }
+  }
+  return resultat;
+}
+
+ipc.handle('sauvegarde-complete:creer', async (event, motDePasse) => {
+  if (typeof motDePasse !== 'string' || motDePasse.length === 0) {
+    return { canceled: false, error: 'mot_de_passe_vide' };
+  }
+  const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 16);
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: 'Créer une sauvegarde complète',
+    defaultPath: `iao-sauvegarde-${stamp}.zip`,
+    filters: [{ name: 'ZIP', extensions: ['zip'] }]
+  });
+  if (result.canceled || !result.filePath) return { canceled: true };
+  try {
+    const dossier = app.getPath('userData');
+    const retenus = sauvegarde.cheminsASauvegarder(listerFichiersDonnees(dossier));
+    const entrees = [];
+    for (const relatif of retenus) {
+      entrees.push({ nom: relatif, contenu: await fsPromises.readFile(path.join(dossier, relatif)) });
+    }
+    // secrets.json -> forme transportable : déchiffré du trousseau, rechiffré
+    // au mot de passe de la sauvegarde (illisible ici = omis, sans bloquer).
+    let portables = null;
+    try {
+      const brut = JSON.parse(fs.readFileSync(path.join(dossier, sauvegarde.FICHIER_SECRETS), 'utf-8'));
+      portables = sauvegarde.secretsPortables(brut, motDePasse, (b64) => {
+        try {
+          return safeStorage.decryptString(Buffer.from(b64, 'base64'));
+        } catch (_) {
+          return null;
+        }
+      }, crypto);
+    } catch (_) { /* secrets.json absent : sauvegarde sans mots de passe */ }
+    if (portables && Object.keys(portables.entrees).length > 0) {
+      entrees.push({
+        nom: sauvegarde.FICHIER_SECRETS_PORTABLES,
+        contenu: JSON.stringify(portables, null, 2)
+      });
+    }
+    const zip = ecrireZip(entrees);
+    await fsPromises.writeFile(result.filePath, zip);
+    log('sauvegarde', 'info',
+      `sauvegarde complète créée : ${entrees.length} entrée(s), ${zip.length} octets` +
+      (portables ? `, ${Object.keys(portables.entrees).length} mot(s) de passe transportable(s)` : ', sans mots de passe'));
+    return { canceled: false, filePath: result.filePath, entrees: entrees.length, taille: zip.length };
+  } catch (error) {
+    log('sauvegarde', 'error', 'échec de création : ' + (error.message || error));
+    return { canceled: false, error: 'ecriture' };
+  }
+});
+
+ipc.handle('sauvegarde-complete:restaurer', async (event, motDePasse) => {
+  if (typeof motDePasse !== 'string' || motDePasse.length === 0) {
+    return { canceled: false, error: 'mot_de_passe_vide' };
+  }
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Restaurer une sauvegarde complète',
+    properties: ['openFile'],
+    filters: [{ name: 'ZIP', extensions: ['zip'] }]
+  });
+  if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+  try {
+    const dossier = app.getPath('userData');
+    const brut = await fsPromises.readFile(result.filePaths[0]);
+    const lecteur = lectureZip.lecteurDeBuffer(brut);
+    const entreesZip = lectureZip.lireEntrees(lecteur);
+    // Le mot de passe est vérifié AVANT d'écraser quoi que ce soit : la
+    // moindre erreur GCM invalide toute la restauration.
+    let secretsClairs = null;
+    const portablesEntree = entreesZip.find((e) => e.nom === sauvegarde.FICHIER_SECRETS_PORTABLES && !e.dossier);
+    if (portablesEntree) {
+      const contenu = lectureZip.extraire(lecteur, portablesEntree, { tailleMax: 16 * 1024 * 1024 });
+      secretsClairs = sauvegarde.secretsEnClair(JSON.parse(contenu.toString('utf-8')), motDePasse, crypto);
+      if (secretsClairs === null) return { canceled: false, error: 'mot_de_passe_faux' };
+    }
+    const restaurables = entreesZip.filter((e) =>
+      !e.dossier && !sauvegarde.cheminExclu(e.nom) && e.nom !== sauvegarde.FICHIER_SECRETS_PORTABLES);
+    for (const entree of restaurables) {
+      // Nom sûr (relatif, sans « .. ») : une entrée de zip est une donnée,
+      // jamais un chemin où écrire sans contrôle (invariant 1).
+      if (!nomSure(entree.nom)) {
+        return { canceled: false, error: 'entree_non_sure', detail: entree.nom };
+      }
+    }
+    for (const entree of restaurables) {
+      const contenu = lectureZip.extraire(lecteur, entree, { tailleMax: 512 * 1024 * 1024 });
+      const cible = path.join(dossier, entree.nom);
+      await fsPromises.mkdir(path.dirname(cible), { recursive: true });
+      await fsPromises.writeFile(cible, contenu);
+    }
+    if (secretsClairs) {
+      // Rechiffrement local : trousseau de CETTE machine.
+      const coffre = {};
+      for (const [profil, clair] of Object.entries(secretsClairs)) {
+        coffre[profil] = safeStorage.encryptString(clair).toString('base64');
+      }
+      await fsPromises.writeFile(path.join(dossier, sauvegarde.FICHIER_SECRETS),
+        JSON.stringify(coffre, null, 2), 'utf-8');
+    }
+    log('sauvegarde', 'info', `sauvegarde complète restaurée : ${restaurables.length} entrée(s)` +
+      (secretsClairs ? `, ${Object.keys(secretsClairs).length} mot(s) de passe rechiffré(s)` : ''));
+    return { canceled: false, entrees: restaurables.length, redemarrer: true };
+  } catch (error) {
+    log('sauvegarde', 'error', 'échec de restauration : ' + (error.message || error));
+    return { canceled: false, error: 'lecture' };
   }
 });
 

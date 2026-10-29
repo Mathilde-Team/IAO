@@ -146,16 +146,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Ninguna pestaña abierta — elija un servicio en la lista de cuentas"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "El perfil permite aislar las cookies en Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Nombre de la cuenta"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Nombre del perfil"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
@@ -578,6 +570,28 @@ msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un 
 msgstr "Pestaña que no se puede cerrar ni mover; la navegación se queda en este sitio y un clic en la pestaña vuelve a esta dirección. Las credenciales compartidas de abajo sirven para iniciar sesión."
 
 #: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "Eliminar la cuenta"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Créer une sauvegarde…"
+msgstr "Restaurar la copia de seguridad"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde…"
+msgstr "Restaurar la copia de seguridad"
+
+#: index.html
+msgid "Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr "Credenciales de los conectores (compartidas)"
 
@@ -596,6 +610,22 @@ msgstr "Contraseña"
 #: index.html
 msgid "Chiffrés par le trousseau du système, partagés entre les profils — les cookies et le 2FA restent propres à chaque profil. Au focus d'un champ de connexion, un menu propose les identifiants du site."
 msgstr "Cifradas por el llavero del sistema y compartidas entre los perfiles: las cookies y la 2FA siguen siendo propias de cada perfil. Al enfocar un campo de inicio de sesión, un menú propone las credenciales del sitio."
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "Contraseña del correo"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "Mostrar la contraseña"
+
+#: index.html
+msgid "Valider"
+msgstr ""
 
 #: assets/app.js
 msgid "L'assistant conversationnel d'Anthropic. Il excelle en rédaction, en analyse de longs documents, en programmation et dans les raisonnements qui demandent plusieurs étapes."
@@ -1644,6 +1674,60 @@ msgstr "No se puede guardar: host, usuario o contraseña no válidos"
 #: assets/app.js
 msgid "Enregistrement impossible : {error}"
 msgstr "No se puede guardar: {error}"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Créer mon premier compte"
+msgid "Créer une sauvegarde complète"
+msgstr "Crear mi primera cuenta"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "Restaurar la copia de seguridad"
+
+#: assets/app.js
+msgid "Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le."
+msgstr ""
+
+#: assets/app.js
+msgid "Celui choisi à la création de cette sauvegarde."
+msgstr ""
+
+#: assets/app.js
+msgid "Choisissez un mot de passe de sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe ne correspondent pas"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Erreur lors de la sauvegarde"
+msgid "Échec de la création de la sauvegarde"
+msgstr "Error al guardar"
+
+#: assets/app.js
+msgid "Sauvegarde créée : {count} fichiers"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect"
+msgstr "Contraseña del correo"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de la lecture du fichier"
+msgid "Échec de la restauration"
+msgstr "Fallo al leer el archivo"
+
+#: assets/app.js
+msgid "Sauvegarde restaurée — IAO va redémarrer"
+msgstr ""
 
 #: assets/app.js
 msgid "Impossible de charger les réglages"

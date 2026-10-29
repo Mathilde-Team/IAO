@@ -150,16 +150,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "لا توجد علامة تبويب مفتوحة — اختر خدمة من قائمة الحسابات"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "يتيح الملف الشخصي عزل ملفات تعريف الارتباط في Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "اسم الحساب"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "اسم الملف الشخصي"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
@@ -584,6 +576,28 @@ msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un 
 msgstr ""
 
 #: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "حذف الحساب"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Créer une sauvegarde…"
+msgstr "استعادة النسخة الاحتياطية"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde…"
+msgstr "استعادة النسخة الاحتياطية"
+
+#: index.html
+msgid "Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr "بيانات اعتماد الموصلات (مشتركة)"
 
@@ -602,6 +616,22 @@ msgstr "كلمة المرور"
 #: index.html
 msgid "Chiffrés par le trousseau du système, partagés entre les profils — les cookies et le 2FA restent propres à chaque profil. Au focus d'un champ de connexion, un menu propose les identifiants du site."
 msgstr "مشفّرة بواسطة سلسلة مفاتيح النظام ومشتركة بين الملفات الشخصية — تبقى ملفات تعريف الارتباط والمصادقة الثنائية خاصة بكل ملف شخصي. عند التركيز على حقل تسجيل الدخول، تقترح قائمة بيانات اعتماد الموقع."
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "كلمة مرور البريد"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "إظهار كلمة المرور"
+
+#: index.html
+msgid "Valider"
+msgstr ""
 
 #: assets/app.js
 msgid "L'assistant conversationnel d'Anthropic. Il excelle en rédaction, en analyse de longs documents, en programmation et dans les raisonnements qui demandent plusieurs étapes."
@@ -1706,6 +1736,60 @@ msgstr "تعذّر الحفظ: المضيف أو اسم المستخدم أو ك
 #: assets/app.js
 msgid "Enregistrement impossible : {error}"
 msgstr "تعذّر الحفظ: {error}"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Créer mon premier compte"
+msgid "Créer une sauvegarde complète"
+msgstr "إنشاء حسابي الأول"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "استعادة النسخة الاحتياطية"
+
+#: assets/app.js
+msgid "Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le."
+msgstr ""
+
+#: assets/app.js
+msgid "Celui choisi à la création de cette sauvegarde."
+msgstr ""
+
+#: assets/app.js
+msgid "Choisissez un mot de passe de sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe ne correspondent pas"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Erreur lors de la sauvegarde"
+msgid "Échec de la création de la sauvegarde"
+msgstr "خطأ أثناء الحفظ"
+
+#: assets/app.js
+msgid "Sauvegarde créée : {count} fichiers"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect"
+msgstr "كلمة مرور البريد"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de la lecture du fichier"
+msgid "Échec de la restauration"
+msgstr "فشلت قراءة الملف"
+
+#: assets/app.js
+msgid "Sauvegarde restaurée — IAO va redémarrer"
+msgstr ""
 
 #: assets/app.js
 msgid "Impossible de charger les réglages"
