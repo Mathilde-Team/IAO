@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Muuta editorin kokoa vetämällä"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Palauta avoimet välilehdet käynnistettäessä"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Palauta avoimet välilehdet käynnistettäessä"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Ei avoimia välilehtiä — valitse palvelu tililuettelosta"
 

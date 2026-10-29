@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Przeciągnij, aby zmienić rozmiar edytora"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Przywracaj otwarte karty przy uruchomieniu"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Przywracaj otwarte karty przy uruchomieniu"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Brak otwartych kart — wybierz usługę z listy kont"
 
