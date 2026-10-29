@@ -99,7 +99,7 @@ const SCRIPT_GLISSER = `(async () => {
   document.dispatchEvent(new MouseEvent('mouseup', { clientX: x - ${DEPLACEMENT_PX}, clientY: y, bubbles: true }));
   const apres = ide.getBoundingClientRect().width;
   ide.style.flex = '';
-  try { localStorage.removeItem('ide_w'); } catch (e) {}
+  try { const p = window.iaoAPI.preferencesLire().preferences || {}; delete p.ide_w; window.iaoAPI.preferencesEcrire(p); } catch (e) {}
   if (ferme) window.toggleIdePanel();
   return Math.round(apres - avant);
 })()`;

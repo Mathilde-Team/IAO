@@ -91,6 +91,14 @@
     }
     const ipcRenderer = { invoke: window.iaoAPI.ipcInvoke };
 
+    // Issue #331 : préférences de l'interface dans <userData>/preferences.json
+    // (lib/magasin-preferences.js), même interface que localStorage. Les
+    // onglets ouverts restent dans le localStorage.
+    const prefStore = window.creerMagasinPreferences({
+      lire: () => window.iaoAPI.preferencesLire(),
+      ecrire: (prefs) => window.iaoAPI.preferencesEcrire(prefs)
+    }, localStorage, console);
+
     // Issue #162 : mode debug (--iao-debug ou IAO_DEBUG=1, décidé par main.js).
     // dbg() écrit en console.debug : main.js ne recopie ce niveau dans
     // iao.log qu'en mode debug, et dbg() se tait hors de ce mode.
@@ -221,7 +229,7 @@
 
     function getActiveServices() {
       try {
-        const raw = localStorage.getItem(ACTIVE_SERVICES_KEY);
+        const raw = prefStore.getItem(ACTIVE_SERVICES_KEY);
         if (!raw) return DEFAULT_ACTIVE_SERVICES.slice();
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return DEFAULT_ACTIVE_SERVICES.slice();
@@ -233,7 +241,7 @@
     }
 
     function saveActiveServices(ids) {
-      try { localStorage.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids)); }
+      try { prefStore.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids)); }
       catch (e) { /* non bloquant */ }
     }
 
@@ -364,12 +372,12 @@
     let starredTabs = new Set();
     function loadStarredTabs() {
       try {
-        var raw = localStorage.getItem(STARRED_KEY);
+        var raw = prefStore.getItem(STARRED_KEY);
         starredTabs = deserializeStarredTabs(raw);
       } catch (e) { /* non bloquant */ }
     }
     function saveStarredTabs() {
-      try { localStorage.setItem(STARRED_KEY, serializeStarredTabs(starredTabs)); } catch (e) { /* non bloquant */ }
+      try { prefStore.setItem(STARRED_KEY, serializeStarredTabs(starredTabs)); } catch (e) { /* non bloquant */ }
     }
     function isTabStarredById(accId, svcId) { return isTabStarred(starredTabs, accId, svcId); }
     function toggleTabStarById(accId, svcId) {
@@ -520,7 +528,7 @@
     const COLLAPSED_KEY = 'collapsed_accounts';
     let collapsedAccounts = new Set();
     try {
-      const saved = JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]');
+      const saved = JSON.parse(prefStore.getItem(COLLAPSED_KEY) || '[]');
       if (Array.isArray(saved)) collapsedAccounts = new Set(saved.filter(x => typeof x === 'string'));
     } catch (e) { console.warn('[storage] états de repli ignorés :', e); }
 
@@ -528,7 +536,7 @@
     // (la clé ne grossit pas indéfiniment au fil des suppressions).
     function saveCollapsed() {
       collapsedAccounts = new Set([...collapsedAccounts].filter(id => accounts.some(a => a.id === id)));
-      try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...collapsedAccounts])); } catch (e) {}
+      try { prefStore.setItem(COLLAPSED_KEY, JSON.stringify([...collapsedAccounts])); } catch (e) {}
     }
 
     window.toggleCardCollapse = function(accId) {
@@ -687,7 +695,7 @@
     // Les comptes sans ordre explicite sont triés alphabétiquement (fallback).
     function getAccountOrder() {
       try {
-        const raw = localStorage.getItem(ORDER_KEY);
+        const raw = prefStore.getItem(ORDER_KEY);
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return null;
@@ -696,7 +704,7 @@
     }
 
     function saveAccountOrder(orderList) {
-      try { localStorage.setItem(ORDER_KEY, JSON.stringify(orderList)); }
+      try { prefStore.setItem(ORDER_KEY, JSON.stringify(orderList)); }
       catch (e) { /* non bloquant */ }
     }
 
@@ -2177,9 +2185,9 @@
       // Lecture défensive (chantier C) : une valeur absente/illisible ne doit
       // jamais empêcher l'app de démarrer — on retombe simplement sur le défaut.
       try {
-        const savedIde = localStorage.getItem('ide_w');
+        const savedIde = prefStore.getItem('ide_w');
         if (savedIde) idePanel.style.flex = '0 0 ' + savedIde;
-        const savedExp = localStorage.getItem('explorer_w');
+        const savedExp = prefStore.getItem('explorer_w');
         if (savedExp) fileExplorer.style.flex = '0 0 ' + savedExp;
       } catch (e) { console.warn('[storage] largeurs de colonnes ignorées :', e); }
 
@@ -2222,7 +2230,7 @@
         min: 260,
         max: () => document.querySelector('.workspace-body').getBoundingClientRect().width - 320,
         apply: (w) => { idePanel.style.flex = '0 0 ' + w + 'px'; },
-        onEnd: () => { try { localStorage.setItem('ide_w', Math.round(idePanel.getBoundingClientRect().width) + 'px'); } catch (e) {} }
+        onEnd: () => { try { prefStore.setItem('ide_w', Math.round(idePanel.getBoundingClientRect().width) + 'px'); } catch (e) {} }
       });
 
       // Explorateur de fichiers ↔ éditeur
@@ -2232,7 +2240,7 @@
         min: 120,
         max: () => idePanel.getBoundingClientRect().width - 160,
         apply: (w) => { fileExplorer.style.flex = '0 0 ' + w + 'px'; },
-        onEnd: () => { try { localStorage.setItem('explorer_w', Math.round(fileExplorer.getBoundingClientRect().width) + 'px'); } catch (e) {} }
+        onEnd: () => { try { prefStore.setItem('explorer_w', Math.round(fileExplorer.getBoundingClientRect().width) + 'px'); } catch (e) {} }
       });
     }
     setupResizers();
