@@ -54,6 +54,8 @@
      l'ordonnanceur peut proposer la restauration depuis son instantané. -->
 <script src="lib/local-storage-json.js"></script>
 <script src="lib/comptes-serie.js"></script>
+<!-- Issue #333 : profil tiré du nom du compte, libellé « nom - adresse mail ». -->
+<script src="lib/profil-compte.js"></script>
 <script src="lib/service-icons.js"></script>
 <script src="lib/services-actifs.js"></script>
 <script src="lib/taches-runner.js"></script>
@@ -218,11 +220,11 @@
 <div class="modal-overlay" id="accountModal">
   <div class="modal">
     <div class="modal__title" id="modalTitle">Ajouter un compte</div>
-    <div class="modal__desc">Le profil permet d'isoler les cookies dans Electron.</div>
     <input type="hidden" id="editId">
     <div class="form-group"><label class="form-label">Nom du compte</label><input class="form-input" id="inputName" type="text"></div>
     <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="inputEmail" type="email"></div>
-    <div class="form-group"><label class="form-label">Nom du Profil</label><input class="form-input" id="inputProfile" type="text"></div>
+    <!-- Issue #333 : profil ni saisi ni affiché ; il reprend le nom du compte à la création. -->
+    <input id="inputProfile" type="hidden">
     <div class="form-group">
       <label class="form-label" for="inputMailPassword">Mot de passe de la messagerie</label>
       <div class="form-pass">

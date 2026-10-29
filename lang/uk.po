@@ -150,16 +150,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Немає відкритих вкладок — виберіть сервіс у списку облікових записів"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Профіль дає змогу ізолювати cookie в Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Назва облікового запису"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Назва профілю"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

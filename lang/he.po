@@ -150,16 +150,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "אין כרטיסייה פתוחה — בחרו שירות מרשימת החשבונות"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "הפרופיל מאפשר לבודד את העוגיות ב-Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "שם החשבון"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "שם הפרופיל"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

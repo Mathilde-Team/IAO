@@ -150,16 +150,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Καμία ανοιχτή καρτέλα — επιλέξτε μια υπηρεσία από τη λίστα λογαριασμών"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Το προφίλ επιτρέπει την απομόνωση των cookies στο Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Όνομα λογαριασμού"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Όνομα προφίλ"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

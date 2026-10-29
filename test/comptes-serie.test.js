@@ -26,12 +26,17 @@ test('comptesEnSerie : à la suite, adresse, profil, services copiés', () => {
   const r = c.comptesEnSerie({ comptes: EXISTANTS, nombre: 2, prefixe: 'docker', domaine: 'dmathilde.fr', services, maintenant: 1700 });
   assert.equal(r.ok, true);
   assert.deepEqual(r.comptes, [
-    { id: 'acc_1700_239', name: '239', email: 'docker239@dmathilde.fr', profile: 'profil_239', services: ['claude'] },
-    { id: 'acc_1700_240', name: '240', email: 'docker240@dmathilde.fr', profile: 'profil_240', services: ['claude'] }
+    { id: 'acc_1700_239', name: '239', email: 'docker239@dmathilde.fr', profile: '239', services: ['claude'] },
+    { id: 'acc_1700_240', name: '240', email: 'docker240@dmathilde.fr', profile: '240', services: ['claude'] }
   ]);
   assert.notEqual(r.comptes[0].services, services);
   const sansPrefixe = c.comptesEnSerie({ nombre: 1, domaine: 'd.fr' });
-  assert.deepEqual(sansPrefixe.comptes[0], { id: 'acc_0_1', name: '1', email: '1@d.fr', profile: 'profil_1', services: [] });
+  assert.deepEqual(sansPrefixe.comptes[0], { id: 'acc_0_1', name: '1', email: '1@d.fr', profile: '1', services: [] });
+});
+
+test('#333 comptesEnSerie : profil = nom du compte, profil_<n> s\'il est déjà pris (sans casse)', () => {
+  const r = c.comptesEnSerie({ comptes: [{ name: 'Perso', profile: '1' }, { name: 'Autre', profile: 'X' }, { name: 'sans profil' }], nombre: 2, domaine: 'd.fr' });
+  assert.deepEqual(r.comptes.map((a) => a.profile), ['profil_1', '2']);
 });
 
 test('comptesEnSerie : nombre et domaine vérifiés', () => {

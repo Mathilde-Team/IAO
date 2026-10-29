@@ -150,16 +150,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "कोई टैब खुला नहीं — खातों की सूची से कोई सेवा चुनें"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "प्रोफ़ाइल Electron में कुकीज़ को अलग रखने देती है।"
-
-#: index.html
 msgid "Nom du compte"
 msgstr "खाते का नाम"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "प्रोफ़ाइल का नाम"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

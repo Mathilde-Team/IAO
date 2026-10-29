@@ -150,16 +150,8 @@ msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Žádná otevřená karta — vyberte službu v seznamu účtů"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Profil umožňuje izolovat soubory cookie v Electronu."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Název účtu"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Název profilu"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
