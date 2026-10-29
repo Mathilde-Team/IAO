@@ -594,6 +594,11 @@
         // des cooldowns par service. lastUsedAt = dernière ouverture manuelle ;
         // lastAutomationAt = dernier job d'ordonnanceur exécuté sur ce profil
         // (sert à choisir le profil "le plus ancien" avant d'en relancer un).
+        // Issue #333 : compte importé sans profil -> profil tiré de son nom.
+        if (!acc.profile || typeof acc.profile !== 'string') {
+          acc.profile = window.iaoProfilCompte.profilDepuisNom(acc.name, accounts.map(a => a.profile).filter(Boolean));
+          needsUpdate = true;
+        }
         if (!acc.automation || typeof acc.automation !== 'object') {
           acc.automation = { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 };
           needsUpdate = true;
@@ -787,7 +792,7 @@
               <div class="account-avatar" data-avatar-color="${color}">${initials}</div>
               <div class="account-info">
                 <div class="account-name">${escapeHtml(acc.name)} ${isActive ? '<span class="active-dot"></span>' : ''}</div>
-                <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span> • ` : ''}${escapeHtml(acc.profile)}</div>
+                <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span>` : ''}</div>
               </div>
               <div class="account-actions">
                 ${currentSettings && currentSettings.webmailUrl ? `<button class="btn btn--icon" data-action="open-webmail" data-acc="${id}" title="${escapeHtml(_('Ouvrir le webmail (adresse copiée)'))}"><span class="ic" data-icon="envelope"></span></button>` : ''}
@@ -955,7 +960,7 @@
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
-        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.profile }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
+        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.name }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
       `;
       pane.appendChild(toolbar);
       hydrateIcons(toolbar);
@@ -1510,7 +1515,7 @@
         const webview = t.paneEl.querySelector('webview');
         if (webview) webview.reload();
       });
-      showToast(_('Profil « {profile} » déconnecté — session effacée', { profile: acc.profile }));
+      showToast(_('Profil « {profile} » déconnecté — session effacée', { profile: acc.name }));
     }
     document.getElementById('tabsContent').addEventListener('click', (e) => {
       const el = e.target.closest('[data-action]');
@@ -1600,6 +1605,7 @@
       if (e.key === 'Escape') {
         document.getElementById('paletteOverlay').classList.remove('open');
         document.getElementById('accountModal').classList.remove('open');
+        document.getElementById('sauvegardeModal').classList.remove('open');
         document.getElementById('deleteModal').classList.remove('open');
         document.getElementById('helpModal').classList.remove('open');
         closeImportConfirm(); // ferme + vide pendingImportContent (pas un simple classList.remove)
@@ -1686,12 +1692,8 @@
         document.getElementById('editId').value = '';
         document.getElementById('inputName').value = '';
         document.getElementById('inputEmail').value = '';
-        // Suggère un profil NON collisionnant (`length+1` pouvait re-proposer un
-        // profil déjà pris après une suppression -> sessions partagées).
-        const used = new Set(accounts.map(a => a.profile));
-        let n = accounts.length + 1;
-        while (used.has('profil_' + n)) n++;
-        document.getElementById('inputProfile').value = 'profil_' + n;
+        // Issue #333 : le profil est tiré du nom à l'enregistrement (saveAccount).
+        document.getElementById('inputProfile').value = '';
       }
       // Issue #201 : mot de passe de messagerie, masqué ; relu depuis le coffre chiffré.
       const pass = document.getElementById('inputMailPassword');
@@ -1909,8 +1911,12 @@
       const id = document.getElementById('editId').value;
       const name = document.getElementById('inputName').value.trim();
       const email = document.getElementById('inputEmail').value.trim();
-      const profile = document.getElementById('inputProfile').value.trim();
-      if (!name || !email || !profile) return showToast(_('Remplissez tous les champs'), 'error');
+      if (!name || !email) return showToast(_('Remplissez tous les champs'), 'error');
+      // Issue #333 : un compte existant garde son profil (ses sessions y sont) ;
+      // un nouveau compte prend un profil tiré de son nom, unique.
+      const profile = id
+        ? document.getElementById('inputProfile').value.trim()
+        : window.iaoProfilCompte.profilDepuisNom(name, accounts.map(a => a.profile));
 
       // Unicité du profil (chantier audit 3.1) : deux comptes partageant le même
       // `profile` utiliseraient la MÊME partition Electron (persist:<profile>) →
@@ -2594,7 +2600,7 @@
       }
       conteneur.innerHTML = evenements.map(function(ev) {
         var ligne = '[' + escapeHtml(formatterDateTache(ev.date)) + '] ' +
-          escapeHtml(ev.nom || '') + (ev.profil ? ' · ' + escapeHtml(ev.profil) : '') +
+          escapeHtml(ev.nom || '') + (ev.profil ? ' · ' + escapeHtml(window.iaoProfilCompte.libelleProfil(ev.profil, accounts)) : '') +
           ' — ' + escapeHtml(texteResultatTache(ev));
         if (ev.detail) ligne += ' (' + escapeHtml(String(ev.detail)) + ')';
         return '<div>' + ligne + '</div>';
@@ -2660,7 +2666,7 @@
       }
       var lignes = avecClaude.map(function(a) {
         var coche = selectionnes.has(a.profile);
-        return '<label class="tache-form__compte"><input type="checkbox" data-profile="' + escapeHtml(a.profile) + '"' + (coche ? ' checked' : '') + '> ' + escapeHtml(a.profile) + '</label>';
+        return '<label class="tache-form__compte"><input type="checkbox" data-profile="' + escapeHtml(a.profile) + '"' + (coche ? ' checked' : '') + '> ' + escapeHtml(window.iaoProfilCompte.libelleCompte(a)) + '</label>';
       });
       for (var i = 0; i < indisponibles.length; i++) {
         var p = indisponibles[i];
@@ -2669,7 +2675,7 @@
           : _('compte supprimé');
         lignes.push('<label class="tache-form__compte tache-form__compte--indisponible">' +
           '<input type="checkbox" data-profile="' + escapeHtml(p) + '" checked disabled> ' +
-          escapeHtml(p) + ' <span class="tache-form__note">(' + escapeHtml(note) + ')</span></label>');
+          escapeHtml(window.iaoProfilCompte.libelleProfil(p, accounts)) + ' <span class="tache-form__note">(' + escapeHtml(note) + ')</span></label>');
       }
       conteneur.innerHTML = lignes.join('');
     }
@@ -3294,6 +3300,70 @@
       }
     });
 
+    // --- Sauvegarde complète (issue #329) -----------------------------------
+    // Modal de mot de passe partagé création/restauration. Le mot de passe ne
+    // transite que par l'IPC : jamais dans iao.log, jamais en clair sur disque ;
+    // il chiffre les secrets du zip (AES-256-GCM, voir main.js).
+    let sauvegardeMode = 'creer';
+    function ouvrirSauvegardeModal(mode) {
+      sauvegardeMode = mode;
+      const creation = mode === 'creer';
+      document.getElementById('sauvegardeTitre').textContent = creation
+        ? _('Créer une sauvegarde complète')
+        : _('Restaurer une sauvegarde complète');
+      document.getElementById('sauvegardeConfirmeBloc').style.display = creation ? '' : 'none';
+      document.getElementById('sauvegardeAide').textContent = creation
+        ? _('Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le.')
+        : _('Celui choisi à la création de cette sauvegarde.');
+      document.getElementById('sauvegardeMdp').value = '';
+      document.getElementById('sauvegardeMdp2').value = '';
+      document.getElementById('sauvegardeModal').classList.add('open');
+      setTimeout(() => document.getElementById('sauvegardeMdp').focus(), 50);
+    }
+    function fermerSauvegardeModal() {
+      document.getElementById('sauvegardeModal').classList.remove('open');
+    }
+
+    async function validerSauvegarde() {
+      const mdp = document.getElementById('sauvegardeMdp').value;
+      if (!mdp) { showToast(_('Choisissez un mot de passe de sauvegarde'), 'error'); return; }
+      if (sauvegardeMode === 'creer' && mdp !== document.getElementById('sauvegardeMdp2').value) {
+        showToast(_('Les deux mots de passe ne correspondent pas'), 'error');
+        return;
+      }
+      fermerSauvegardeModal();
+      if (sauvegardeMode === 'creer') {
+        const res = await ipcRenderer.invoke('sauvegarde-complete:creer', mdp);
+        if (res.canceled) return;
+        if (res.error) {
+          showToast(_('Échec de la création de la sauvegarde'), 'error');
+          return;
+        }
+        showToast(_('Sauvegarde créée : {count} fichiers', { count: res.entrees }), 'success');
+        dbg('sauvegarde', 'créée : ' + res.filePath);
+      } else {
+        const res = await ipcRenderer.invoke('sauvegarde-complete:restaurer', mdp);
+        if (res.canceled) return;
+        if (res.error === 'mot_de_passe_faux') {
+          showToast(_('Mot de passe de la sauvegarde incorrect'), 'error');
+          return;
+        }
+        if (res.error) {
+          showToast(_('Échec de la restauration'), 'error');
+          return;
+        }
+        // Les données (dont les sessions Chromium) sont remplacées : seul un
+        // redémarrage les rouvre proprement.
+        showToast(_('Sauvegarde restaurée — IAO va redémarrer'), 'success');
+        setTimeout(() => window.iaoAPI.ipcInvoke('app:relaunch'), 900);
+      }
+    }
+
+    document.getElementById('sauvegardeCreer').addEventListener('click', function() { ouvrirSauvegardeModal('creer'); });
+    document.getElementById('sauvegardeRestaurer').addEventListener('click', function() { ouvrirSauvegardeModal('restaurer'); });
+    document.getElementById('sauvegardeAnnuler').addEventListener('click', fermerSauvegardeModal);
+    document.getElementById('sauvegardeValider').addEventListener('click', function() { validerSauvegarde(); });
+
     let loadedLanguage = 'auto';
     async function loadSettings() {
       try {
@@ -3450,7 +3520,7 @@
             <div class="sched-job">
               <div class="sched-job__dot" data-dot-color="${color}"></div>
               <div class="sched-job__body">
-                <div class="sched-job__title">${escapeHtml(j.id)} — ${escapeHtml(j.service || _('service inconnu'))} · ${escapeHtml(j.profile || '—')}</div>
+                <div class="sched-job__title">${escapeHtml(j.id)} — ${escapeHtml(j.service || _('service inconnu'))} · ${escapeHtml(j.profile ? window.iaoProfilCompte.libelleProfil(j.profile, accounts) : '—')}</div>
                 <div class="sched-job__meta">${escapeHtml(label)} · ${escapeHtml(_('tentative {n}', { n: j.attempts || 1 }))}${fileName ? ' · ' + escapeHtml(fileName) : ''}</div>
                 ${actions.length ? `<div class="sched-job__actions">${actions.join('')}</div>` : ''}
               </div>
@@ -3704,7 +3774,7 @@
           showToast(_('Aucun compte vert disponible pour ce projet.'), 'warning');
           return;
         }
-        var names = res.map(function(a) { return a.name + ' (' + a.profile + ')'; });
+        var names = res.map(function(a) { return window.iaoProfilCompte.libelleProfil(a.profile, accounts); });
         var choice = prompt(_('Comptes verts disponibles :') + '\n' + names.map(function(n, i) { return (i+1) + '. ' + n; }).join('\n') + '\n\n' + _('Numéro du compte :'), '1');
         if (!choice) return;
         var idx = parseInt(choice, 10) - 1;
