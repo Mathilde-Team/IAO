@@ -23,7 +23,10 @@ function runPreloadSandboxed(pageUrl) {
   const invoked = [];
   const electronStub = {
     contextBridge: { exposeInMainWorld: (key, api) => { exposed[key] = api; } },
-    ipcRenderer: { invoke: (...args) => { invoked.push(args); return Promise.resolve('ok'); } }
+    ipcRenderer: {
+      invoke: (...args) => { invoked.push(args); return Promise.resolve('ok'); },
+      sendSync: (...args) => { invoked.push(['sync'].concat(args)); return { status: 'ok' }; }
+    }
   };
   const sandboxRequire = (name) => {
     if (!SANDBOXED_PRELOAD_MODULES.includes(name)) throw new Error('module not found: ' + name);
@@ -71,4 +74,11 @@ test('main.js déclare bien preload.js et garde nodeIntegration:false / contextI
   assert.match(main, /preload:\s*path\.join\(__dirname,\s*'preload\.js'\)/);
   assert.match(main, /nodeIntegration:\s*false/);
   assert.match(main, /contextIsolation:\s*true/);
+});
+
+test('#311 : profilsLire / profilsEcrire passent par deux canaux synchrones fixes', () => {
+  const { exposed, invoked } = runPreloadSandboxed('file:///home/u/IAO/index.html');
+  assert.deepEqual(exposed.iaoAPI.profilsLire(), { status: 'ok' });
+  assert.deepEqual(exposed.iaoAPI.profilsEcrire([{ id: 'a' }]), { status: 'ok' });
+  assert.deepEqual(invoked, [['sync', 'profils:lire'], ['sync', 'profils:ecrire', [{ id: 'a' }]]]);
 });
