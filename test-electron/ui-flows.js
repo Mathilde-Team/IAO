@@ -266,8 +266,12 @@ async function run() {
   await exec(`
     localStorage.setItem('ai_accounts', ${JSON.stringify(JSON.stringify(seedAccounts))});
     localStorage.setItem('ai_open_tabs', ${JSON.stringify(JSON.stringify(seedTabs))});
+    localStorage.setItem('ai_starred_tabs', '["migration|331"]'); // #331 : recopié dans preferences.json (C1.8)
     'injected'
   `);
+  // #331 : le premier chargement a déjà créé preferences.json ; on le retire
+  // pour que le rechargement fasse la migration depuis le localStorage (C1.8).
+  fs.rmSync(path.join(app.getPath('userData'), 'preferences.json'), { force: true });
   if (MEASURE_COVERAGE) {
     try { await v8cov.startCoverage(win.webContents); }
     catch (e) { console.log('COV démarrage impossible : ' + e.message); }
@@ -399,7 +403,8 @@ async function run() {
       if (c) {
         window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'compte_319'));
       }
-      localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
+      // la suite du harnais attend la sélection par défaut
+      (() => { const p = window.iaoAPI.preferencesLire().preferences || {}; delete p.ai_active_services; window.iaoAPI.preferencesEcrire(p); })(); // #331 : préférences dans preferences.json
       return services;
     })()`);
     win.webContents.reload();
@@ -427,11 +432,11 @@ async function run() {
       const carte = document.querySelector('#accountsList .account-card');
       return { boutons: carte.querySelectorAll('[data-action="open-service"]').length,
         total: list.querySelectorAll('[data-svc-id]').length,
-        stocke: JSON.parse(localStorage.getItem('ai_active_services')).length };
+        stocke: window.iaoAPI.preferencesLire().preferences.ai_active_services.length };
     })()`);
     const un = await choisir(['claude']);
     const tous = await choisir('tous');
-    await exec(`localStorage.removeItem('ai_active_services'); 'ok'`);
+    await exec(`(() => { const p = window.iaoAPI.preferencesLire().preferences || {}; delete p.ai_active_services; window.iaoAPI.preferencesEcrire(p); })(); 'ok'`);
     win.webContents.reload();
     await sleep(300);
     await waitLoaded();
@@ -439,6 +444,40 @@ async function run() {
     assert(un.boutons === 1 && un.stocke === 1, 'une seule IA : ' + JSON.stringify(un));
     assert(tous.total > 9 && tous.boutons === tous.total && tous.stocke === tous.total, 'toutes les IA : ' + JSON.stringify(tous));
     assert(defaut === 9, 'retour à la sélection par défaut : ' + defaut);
+  });
+
+  // Issue #331 : préférences de l'interface dans <userData>/preferences.json.
+  await test('C1.8 Préférences dans preferences.json : migration unique, plus rien dans le localStorage (#331)', async () => {
+    const fichierPrefs = path.join(app.getPath('userData'), 'preferences.json');
+    assert(fs.existsSync(fichierPrefs), 'preferences.json absent après le démarrage');
+    const migre = JSON.parse(fs.readFileSync(fichierPrefs, 'utf-8'));
+    assert(Array.isArray(migre.ai_starred_tabs) && migre.ai_starred_tabs.includes('migration|331'),
+      'étoile du localStorage non recopiée : ' + JSON.stringify(migre.ai_starred_tabs));
+    const r = await exec(`(() => {
+      openServicesModal();
+      const list = document.getElementById('servicesList');
+      [...list.querySelectorAll('[data-svc-id]')].forEach((cb) => {
+        const coche = cb.dataset.svcId === 'claude';
+        if (cb.checked !== coche) { cb.checked = coche; list.onchange({ target: cb }); }
+      });
+      saveServicesModal();
+      return ['ai_active_services', 'ai_starred_tabs', 'ai_account_order', 'collapsed_accounts', 'ide_w', 'explorer_w']
+        .filter((k) => localStorage.getItem(k) !== null);
+    })()`);
+    assert(r.length === 0, 'clés encore dans le localStorage : ' + r.join(','));
+    const ecrit = JSON.parse(fs.readFileSync(fichierPrefs, 'utf-8'));
+    assert(JSON.stringify(ecrit.ai_active_services) === '["claude"]', 'preferences.json : ' + JSON.stringify(ecrit.ai_active_services));
+    // Perte du localStorage : la préférence reste (elle est dans le fichier).
+    await exec(`localStorage.removeItem('ai_active_services'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const boutons = await exec(`document.querySelector('#accountsList .account-card').querySelectorAll('[data-action="open-service"]').length`);
+    assert(boutons === 1, 'choix des IA perdu au rechargement : ' + boutons);
+    await exec(`(() => { const p = window.iaoAPI.preferencesLire().preferences || {}; delete p.ai_active_services; p.ai_starred_tabs = []; window.iaoAPI.preferencesEcrire(p); })(); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
   });
 
   // =========================================================================

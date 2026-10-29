@@ -13,6 +13,8 @@
 // Il expose une API MINIMALE via contextBridge.exposeInMainWorld :
 //   window.iaoAPI.ipcInvoke(channel, ...args)  → ipcRenderer.invoke
 //   window.iaoAPI.resolveMonacoBase()          → URL absolue de Monaco
+//   window.iaoAPI.preferencesLire()            → préférences de preferences.json (#331)
+//   window.iaoAPI.preferencesEcrire(prefs)     → écriture de preferences.json (#331)
 //   window.iaoAPI.profilsLire()                → comptes de profils.json (#311)
 //   window.iaoAPI.profilsEcrire(comptes)       → écriture de profils.json (#311)
 //
@@ -28,6 +30,11 @@ contextBridge.exposeInMainWorld('iaoAPI', {
   // n'utilise que invoke (requête/réponse, jamais push du main vers renderer).
   ipcInvoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
 
+  // Issue #331 : préférences de l'interface dans <userData>/preferences.json.
+  // Canaux SYNCHRONES fixes : lues avant de dessiner l'interface, écrites
+  // avant que l'appelant rende la main.
+  preferencesLire: () => ipcRenderer.sendSync('preferences:lire'),
+  preferencesEcrire: (prefs) => ipcRenderer.sendSync('preferences:ecrire', prefs),
   // Issue #311 : les comptes vivent dans <userData>/profils.json. Lecture et
   // écriture SYNCHRONES, sur deux canaux fixes seulement : le renderer charge
   // ses comptes avant de dessiner l'interface, et une écriture est sur le

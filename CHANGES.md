@@ -140,6 +140,28 @@
 ### Non modifié
 - L'ancien ordonnanceur (désactivé par défaut depuis #199) surveille encore toutes les
   partitions quand on l'active (`_watchAllPartitions`).
+## Issue #331 — préférences de l'interface dans un fichier (27/10/2026)
+
+### Modifié
+- Les préférences de l'interface ne sont plus dans le `localStorage` mais dans
+  `<userData>/preferences.json` : IA à portée de main, ordre des comptes, onglets
+  étoilés, cartes repliées, largeur de l'éditeur et de l'explorateur. Elles survivent
+  à la perte du `localStorage`. Seuls les onglets ouverts y restent.
+- `lib/preferences.js` (lecture filtrée sur les clés connues, écriture atomique, fichier
+  illisible mis de côté dans `preferences.json.illisible`) ; `lib/magasin-preferences.js`
+  (même interface que `localStorage` pour `assets/app.js`) ; canaux synchrones
+  `preferences:lire` / `preferences:ecrire` exposés par le preload.
+- Migration unique : sans `preferences.json`, les clés encore dans le `localStorage` y
+  sont recopiées, puis retirées une fois le fichier écrit.
+
+### Testé
+- `test/preferences.test.js`, `test/main-accounts.test.js`, `test/preload-sandbox.test.js` ;
+  harnais C1.8 (migration, plus rien dans le `localStorage`, choix des IA conservé
+  après la perte du `localStorage`).
+
+### Limites
+- Les réglages de la fenêtre « Réglages » restent dans `settings.json`, et les comptes
+  dans `profils.json` (#311, fusionnée depuis).
 ## Issue #330 — confirmation de fermeture d'un onglet : option désactivée par défaut (27/10/2026)
 
 ### Modifié
