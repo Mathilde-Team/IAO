@@ -26,7 +26,6 @@
 
 # Rapport de modifications — IAO (18/09/2026)
 
-<<<<<<< HEAD
 ## Issue #329 — sauvegarde complète de tout le dossier de données (29/10/2026)
 
 ### Ajouté
@@ -48,7 +47,7 @@
 - `test/sauvegarde-complete.test.js` (10) : chemins retenus/exclus, secrets transportables scrypt+AES-256-GCM (mot de passe faux → null), round-trip, entrées mal formées.
 - `test/main-sauvegarde.test.js` (15) : handlers IPC complets — création (annulations, exclusions, secret illisible omis, échec d'écriture) et restauration (mot de passe faux refusé avant toute écriture, rechiffrement au trousseau local, entrée de zip au nom dangereux refusée, fichier non zip).
 - `test/main-harness.test.js` : deux canaux IPC `sauvegarde-complete:creer` / `sauvegarde-complete:restaurer` dans la liste de référence.
-=======
+
 ## Issue #316 — documentation des raccourcis clavier (29/10/2026)
 
 ### Ajouté
@@ -57,7 +56,6 @@
 
 ### Vérifié
 - `mkdocs build --strict` : la nouvelle page est construite, liens valides.
->>>>>>> origin/dev
 
 ## Issue #335 — licence MIT et version des paquets (27/10/2026)
 
