@@ -134,6 +134,14 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Ziehen, um die Größe des Editors zu ändern"
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Tabs nach links scrollen"
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Tabs nach rechts scrollen"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Kein Tab offen — wählen Sie einen Dienst aus der Kontenliste"
 

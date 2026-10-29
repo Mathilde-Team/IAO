@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "拖动以调整编辑器大小"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "启动时恢复已打开的标签页"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "启动时恢复已打开的标签页"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "没有打开的标签页 — 请在账户列表中选择一个服务"
 

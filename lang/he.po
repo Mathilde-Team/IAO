@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "גרירה לשינוי גודל העורך"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "שחזור הכרטיסיות הפתוחות בהפעלה"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "שחזור הכרטיסיות הפתוחות בהפעלה"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "אין כרטיסייה פתוחה — בחרו שירות מרשימת החשבונות"
 

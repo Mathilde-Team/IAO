@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Slepen om de grootte van de editor te wijzigen"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Geopende tabbladen herstellen bij het opstarten"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Geopende tabbladen herstellen bij het opstarten"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Geen tabblad open — kies een dienst in de lijst met accounts"
 

@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "সম্পাদকের আকার বদলাতে টানুন"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "চালুর সময় খোলা ট্যাব পুনরুদ্ধার করুন"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "চালুর সময় খোলা ট্যাব পুনরুদ্ধার করুন"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "কোনো ট্যাব খোলা নেই — অ্যাকাউন্টের তালিকা থেকে একটি পরিষেবা বেছে নিন"
 

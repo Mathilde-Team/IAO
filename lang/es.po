@@ -134,6 +134,14 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Arrastrar para redimensionar el editor"
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Desplazar las pestañas a la izquierda"
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Desplazar las pestañas a la derecha"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Ninguna pestaña abierta — elija un servicio en la lista de cuentas"
 
