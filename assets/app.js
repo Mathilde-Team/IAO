@@ -1032,6 +1032,88 @@
       }, M.INTERVALLE_LECTURE_MS);
     }
 
+    // Issue #338 : premier onglet immuable, hors de tabs[] (ni fermeture, ni
+    // déplacement, ni étoile, ni statistiques de compte). Session propre
+    // (persist:onglet-fixe) ; main.js bloque toute sortie du site.
+    const OF = window.iaoOngletFixe;
+    let ongletFixe = null; // { url, paneEl, webview }
+
+    function htmlOngletFixe() {
+      if (!ongletFixe) return '';
+      const cls = 'tab tab--fixe' + (activeTabId === OF.ID_ONGLET ? ' active' : '');
+      return `
+          <div class="${cls}" draggable="false" data-action="activate-tab" data-tab="${OF.ID_ONGLET}" title="${escapeHtml(ongletFixe.url)}">
+            <span class="ic" data-icon="house"></span>
+            <span class="tab__text">
+              <span class="tab__label">${escapeHtml(OF.libelle(ongletFixe.url))}</span>
+            </span>
+          </div>
+        `;
+    }
+
+    function chargerOngletFixe(url) {
+      try {
+        ongletFixe.webview.loadURL(url).catch((e) => dbg('onglets', 'onglet fixe : chargement refusé', e && e.message));
+      } catch (e) {
+        // webview pas encore prête (avant dom-ready) : l'attribut suffit.
+        dbg('onglets', 'onglet fixe : chargement par attribut', e && e.message);
+        ongletFixe.webview.setAttribute('src', url);
+      }
+    }
+
+    // Crée, met à jour ou retire l'onglet selon les réglages.
+    function appliquerOngletFixe(reglages) {
+      const conf = OF.configuration(reglages);
+      if (!conf.actif) {
+        if (!ongletFixe) return;
+        ongletFixe.paneEl.remove();
+        ongletFixe = null;
+        dbg('onglets', 'onglet fixe retiré');
+        if (activeTabId === OF.ID_ONGLET) activateTab(tabs.length ? tabs[0].id : null);
+        else renderTabsBar();
+        return;
+      }
+      if (ongletFixe) {
+        if (ongletFixe.url !== conf.url) {
+          ongletFixe.url = conf.url;
+          chargerOngletFixe(conf.url);
+          dbg('onglets', 'onglet fixe : nouvelle adresse', OF.libelle(conf.url));
+        }
+        renderTabsBar();
+        return;
+      }
+      const pane = document.createElement('div');
+      pane.className = 'tab-pane';
+      pane.id = OF.ID_ONGLET;
+      const webview = document.createElement('webview');
+      webview.setAttribute('partition', OF.PARTITION);
+      webview.setAttribute('src', conf.url);
+      webview.setAttribute('allowpopups', ''); // popups jugées par main.js (même site -> dans l'onglet)
+      webview.style.width = '100%';
+      webview.style.height = '100%';
+      webview.addEventListener('did-fail-load', (ev) => {
+        if (ev.isMainFrame) dbg('onglets', 'onglet fixe : échec de chargement', ev.errorCode, ev.errorDescription);
+      });
+      pane.appendChild(webview);
+      document.getElementById('tabsContent').appendChild(pane);
+      ongletFixe = { url: conf.url, paneEl: pane, webview };
+      dbg('onglets', 'onglet fixe ouvert', OF.libelle(conf.url));
+      if (!activeTabId) activateTab(OF.ID_ONGLET);
+      else renderTabsBar();
+    }
+
+    // Clic sur l'onglet : l'affiche et revient à l'adresse définie.
+    function revenirOngletFixe() {
+      activateTab(OF.ID_ONGLET);
+      let actuelle = '';
+      try {
+        actuelle = ongletFixe.webview.getURL();
+      } catch (e) {
+        dbg('onglets', 'onglet fixe : adresse courante illisible', e && e.message);
+      }
+      if (actuelle !== ongletFixe.url) chargerOngletFixe(ongletFixe.url);
+    }
+
     // Réaffiche la barre d'onglets à partir de tabs[] (source de vérité unique).
     // Délégation d'événements (chantier A) : aucun onclick avec donnée interpolée.
     // Issue #324 : logo du service + nom du compte (service en infobulle) ;
@@ -1040,7 +1122,7 @@
     function renderTabsBar() {
       const bar = document.getElementById('tabsBar');
       const now = Date.now();
-      bar.innerHTML = tabs.map(t => {
+      bar.innerHTML = htmlOngletFixe() + tabs.map(t => {
         const acc = accounts.find(a => a.id === t.accId);
         const svc = SERVICES.find(s => s.id === t.svcId);
         if (!acc || !svc) return '';
@@ -1114,7 +1196,7 @@
 
       if (activeTabId === tabId) {
         const next = tabs[idx] || tabs[idx - 1] || null;
-        activateTab(next ? next.id : null);
+        activateTab(next ? next.id : (ongletFixe ? OF.ID_ONGLET : null)); // #338
       } else {
         renderTabsBar();
       }
@@ -1130,6 +1212,7 @@
       if (!el) return;
       const tabId = el.getAttribute('data-tab');
       if (el.getAttribute('data-action') === 'close-tab') closeTab(tabId);
+      else if (ongletFixe && tabId === OF.ID_ONGLET) revenirOngletFixe(); // #338
       else activateTab(tabId);
     });
 
@@ -3166,6 +3249,9 @@
         document.getElementById('settingsMailPrefix').value = settings.mailPrefix || '';
         document.getElementById('settingsMailDomain').value = settings.mailDomain || '';
         document.getElementById('settingsWebmailUrl').value = settings.webmailUrl || '';
+        document.getElementById('settingsOngletFixeActif').checked = settings.ongletFixeActif === true;
+        document.getElementById('settingsOngletFixeUrl').value = settings.ongletFixeUrl || '';
+        appliquerOngletFixe(settings); // issue #338
         loadedLanguage = settings.language || 'auto';
         const langSelect = document.getElementById('settingsLanguage');
         if (langSelect && langSelect.querySelector('option[value="' + loadedLanguage + '"]')) langSelect.value = loadedLanguage;
@@ -3188,13 +3274,21 @@
         language: (document.getElementById('settingsLanguage') || { value: loadedLanguage }).value,
         mailPrefix: document.getElementById('settingsMailPrefix').value,
         mailDomain: document.getElementById('settingsMailDomain').value,
-        webmailUrl: document.getElementById('settingsWebmailUrl').value
+        webmailUrl: document.getElementById('settingsWebmailUrl').value,
+        ongletFixeActif: document.getElementById('settingsOngletFixeActif').checked,
+        ongletFixeUrl: document.getElementById('settingsOngletFixeUrl').value
       };
+      // Issue #338 : onglet fixe coché sans adresse https valide -> rien n'est enregistré.
+      if (raw.ongletFixeActif && !window.normalizeOngletFixeUrl(raw.ongletFixeUrl)) {
+        showToast(_('Adresse du premier onglet invalide : une adresse https:// est attendue'), 'error');
+        return;
+      }
       try {
         var result = await ipcRenderer.invoke('settings:save', raw);
         if (result && result.ok) {
           applySettings(result.settings);
           renderAccounts(); // bouton webmail selon le réglage (issue #201)
+          appliquerOngletFixe(result.settings); // issue #338
           const languageChanged = result.settings.language !== loadedLanguage;
           loadedLanguage = result.settings.language;
           showToast(languageChanged

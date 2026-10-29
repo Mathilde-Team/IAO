@@ -4,6 +4,7 @@ const fs = require('fs');
 const fsPromises = fs.promises;
 
 const { decidePopup } = require('./lib/popup-guard');
+const ongletFixe = require('./lib/onglet-fixe');
 const { Scheduler, registerSchedulerIPC } = require('./scheduler');
 const { TachesService, registerTachesIPC } = require('./scheduler/taches-service');
 const schedulerCore = require('./scheduler/core');
@@ -294,6 +295,11 @@ function createWindow() {
         log('webview ' + hostOf(guestContents.getURL()), ev.level, ev.message, ev.sourceId, ev.lineNumber);
       }
     });
+    // Issue #338 : le premier onglet immuable reste sur son site.
+    if (estOngletFixe(guestContents)) {
+      verrouillerOngletFixe(guestContents);
+      return;
+    }
     guestContents.setWindowOpenHandler(({ url }) => {
       if (decidePopup(url) === 'allow') return { action: 'allow' };
       // Schéma non web (http:, data:, javascript:, URL illisible) : refus pur.
@@ -580,6 +586,44 @@ ipc.on('profils:ecrire', (event, comptes) => {
 const { normalizeSettings, DEFAULT_SETTINGS } = require('./lib/settings');
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
+// Issue #338 : adresse du premier onglet immuable, gardée en mémoire pour
+// juger chaque navigation de cet onglet (relue à chaque enregistrement).
+let urlOngletFixe = (() => {
+  try {
+    return ongletFixe.configuration(normalizeSettings(JSON.parse(fs.readFileSync(settingsPath, 'utf-8')))).url;
+  } catch (e) {
+    debug('onglet-fixe', 'réglages illisibles, onglet non configuré : ' + (e && e.message));
+    return '';
+  }
+})();
+
+function estOngletFixe(contenu) {
+  try {
+    return contenu.session === session.fromPartition(ongletFixe.PARTITION);
+  } catch (e) {
+    debug('onglet-fixe', 'session non identifiable : ' + (e && e.message));
+    return false;
+  }
+}
+
+// Navigation et popups de l'onglet immuable : même site que l'adresse des
+// réglages, sinon bloqué. Une popup du même site s'ouvre dans l'onglet.
+function verrouillerOngletFixe(contenu) {
+  contenu.on('will-navigate', (event, url) => {
+    if (ongletFixe.memeSite(url, urlOngletFixe)) return;
+    event.preventDefault();
+    log('onglet-fixe', 'info', 'sortie du site bloquée : ' + hostOf(url));
+  });
+  contenu.setWindowOpenHandler(({ url }) => {
+    if (ongletFixe.memeSite(url, urlOngletFixe)) {
+      contenu.loadURL(url).catch((e) => debug('onglet-fixe', 'chargement refusé : ' + (e && e.message)));
+    } else {
+      log('onglet-fixe', 'info', 'popup hors du site bloquée : ' + hostOf(url));
+    }
+    return { action: 'deny' };
+  });
+}
+
 ipc.handle('settings:load', async () => {
   try {
     const raw = await fsPromises.readFile(settingsPath, 'utf-8');
@@ -594,6 +638,7 @@ ipc.handle('settings:save', async (event, rawSettings) => {
   try {
     const normalized = normalizeSettings(rawSettings);
     await fsPromises.writeFile(settingsPath, JSON.stringify(normalized, null, 2), 'utf-8');
+    urlOngletFixe = ongletFixe.configuration(normalized).url;
     return { ok: true, settings: normalized };
   } catch (error) {
     console.error('Erreur sauvegarde réglages:', error);

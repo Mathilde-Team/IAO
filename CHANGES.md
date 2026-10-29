@@ -14,6 +14,21 @@
 
 ### Tests
 - `test/licence-distribution.test.js`.
+## Issue #338 — premier onglet fixe (27/10/2026)
+
+### Ajouté
+- Réglages : « Ouvrir un premier onglet fixe » et « Adresse du premier onglet » (https). Une adresse invalide est refusée avant enregistrement.
+- Onglet en tête de la barre, sans croix ni glisser-déposer ni menu contextuel ; un clic le ramène à l'adresse définie. Décocher le réglage le retire.
+- `lib/onglet-fixe.js` : partition `persist:onglet-fixe`, `memeSite()` (même hôte ou sous-domaine, https), `configuration()`, `libelle()`.
+- `main.js` : navigations et popups de cet onglet jugées par `memeSite()` ; sortie du site bloquée et journalisée, popup du même site chargée dans l'onglet.
+- Les identifiants partagés des réglages (#278) y sont proposés (preload posé sur chaque session).
+- Traductions en/de/es/it.
+
+### Tests
+- `test/onglet-fixe.test.js`, `test/main-window-security.test.js` (#338), `test/settings.test.js` ; harnais C9.4.
+
+### Limites
+- Redirections HTTP vers un autre site non bloquées (connexion par fournisseur tiers possible) ; Ctrl+Tab et Alt+1..9 ignorent l'onglet fixe.
 ## Issue #311 (relecture du 27/10/2026) — comptes dans `profils.json` (27/10/2026)
 
 ### Modifié
