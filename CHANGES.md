@@ -1,5 +1,14 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #316 — documentation des raccourcis clavier (29/10/2026)
+
+### Ajouté
+- `docs/raccourcis.md` : page « Raccourcis clavier » du guide utilisateur — palette `Ctrl+K` (ouverture, `Entrée`, `Échap`), onglets (`Ctrl+Tab` / `Ctrl+Maj+Tab` / `Alt+1..9`), `Ctrl+S` de l'éditeur, et le comportement des touches quand le focus est dans une page IA (webview).
+- `mkdocs.yml` : entrée « Raccourcis clavier » dans la navigation du guide utilisateur ; lien depuis la page d'accueil (`docs/index.md`).
+
+### Vérifié
+- `mkdocs build --strict` : la nouvelle page est construite, liens valides.
+
 ## Issue #335 — licence MIT et version des paquets (27/10/2026)
 
 ### Modifié
