@@ -1,5 +1,25 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #329 — sauvegarde complète de tout le dossier de données (29/10/2026)
+
+### Ajouté
+- Page Réglages, boutons « Sauvegarde complète » : la sauvegarde copie tout ce qui est utile dans le dossier de données (profils, secrets transportables, sessions Chromium, statistiques, capture HAR, historique — sauf les journaux) dans un fichier `iao-sauvegarde-<date>.zip`.
+- Les mots de passe de messagerie sont déchiffrés du trousseau puis rechiffrés avec le mot de passe de la sauvegarde (AES-256-GCM) : le fichier est restaurable sur une autre machine ou pour un autre utilisateur, même après une réinstallation.
+- La restauration remplace le contenu actuel du dossier de données puis propose de redémarrer IAO.
+
+### Modifié
+- Le mot de passe de la sauvegarde n'est jamais écrit en clair ni dans `iao.log` ; sans lui, la sauvegarde ne contient que des données de comptes sans mots de passe. Un mot de passe incorrect est refusé avant qu'aucun fichier ne soit écrasé.
+- L'écriture et la lecture du zip sont des fonctions pures sans dépendance npm (`lib/ecriture-zip.js`, `lib/sauvegarde-complete.js`), testées via `node --test` (invariants 7 et 11).
+
+### Vérifié
+- `node --test` : 1351 tests, les 9 échecs pré-existants du dev sont inchangés (dialogues de dossier et openZip, déjà documentés).
+- `scripts/i18n-update.sh --check` : catalogues synchronisés pour les 30 langues.
+
+### Tests
+- `test/ecriture-zip.test.js` : format zip conforme au lecteur existant (bloc local, répertoire central, offsets, DOS time/date), noms sûrs.
+- `test/sauvegarde-complete.test.js` : chemins retenus/exclus, secrets transportables scrypt+AES-256-GCM (mot de passe faux → null), round-trip.
+- `test/main-harness.test.js` : deux canaux IPC `sauvegarde-complete:creer` / `sauvegarde-complete:restaurer` dans la liste de référence.
+
 ## Issue #335 — licence MIT et version des paquets (27/10/2026)
 
 ### Modifié

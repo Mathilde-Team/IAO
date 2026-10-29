@@ -1537,6 +1537,7 @@
       if (e.key === 'Escape') {
         document.getElementById('paletteOverlay').classList.remove('open');
         document.getElementById('accountModal').classList.remove('open');
+        document.getElementById('sauvegardeModal').classList.remove('open');
         document.getElementById('deleteModal').classList.remove('open');
         document.getElementById('helpModal').classList.remove('open');
         closeImportConfirm(); // ferme + vide pendingImportContent (pas un simple classList.remove)
@@ -3230,6 +3231,70 @@
         showToast(_('Enregistrement impossible : {error}', { error: e && e.message }), 'error');
       }
     });
+
+    // --- Sauvegarde complète (issue #329) -----------------------------------
+    // Modal de mot de passe partagé création/restauration. Le mot de passe ne
+    // transite que par l'IPC : jamais dans iao.log, jamais en clair sur disque ;
+    // il chiffre les secrets du zip (AES-256-GCM, voir main.js).
+    let sauvegardeMode = 'creer';
+    function ouvrirSauvegardeModal(mode) {
+      sauvegardeMode = mode;
+      const creation = mode === 'creer';
+      document.getElementById('sauvegardeTitre').textContent = creation
+        ? _('Créer une sauvegarde complète')
+        : _('Restaurer une sauvegarde complète');
+      document.getElementById('sauvegardeConfirmeBloc').style.display = creation ? '' : 'none';
+      document.getElementById('sauvegardeAide').textContent = creation
+        ? _('Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le.')
+        : _('Celui choisi à la création de cette sauvegarde.');
+      document.getElementById('sauvegardeMdp').value = '';
+      document.getElementById('sauvegardeMdp2').value = '';
+      document.getElementById('sauvegardeModal').classList.add('open');
+      setTimeout(() => document.getElementById('sauvegardeMdp').focus(), 50);
+    }
+    function fermerSauvegardeModal() {
+      document.getElementById('sauvegardeModal').classList.remove('open');
+    }
+
+    async function validerSauvegarde() {
+      const mdp = document.getElementById('sauvegardeMdp').value;
+      if (!mdp) { showToast(_('Choisissez un mot de passe de sauvegarde'), 'error'); return; }
+      if (sauvegardeMode === 'creer' && mdp !== document.getElementById('sauvegardeMdp2').value) {
+        showToast(_('Les deux mots de passe ne correspondent pas'), 'error');
+        return;
+      }
+      fermerSauvegardeModal();
+      if (sauvegardeMode === 'creer') {
+        const res = await ipcRenderer.invoke('sauvegarde-complete:creer', mdp);
+        if (res.canceled) return;
+        if (res.error) {
+          showToast(_('Échec de la création de la sauvegarde'), 'error');
+          return;
+        }
+        showToast(_('Sauvegarde créée : {count} fichiers', { count: res.entrees }), 'success');
+        dbg('sauvegarde', 'créée : ' + res.filePath);
+      } else {
+        const res = await ipcRenderer.invoke('sauvegarde-complete:restaurer', mdp);
+        if (res.canceled) return;
+        if (res.error === 'mot_de_passe_faux') {
+          showToast(_('Mot de passe de la sauvegarde incorrect'), 'error');
+          return;
+        }
+        if (res.error) {
+          showToast(_('Échec de la restauration'), 'error');
+          return;
+        }
+        // Les données (dont les sessions Chromium) sont remplacées : seul un
+        // redémarrage les rouvre proprement.
+        showToast(_('Sauvegarde restaurée — IAO va redémarrer'), 'success');
+        setTimeout(() => window.iaoAPI.ipcInvoke('app:relaunch'), 900);
+      }
+    }
+
+    document.getElementById('sauvegardeCreer').addEventListener('click', function() { ouvrirSauvegardeModal('creer'); });
+    document.getElementById('sauvegardeRestaurer').addEventListener('click', function() { ouvrirSauvegardeModal('restaurer'); });
+    document.getElementById('sauvegardeAnnuler').addEventListener('click', fermerSauvegardeModal);
+    document.getElementById('sauvegardeValider').addEventListener('click', function() { validerSauvegarde(); });
 
     let loadedLanguage = 'auto';
     async function loadSettings() {

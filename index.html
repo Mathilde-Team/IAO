@@ -585,6 +585,17 @@
         <span class="settings-hint">Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter.</span>
       </div>
 
+      <!-- Sauvegarde complète (issue #329) : zip du dossier de données,
+           secrets rechiffrés au mot de passe de la sauvegarde. -->
+      <div>
+        <label class="settings-label">Sauvegarde complète</label>
+        <div class="identifiants-form">
+          <button type="button" id="sauvegardeCreer" class="btn">Créer une sauvegarde…</button>
+          <button type="button" id="sauvegardeRestaurer" class="btn">Restaurer une sauvegarde…</button>
+        </div>
+        <span class="settings-hint">Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer.</span>
+      </div>
+
       <!-- Identifiants des connecteurs, partagés entre profils (issue #278) -->
       <div>
         <label class="settings-label" for="identifiantsListe">Identifiants des connecteurs (partagés)</label>
@@ -603,6 +614,29 @@
     <div class="modal__actions">
       <button class="btn" data-action="ui-closeSettingsModal">Annuler</button>
       <button class="btn btn--primary-accent" data-action="ui-saveSettings">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal mot de passe de la sauvegarde complète (issue #329). Le mot de
+     passe n'est jamais écrit ; il chiffre les secrets du zip (AES-256-GCM). -->
+<div class="modal-overlay" id="sauvegardeModal">
+  <div class="modal modal--help">
+    <div class="modal__title" id="sauvegardeTitre">Sauvegarde complète</div>
+    <div class="settings-body">
+      <div>
+        <label class="settings-label" for="sauvegardeMdp">Mot de passe de la sauvegarde</label>
+        <input type="password" id="sauvegardeMdp" class="settings-input settings-input--wide" autocomplete="new-password">
+      </div>
+      <div id="sauvegardeConfirmeBloc">
+        <label class="settings-label" for="sauvegardeMdp2">Confirmer le mot de passe</label>
+        <input type="password" id="sauvegardeMdp2" class="settings-input settings-input--wide" autocomplete="new-password">
+      </div>
+      <span class="settings-hint" id="sauvegardeAide"></span>
+    </div>
+    <div class="modal__actions">
+      <button type="button" id="sauvegardeAnnuler" class="btn">Annuler</button>
+      <button type="button" id="sauvegardeValider" class="btn btn--primary">Valider</button>
     </div>
   </div>
 </div>

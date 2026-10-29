@@ -572,6 +572,28 @@ msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un 
 msgstr ""
 
 #: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "Șterge contul"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Créer une sauvegarde…"
+msgstr "Restaurează copia de rezervă"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde…"
+msgstr "Restaurează copia de rezervă"
+
+#: index.html
+msgid "Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr "Datele de autentificare ale conectorilor (partajate)"
 
@@ -590,6 +612,22 @@ msgstr "Parolă"
 #: index.html
 msgid "Chiffrés par le trousseau du système, partagés entre les profils — les cookies et le 2FA restent propres à chaque profil. Au focus d'un champ de connexion, un menu propose les identifiants du site."
 msgstr "Criptate de portcheiul sistemului și partajate între profiluri — cookie-urile și 2FA rămân proprii fiecărui profil. Când un câmp de autentificare primește focusul, un meniu propune datele de autentificare ale site-ului."
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "Parola e-mailului"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "Afișează parola"
+
+#: index.html
+msgid "Valider"
+msgstr ""
 
 #: assets/app.js
 msgid "L'assistant conversationnel d'Anthropic. Il excelle en rédaction, en analyse de longs documents, en programmation et dans les raisonnements qui demandent plusieurs étapes."
@@ -1652,6 +1690,60 @@ msgstr "Salvare imposibilă: gazdă, login sau parolă nevalide"
 #: assets/app.js
 msgid "Enregistrement impossible : {error}"
 msgstr "Salvare imposibilă: {error}"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Créer mon premier compte"
+msgid "Créer une sauvegarde complète"
+msgstr "Creează primul meu cont"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "Restaurează copia de rezervă"
+
+#: assets/app.js
+msgid "Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le."
+msgstr ""
+
+#: assets/app.js
+msgid "Celui choisi à la création de cette sauvegarde."
+msgstr ""
+
+#: assets/app.js
+msgid "Choisissez un mot de passe de sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe ne correspondent pas"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Erreur lors de la sauvegarde"
+msgid "Échec de la création de la sauvegarde"
+msgstr "Eroare la salvare"
+
+#: assets/app.js
+msgid "Sauvegarde créée : {count} fichiers"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect"
+msgstr "Parola e-mailului"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de la lecture du fichier"
+msgid "Échec de la restauration"
+msgstr "Citirea fișierului a eșuat"
+
+#: assets/app.js
+msgid "Sauvegarde restaurée — IAO va redémarrer"
+msgstr ""
 
 #: assets/app.js
 msgid "Impossible de charger les réglages"
