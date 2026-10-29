@@ -55,6 +55,7 @@ nav:
       - Installation: installation.md
       - Données et dépannage: donnees-et-depannage.md
       - Langue de l'interface: i18n.md
+      - Raccourcis clavier: raccourcis.md
   - Développement:
       - Structure, sécurité, contribuer: developpement.md
       - Contexte du projet: PROJECT_CONTEXT.md
