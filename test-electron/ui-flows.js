@@ -211,6 +211,10 @@ async function run() {
     ses.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_d, cb) => cb({ cancel: true }));
   };
   app.on('session-created', blockNetwork);
+  // Issue #328 : dossiers des sessions créées, pour vérifier que seules celles
+  // des onglets ouverts sont chargées.
+  const sessionsCreees = [];
+  app.on('session-created', (ses) => { sessionsCreees.push(ses.storagePath); });
 
   // Chargement de l'application RÉELLE
   require('../main.js');
@@ -2222,6 +2226,41 @@ async function run() {
     assert(apresRep.trim() === '', 'reponses.jsonl doit être vidé : ' + apresRep.length + ' caractères');
     const apresQuo = fs.readFileSync(fichierQuotas14, 'utf-8');
     assert(apresQuo.trim() === '', 'quotas.jsonl doit être vidé : ' + apresQuo.length + ' caractères');
+  });
+
+  // =========================================================================
+  // C15 — Mémoire : seules les sessions des onglets ouverts (issue #328)
+  // En fin de harnais : l'onglet ouvert ici ajoute une session aux
+  // statistiques, que C11 et C14 comptent.
+  // =========================================================================
+  console.log('\n--- C15 : sessions chargées à la demande ---');
+  await test('C15.1 ouvrir un onglet ne charge que la session de son compte (#328)', async () => {
+    // Onglet ouvert sur le DERNIER compte de la liste : avant #328, son compte
+    // était cherché en chargeant la session de chaque compte placé avant lui
+    // (session.fromPartition), onglet ouvert ou non. Une session déjà chargée
+    // le reste après fermeture de l'onglet (Electron) : on ne compte donc que
+    // les sessions créées par cette ouverture.
+    const avant = sessionsCreees.length;
+    const cible = await exec(`(() => {
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : comptes dans profils.json
+      const dernier = comptes[comptes.length - 1];
+      const bouton = document.querySelector('#accountsList [data-action="open-service"][data-acc="' + dernier.id + '"]');
+      bouton.click();
+      return { acc: dernier.id, svc: bouton.dataset.svc, profil: dernier.profile.toLowerCase(), rang: comptes.length };
+    })()`);
+    await sleep(1500); // <webview> attachée (did-attach-webview)
+    const { partitionDepuisStoragePath } = require('../scheduler/core');
+    const nouvelles = sessionsCreees.slice(avant).map(partitionDepuisStoragePath).filter((p) => p !== null);
+    await exec(`(() => {
+      const t = [...document.querySelectorAll('#tabsBar .tab')].find(x => x.dataset.acc === ${JSON.stringify(cible.acc)} && x.dataset.svc === ${JSON.stringify(cible.svc)});
+      if (t) closeTab(t.dataset.tab);
+      const oui = document.getElementById('confirmModalYes');
+      if (oui && oui.offsetParent !== null) oui.click();
+      return 'ok';
+    })()`);
+    assert(cible.rang >= 3, 'cas non significatif : ' + cible.rang + ' compte(s)');
+    const autres = nouvelles.filter((p) => p !== cible.profil);
+    assert(autres.length === 0, 'sessions d\'autres comptes chargées à l\'ouverture de « ' + cible.profil + ' » : ' + autres.join(', '));
   });
 
   // =========================================================================
