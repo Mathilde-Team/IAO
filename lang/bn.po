@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "সম্পাদকের আকার বদলাতে টানুন"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "চালুর সময় খোলা ট্যাব পুনরুদ্ধার করুন"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "চালুর সময় খোলা ট্যাব পুনরুদ্ধার করুন"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "কোনো ট্যাব খোলা নেই — অ্যাকাউন্টের তালিকা থেকে একটি পরিষেবা বেছে নিন"
 
@@ -544,6 +556,24 @@ msgstr "ওয়েবমেইলের ঠিকানা (Roundcube)"
 #: index.html
 msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
+
+#: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "ওয়েবমেইলের ঠিকানা (Roundcube)"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
 
 #: index.html
 msgid "Identifiants des connecteurs (partagés)"
@@ -1616,6 +1646,10 @@ msgstr "সংরক্ষণ সম্ভব নয়: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "সেটিংস লোড করা যায়নি"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr ""
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

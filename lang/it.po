@@ -134,6 +134,14 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Trascina per ridimensionare l'editor"
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Scorri le schede verso sinistra"
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Scorri le schede verso destra"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Nessuna scheda aperta — scegli un servizio dall'elenco degli account"
 
@@ -544,6 +552,22 @@ msgstr "Indirizzo della webmail (Roundcube)"
 #: index.html
 msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
+
+#: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr "Apri una prima scheda fissa"
+
+#: index.html
+msgid "Adresse du premier onglet"
+msgstr "Indirizzo della prima scheda"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr "Scheda che non si può chiudere né spostare; la navigazione resta su questo sito e un clic sulla scheda riporta a questo indirizzo. Le credenziali condivise qui sotto servono per accedere."
 
 #: index.html
 msgid "Identifiants des connecteurs (partagés)"
@@ -1616,6 +1640,10 @@ msgstr "Salvataggio impossibile: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Impossibile caricare le impostazioni"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr "Indirizzo della prima scheda non valido: è atteso un indirizzo https://"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

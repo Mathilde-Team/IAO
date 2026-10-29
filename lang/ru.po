@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Перетащите, чтобы изменить размер редактора"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Восстанавливать открытые вкладки при запуске"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Восстанавливать открытые вкладки при запуске"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Нет открытых вкладок — выберите сервис в списке аккаунтов"
 
@@ -544,6 +556,24 @@ msgstr "Адрес веб-почты (Roundcube)"
 #: index.html
 msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
+
+#: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "Адрес веб-почты (Roundcube)"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
 
 #: index.html
 msgid "Identifiants des connecteurs (partagés)"
@@ -1630,6 +1660,10 @@ msgstr "Сохранение невозможно: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Не удалось загрузить настройки"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr ""
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

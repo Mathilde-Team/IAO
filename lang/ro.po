@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Trageți pentru a redimensiona editorul"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Restaurează filele deschise la pornire"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Restaurează filele deschise la pornire"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Nicio filă deschisă — alegeți un serviciu din lista de conturi"
 
@@ -544,6 +556,24 @@ msgstr "Adresa webmailului (Roundcube)"
 #: index.html
 msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
+
+#: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "Adresa webmailului (Roundcube)"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
 
 #: index.html
 msgid "Identifiants des connecteurs (partagés)"
@@ -1630,6 +1660,10 @@ msgstr "Salvare imposibilă: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Setările nu pot fi încărcate"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr ""
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

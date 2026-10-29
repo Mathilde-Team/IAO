@@ -134,6 +134,14 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
   quand le bureau change. `resolveTheme()` pure dans `lib/settings.js`. Les réglages déjà
   enregistrés (`iao`, `light`, `dark`) sont conservés. Tests : `test/theme-system.test.js`.
 
+- **Premier onglet fixe (issue #338, 27/10/2026)**
+  Réglages `ongletFixeActif` / `ongletFixeUrl` (https seulement, `lib/settings.js`). L'onglet,
+  hors de `tabs[]`, est rendu en tête de la barre sans croix ni glisser-déposer ; un clic le
+  ramène à l'adresse. `lib/onglet-fixe.js` (`memeSite`) juge chaque `will-navigate` et
+  chaque popup dans `main.js` : autre site -> bloqué et journalisé, popup du même site ->
+  chargée dans l'onglet. Session `persist:onglet-fixe`, identifiants partagés (#278).
+  Tests : `test/onglet-fixe.test.js`, `test/main-window-security.test.js`, harnais C9.4.
+
 - **Webmail connecté au compte (issue #310, 26/10/2026)**
   `lib/webmail-connexion.js` : l'enveloppe ouvre l'URL des réglages dans une fenêtre sans
   privilèges (sandbox, contextIsolation, partition `persist:<profil>` du compte, une fenêtre

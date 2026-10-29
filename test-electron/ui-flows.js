@@ -1083,6 +1083,178 @@ async function run() {
   const dansDeuxJoursISO = () => new Date(Date.now() + 2 * 86400000).toISOString();
 
 
+  await test('C9.4 Premier onglet fixe : réglage, en tête, ni fermeture ni déplacement, retour à l\'adresse, retrait (#338)', async () => {
+    const r = await exec(`(async () => {
+      const pause = (ms) => new Promise(r => setTimeout(r, ms));
+      const toasts = () => [...document.querySelectorAll('#toastContainer .toast')].map(t => t.textContent.trim()).join(' | ');
+      openSettingsModal();
+      await pause(200);
+      // http:// refusé : message, rien d'enregistré, pas d'onglet.
+      document.getElementById('settingsOngletFixeActif').checked = true;
+      document.getElementById('settingsOngletFixeUrl').value = 'http://127.0.0.1:9/';
+      await saveSettings();
+      const refus = toasts();
+      const ongletApresRefus = document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null;
+      const modaleOuverte = document.getElementById('settingsModal').classList.contains('open');
+      document.getElementById('settingsOngletFixeUrl').value = 'https://127.0.0.1:9/accueil';
+      await saveSettings();
+      await pause(300);
+      const bar = document.getElementById('tabsBar');
+      const fixe = bar.querySelector('[data-tab="tab_fixe"]');
+      const wv = document.querySelector('#tab_fixe webview');
+      const etat = {
+        refus, ongletApresRefus, modaleOuverte,
+        premier: bar.querySelector('.tab') ? bar.querySelector('.tab').getAttribute('data-tab') : null,
+        libelle: fixe ? fixe.querySelector('.tab__label').textContent.trim() : null,
+        fermeture: fixe ? fixe.querySelector('.tab__close') !== null : null,
+        deplacable: fixe ? fixe.getAttribute('draggable') : null,
+        partition: wv ? wv.getAttribute('partition') : null,
+        src: wv ? wv.getAttribute('src') : null
+      };
+      // Fermeture impossible, menu contextuel absent.
+      closeTab('tab_fixe');
+      fixe.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 5, clientY: 5 }));
+      etat.toujoursLa = document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null;
+      etat.menu = document.querySelector('.ctx-menu') !== null;
+      // Clic : l'onglet passe au premier plan.
+      document.querySelector('#tabsBar [data-tab="tab_fixe"]').click();
+      await pause(100);
+      etat.actif = document.getElementById('tab_fixe').classList.contains('active');
+      etat.barreActive = document.querySelector('#tabsBar [data-tab="tab_fixe"]').classList.contains('active');
+      return etat;
+    })()`);
+    assert(/https:\/\//.test(r.refus), 'message d\'adresse invalide attendu : ' + r.refus);
+    assert(!r.ongletApresRefus && r.modaleOuverte, 'adresse invalide : ni onglet ni fermeture des réglages');
+    assert(r.premier === 'tab_fixe', 'onglet fixe en tête attendu : ' + r.premier);
+    assert(r.libelle === '127.0.0.1', 'libellé : ' + r.libelle);
+    assert(r.fermeture === false && r.deplacable === 'false', 'ni croix ni glisser attendus');
+    assert(r.partition === 'persist:onglet-fixe' && r.src === 'https://127.0.0.1:9/accueil', 'webview : ' + r.partition + ' ' + r.src);
+    assert(r.toujoursLa && !r.menu, 'onglet fermé ou menu contextuel affiché');
+    assert(r.actif && r.barreActive, 'onglet fixe non activé au clic');
+    const enregistres = await ipc('settings:load');
+    assert(enregistres.ongletFixeActif === true && enregistres.ongletFixeUrl === 'https://127.0.0.1:9/accueil',
+      'réglages enregistrés : ' + JSON.stringify([enregistres.ongletFixeActif, enregistres.ongletFixeUrl]));
+    // Décoché : l'onglet disparaît.
+    const retrait = await exec(`(async () => {
+      openSettingsModal();
+      await new Promise(r => setTimeout(r, 200));
+      document.getElementById('settingsOngletFixeActif').checked = false;
+      await saveSettings();
+      return { onglet: document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null, panneau: document.getElementById('tab_fixe') !== null };
+    })()`);
+    assert(!retrait.onglet && !retrait.panneau, 'onglet fixe toujours présent après décochage');
+  });
+  await test('C9.5 Barre d\'onglets pleine : flèches de défilement, onglet fixe immuable (#339)', async () => {
+    // Onglet fixe réactivé + 4 onglets de comptes ; la zone est rétrécie
+    // artificiellement (style) pour déborder sans ouvrir une multitude de
+    // webviews (mémoire du harnais, cf. commentaire /dev/shm plus haut).
+    // Tout est remis en place dans le finally : styles, réglages, onglets.
+    const r = await exec(`(async () => {
+      const pause = (ms) => new Promise(r => setTimeout(r, ms));
+      const zone = document.getElementById('tabsScrollZone');
+      const flecheG = document.getElementById('tabsArrowLeft');
+      const flecheD = document.getElementById('tabsArrowRight');
+      const res = {};
+      try {
+        openSettingsModal();
+        await pause(200);
+        document.getElementById('settingsOngletFixeActif').checked = true;
+        document.getElementById('settingsOngletFixeUrl').value = 'https://127.0.0.1:9/accueil';
+        await saveSettings();
+        await pause(200);
+        const svcOuvres = ['claude', 'chatgpt', 'gemini', 'zeta'];
+        for (const svc of svcOuvres) {
+          openService('acc_test_1', svc);
+          await pause(100);
+        }
+        // État initial : zone large, rien ne déborde, paire masquée.
+        res.avant = {
+          onglets: document.querySelectorAll('#tabsScrollZone .tab').length,
+          fixe: document.querySelector('#tabsBarFixe .tab') !== null,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden
+        };
+        // Zone rétrécie : débordement réel, paire affichée (layout stable),
+        // flèche gauche désactivée au début, flèche droite active.
+        zone.style.flex = 'none';
+        zone.style.width = '260px';
+        window.dispatchEvent(new Event('resize'));
+        await pause(150);
+        const rectFixeAvant = document.querySelector('#tabsBarFixe .tab').getBoundingClientRect();
+        res.debordement = {
+          deborde: zone.scrollWidth > zone.clientWidth,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden,
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled
+        };
+        // Défilement vers la droite : scrollLeft bouge, flèche gauche s'active,
+        // l'onglet fixe ne bouge pas (épinglé hors de la zone défilante) et
+        // reste actif s'il l'était (il ne participe pas au défilement).
+        document.querySelector('#tabsBarFixe .tab').click();
+        await pause(100);
+        res.fixeActifAvant = document.querySelector('#tabsBarFixe .tab').classList.contains('active');
+        flecheD.click();
+        await pause(700);
+        res.apresDroite = {
+          scrollLeft: Math.round(zone.scrollLeft),
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled,
+          fixeBouge: Math.abs(document.querySelector('#tabsBarFixe .tab').getBoundingClientRect().left - rectFixeAvant.left) > 1,
+          fixeActif: document.querySelector('#tabsBarFixe .tab').classList.contains('active')
+        };
+        // Retour vers la gauche : flèche gauche se désactive, flèche droite reste.
+        flecheG.click();
+        await pause(700);
+        res.apresGauche = {
+          scrollLeft: Math.round(zone.scrollLeft),
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled
+        };
+        // Onglet actif amené dans la zone visible par activateTab.
+        document.querySelector('#tabsScrollZone .tab[data-svc="zeta"]').click();
+        await pause(700);
+        const t = document.querySelector('#tabsScrollZone .tab[data-svc="zeta"]');
+        const zr = zone.getBoundingClientRect();
+        const tr = t.getBoundingClientRect();
+        res.actifVisible = tr.left >= zr.left - 1 && tr.right <= zr.right + 1;
+      } finally {
+        // Remise en état : zone, réglages, onglets ouverts.
+        zone.style.flex = '';
+        zone.style.width = '';
+        window.dispatchEvent(new Event('resize'));
+        await pause(200);
+        res.restaure = {
+          deborde: zone.scrollWidth > zone.clientWidth,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden
+        };
+        openSettingsModal();
+        await pause(200);
+        document.getElementById('settingsOngletFixeActif').checked = false;
+        await saveSettings();
+        for (const svc of ['zeta', 'gemini', 'chatgpt', 'claude']) {
+          const t = document.querySelector('#tabsScrollZone .tab[data-svc="' + svc + '"]');
+          if (t) closeTab(t.getAttribute('data-tab'));
+        }
+      }
+      return res;
+    })()`);
+    assert(r.avant.onglets === 4, '4 onglets de comptes attendus : ' + r.avant.onglets);
+    assert(r.avant.fixe, 'onglet fixe épinglé attendu dans #tabsBarFixe');
+    assert(r.avant.gauchesCachees && r.avant.droitesCachees, 'zone large : flèches masquées');
+    assert(r.debordement.deborde, 'zone rétrécie : elle doit déborder');
+    assert(!r.debordement.gauchesCachees && !r.debordement.droitesCachees,
+      'débordement : la paire de flèches doit être affichée');
+    assert(r.debordement.gaucheDesactive && !r.debordement.droiteDesactive,
+      'au début : flèche gauche désactivée, flèche droite active');
+    assert(r.fixeActifAvant, 'onglet fixe activé au clic');
+    assert(r.apresDroite.scrollLeft > 0, 'clic flèche droite : défilement attendu, scrollLeft=' + r.apresDroite.scrollLeft);
+    assert(!r.apresDroite.gaucheDesactive && !r.apresDroite.droiteDesactive,
+      'après défilement : flèche gauche active');
+    assert(!r.apresDroite.fixeBouge, 'l\'onglet fixe ne doit pas défiler');
+    assert(r.apresDroite.fixeActif, 'l\'onglet fixe actif doit le rester pendant le défilement');
+    assert(r.apresGauche.scrollLeft === 0 && r.apresGauche.gaucheDesactive && !r.apresGauche.droiteDesactive,
+      'retour au début : ' + JSON.stringify(r.apresGauche));
+    assert(r.actifVisible, 'l\'onglet activé doit être ramené dans la zone visible');
+    assert(!r.restaure.deborde && r.restaure.gauchesCachees && r.restaure.droitesCachees,
+      'zone restaurée : plus de flèches : ' + JSON.stringify(r.restaure));
+  });
+
   await test('C10.1 modale ordonnanceur : interface des tâches visible, liste vide', async () => {
     await exec('window.openSchedulerModal()');
     await sleep(800);

@@ -92,8 +92,13 @@ function capture(fn) {
 // Charge main.js, exécute app.whenReady() (=> createWindow) et renvoie le
 // contexte. `debug` positionne IAO_DEBUG=1 le temps du chargement (DEBUG est lu
 // une seule fois, à l'évaluation de main.js).
-function boot({ debug = false } = {}) {
+function boot({ debug = false, reglages = null } = {}) {
   const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-main-window-'));
+  if (reglages) {
+    // settings.json présent AVANT le chargement de main.js (lu au démarrage).
+    fs.mkdirSync(path.join(appDataDir, 'ai-manager'), { recursive: true });
+    fs.writeFileSync(path.join(appDataDir, 'ai-manager', 'settings.json'), JSON.stringify(reglages));
+  }
   const electron = createElectronMock(appDataDir);
   const originalLoad = Module._load;
   const savedDebug = process.env.IAO_DEBUG;
@@ -549,6 +554,72 @@ test('#187 : app:log-path renvoie le chemin du journal', async () => {
   try {
     const p = await h.electron.ipcHandlers.get('app:log-path')({});
     assert.equal(p, path.join(h.electron.app.getPath('userData'), 'logs', 'iao.log'));
+  } finally {
+    h.cleanup();
+  }
+});
+
+// --- Issue #338 : premier onglet immuable, verrouillé sur son site ---
+
+function evenement() {
+  return { bloque: false, preventDefault() { this.bloque = true; } };
+}
+
+test('#338 : l\'onglet fixe reste sur le site des réglages (navigation et popups)', () => {
+  const h = boot({ reglages: { ongletFixeActif: true, ongletFixeUrl: 'https://github.com/Mathilde-Team' } });
+  try {
+    const charges = [];
+    const guest = h.attachGuest({
+      getURL: () => 'https://github.com/Mathilde-Team',
+      session: h.electron.session.fromPartition('persist:onglet-fixe'),
+      loadURL: (u) => { charges.push(u); return Promise.resolve(); }
+    });
+    const dedans = evenement();
+    guest.emit('will-navigate', dedans, 'https://github.com/Mathilde-Team/IAO/issues');
+    assert.equal(dedans.bloque, false, 'navigation sur le site autorisée');
+    const dehors = evenement();
+    guest.emit('will-navigate', dehors, 'https://example.com/');
+    assert.equal(dehors.bloque, true, 'sortie du site bloquée');
+    assert.match(h.readLog(), /sortie du site bloquée : example\.com/);
+    // Popup du même site : chargée dans l'onglet ; autre site : refusée.
+    assert.deepEqual(guest.openHandler({ url: 'https://github.com/login' }), { action: 'deny' });
+    assert.deepEqual(charges, ['https://github.com/login']);
+    assert.deepEqual(guest.openHandler({ url: 'https://evil.fr/' }), { action: 'deny' });
+    assert.deepEqual(charges, ['https://github.com/login']);
+    assert.match(h.readLog(), /popup hors du site bloquée : evil\.fr/);
+  } finally {
+    h.cleanup();
+  }
+});
+
+test('#338 : chargement refusé journalisé ; réglage enregistré relu ; autre onglet non verrouillé', async () => {
+  const h = boot();
+  try {
+    // Sans réglage : l'adresse est vide, toute navigation de l'onglet fixe est bloquée.
+    const guest = h.attachGuest({
+      session: h.electron.session.fromPartition('persist:onglet-fixe'),
+      loadURL: () => Promise.reject(new Error('annulé'))
+    });
+    const ev = evenement();
+    guest.emit('will-navigate', ev, 'https://github.com/');
+    assert.equal(ev.bloque, true);
+    // Enregistrement des réglages : l'adresse est prise en compte aussitôt.
+    const r = await h.electron.ipcHandlers.get('settings:save')({ sender: h.wc },
+      { ongletFixeActif: true, ongletFixeUrl: 'https://github.com/' });
+    assert.equal(r.ok, true);
+    const ev2 = evenement();
+    guest.emit('will-navigate', ev2, 'https://github.com/x');
+    assert.equal(ev2.bloque, false);
+    assert.deepEqual(guest.openHandler({ url: 'https://github.com/y' }), { action: 'deny' });
+    await new Promise((resolve) => setImmediate(resolve));
+    // Session illisible (webview détruite) : traitée comme un onglet ordinaire.
+    const ordinaire = Object.assign(new EventEmitter(), {
+      setWindowOpenHandler(fn) { this.openHandler = fn; },
+      getURL: () => 'https://claude.ai/'
+    });
+    Object.defineProperty(ordinaire, 'session', { get() { throw new Error('détruite'); } });
+    h.wc.emit('did-attach-webview', {}, ordinaire);
+    assert.deepEqual(ordinaire.openHandler({ url: 'https://example.com/' }), { action: 'allow' });
   } finally {
     h.cleanup();
   }

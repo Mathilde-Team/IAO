@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Dra för att ändra redigerarens storlek"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Återställ öppna flikar vid start"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Återställ öppna flikar vid start"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Ingen flik öppen — välj en tjänst i kontolistan"
 
@@ -544,6 +556,24 @@ msgstr "Webbmejlens adress (Roundcube)"
 #: index.html
 msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
+
+#: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "Webbmejlens adress (Roundcube)"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
 
 #: index.html
 msgid "Identifiants des connecteurs (partagés)"
@@ -1616,6 +1646,10 @@ msgstr "Det går inte att spara: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Kan inte läsa in inställningarna"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr ""
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

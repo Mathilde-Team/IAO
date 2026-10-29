@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "برای تغییر اندازهٔ ویرایشگر بکشید"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "بازیابی زبانه‌های باز هنگام راه‌اندازی"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "بازیابی زبانه‌های باز هنگام راه‌اندازی"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "هیچ زبانه‌ای باز نیست — یک سرویس را از فهرست حساب‌ها انتخاب کنید"
 
@@ -544,6 +556,24 @@ msgstr "نشانی ایمیل وب (Roundcube)"
 #: index.html
 msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
+
+#: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "نشانی ایمیل وب (Roundcube)"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
 
 #: index.html
 msgid "Identifiants des connecteurs (partagés)"
@@ -1616,6 +1646,10 @@ msgstr "ذخیره ممکن نیست: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "بارگذاری تنظیمات ممکن نیست"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr ""
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

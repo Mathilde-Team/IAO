@@ -1037,15 +1037,103 @@
       }, M.INTERVALLE_LECTURE_MS);
     }
 
+    // Issue #338 : premier onglet immuable, hors de tabs[] (ni fermeture, ni
+    // déplacement, ni étoile, ni statistiques de compte). Session propre
+    // (persist:onglet-fixe) ; main.js bloque toute sortie du site.
+    const OF = window.iaoOngletFixe;
+    let ongletFixe = null; // { url, paneEl, webview }
+
+    function htmlOngletFixe() {
+      if (!ongletFixe) return '';
+      const cls = 'tab tab--fixe' + (activeTabId === OF.ID_ONGLET ? ' active' : '');
+      return `
+          <div class="${cls}" draggable="false" data-action="activate-tab" data-tab="${OF.ID_ONGLET}" title="${escapeHtml(ongletFixe.url)}">
+            <span class="ic" data-icon="house"></span>
+            <span class="tab__text">
+              <span class="tab__label">${escapeHtml(OF.libelle(ongletFixe.url))}</span>
+            </span>
+          </div>
+        `;
+    }
+
+    function chargerOngletFixe(url) {
+      try {
+        ongletFixe.webview.loadURL(url).catch((e) => dbg('onglets', 'onglet fixe : chargement refusé', e && e.message));
+      } catch (e) {
+        // webview pas encore prête (avant dom-ready) : l'attribut suffit.
+        dbg('onglets', 'onglet fixe : chargement par attribut', e && e.message);
+        ongletFixe.webview.setAttribute('src', url);
+      }
+    }
+
+    // Crée, met à jour ou retire l'onglet selon les réglages.
+    function appliquerOngletFixe(reglages) {
+      const conf = OF.configuration(reglages);
+      if (!conf.actif) {
+        if (!ongletFixe) return;
+        ongletFixe.paneEl.remove();
+        ongletFixe = null;
+        dbg('onglets', 'onglet fixe retiré');
+        if (activeTabId === OF.ID_ONGLET) activateTab(tabs.length ? tabs[0].id : null);
+        else renderTabsBar();
+        return;
+      }
+      if (ongletFixe) {
+        if (ongletFixe.url !== conf.url) {
+          ongletFixe.url = conf.url;
+          chargerOngletFixe(conf.url);
+          dbg('onglets', 'onglet fixe : nouvelle adresse', OF.libelle(conf.url));
+        }
+        renderTabsBar();
+        return;
+      }
+      const pane = document.createElement('div');
+      pane.className = 'tab-pane';
+      pane.id = OF.ID_ONGLET;
+      const webview = document.createElement('webview');
+      webview.setAttribute('partition', OF.PARTITION);
+      webview.setAttribute('src', conf.url);
+      webview.setAttribute('allowpopups', ''); // popups jugées par main.js (même site -> dans l'onglet)
+      webview.style.width = '100%';
+      webview.style.height = '100%';
+      webview.addEventListener('did-fail-load', (ev) => {
+        if (ev.isMainFrame) dbg('onglets', 'onglet fixe : échec de chargement', ev.errorCode, ev.errorDescription);
+      });
+      pane.appendChild(webview);
+      document.getElementById('tabsContent').appendChild(pane);
+      ongletFixe = { url: conf.url, paneEl: pane, webview };
+      dbg('onglets', 'onglet fixe ouvert', OF.libelle(conf.url));
+      if (!activeTabId) activateTab(OF.ID_ONGLET);
+      else renderTabsBar();
+    }
+
+    // Clic sur l'onglet : l'affiche et revient à l'adresse définie.
+    function revenirOngletFixe() {
+      activateTab(OF.ID_ONGLET);
+      let actuelle = '';
+      try {
+        actuelle = ongletFixe.webview.getURL();
+      } catch (e) {
+        dbg('onglets', 'onglet fixe : adresse courante illisible', e && e.message);
+      }
+      if (actuelle !== ongletFixe.url) chargerOngletFixe(ongletFixe.url);
+    }
+
     // Réaffiche la barre d'onglets à partir de tabs[] (source de vérité unique).
     // Délégation d'événements (chantier A) : aucun onclick avec donnée interpolée.
     // Issue #324 : logo du service + nom du compte (service en infobulle) ;
     // reflet visuel « inactif
     // depuis 5 min » via isTabIdle(t.lastFocusAt) (lib/activity-status.js).
     function renderTabsBar() {
-      const bar = document.getElementById('tabsBar');
+      // Issue #339 : l'onglet fixe est épinglé dans #tabsBarFixe (hors de la
+      // zone défilante : il ne bouge jamais au défilement), les onglets de
+      // comptes vivent dans la zone défilante #tabsScrollZone.
+      const conteneurFixe = document.getElementById('tabsBarFixe');
+      const zone = document.getElementById('tabsScrollZone');
       const now = Date.now();
-      bar.innerHTML = tabs.map(t => {
+      conteneurFixe.innerHTML = htmlOngletFixe();
+      conteneurFixe.hidden = !ongletFixe;
+      zone.innerHTML = tabs.map(t => {
         const acc = accounts.find(a => a.id === t.accId);
         const svc = SERVICES.find(s => s.id === t.svcId);
         if (!acc || !svc) return '';
@@ -1065,7 +1153,31 @@
           </div>
         `;
       }).join('');
-      hydrateIcons(bar);
+      hydrateIcons(conteneurFixe);
+      hydrateIcons(zone);
+      majDefilementOnglets();
+    }
+
+    // Issue #339 : affiche ou masque les flèches de défilement selon le
+    // débordement de la zone. Helpers purs dans lib/defilement-onglets.js ;
+    // appelée après chaque rendu, au défilement (écouteur passif ci-dessous)
+    // et au redimensionnement de la fenêtre.
+    const DO = window.iaoDefilementOnglets;
+    function majDefilementOnglets() {
+      const zone = document.getElementById('tabsScrollZone');
+      const flecheGauche = document.getElementById('tabsArrowLeft');
+      const flecheDroite = document.getElementById('tabsArrowRight');
+      if (!zone || !flecheGauche || !flecheDroite) return;
+      const rtl = getComputedStyle(zone).direction === 'rtl';
+      const etat = DO.etatDefilement(zone.scrollLeft, zone.scrollWidth, zone.clientWidth, rtl);
+      // La paire de flèches est affichée ensemble dès que la zone déborde
+      // (layout stable : la zone garde la même largeur) ; chaque flèche est
+      // désactivée à son extrême. En RTL le contenu commence à droite : la
+      // flèche gauche mène vers la fin (apres), la droite vers le début.
+      flecheGauche.hidden = !etat.debordant;
+      flecheDroite.hidden = !etat.debordant;
+      flecheGauche.disabled = !(rtl ? etat.apres : etat.avant);
+      flecheDroite.disabled = !(rtl ? etat.avant : etat.apres);
     }
 
     // Affiche l'onglet demandé (et masque les autres) ; les webviews inactives
@@ -1083,6 +1195,11 @@
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
       document.getElementById('tabsEmpty').style.display = tabId ? 'none' : 'flex';
       renderTabsBar();
+      // Issue #339 : barre pleine — l'onglet activé (clic, ouverture de
+      // compte, fermeture du voisin) est amené dans la partie visible de la
+      // zone défilante. L'onglet fixe, épinglé hors de la zone, n'y passe pas.
+      const actif = document.querySelector('#tabsScrollZone .tab.active');
+      if (actif) actif.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
     }
 
     // Ferme un onglet : détruit sa <webview> (le process invité Chromium est
@@ -1119,7 +1236,7 @@
 
       if (activeTabId === tabId) {
         const next = tabs[idx] || tabs[idx - 1] || null;
-        activateTab(next ? next.id : null);
+        activateTab(next ? next.id : (ongletFixe ? OF.ID_ONGLET : null)); // #338
       } else {
         renderTabsBar();
       }
@@ -1133,10 +1250,39 @@
     document.getElementById('tabsBar').addEventListener('click', (e) => {
       const el = e.target.closest('[data-action]');
       if (!el) return;
+      // Issue #339 : flèche de défilement de la zone d'onglets. data-dir
+      // vaut -1 (gauche) ou 1 (droite) — jamais une donnée utilisateur.
+      if (el.getAttribute('data-action') === 'tabs-scroll') {
+        defilerZoneOnglets(Number(el.getAttribute('data-dir')) || 1);
+        return;
+      }
       const tabId = el.getAttribute('data-tab');
       if (el.getAttribute('data-action') === 'close-tab') closeTab(tabId);
+      else if (ongletFixe && tabId === OF.ID_ONGLET) revenirOngletFixe(); // #338
       else activateTab(tabId);
     });
+
+    // Issue #339 : défilement d'un clic sur une flèche (lissé ; l'état des
+    // flèches est rafraîchi par l'événement scroll ci-dessous) et écouteurs
+    // qui rafraîchissent les flèches pendant le défilement et au
+    // redimensionnement de la fenêtre.
+    function defilerZoneOnglets(direction) {
+      const zone = document.getElementById('tabsScrollZone');
+      if (!zone) return;
+      // Direction physique (-1 vers la gauche, +1 vers la droite), identique
+      // en LTR et RTL : Chromium y rend scrollLeft négatif vers la fin du
+      // contenu, scrollBy(-pas) décale la zone vers la gauche dans les deux cas.
+      zone.scrollBy({ left: direction * DO.pasDefilement(zone.clientWidth), behavior: 'smooth' });
+    }
+    document.getElementById('tabsScrollZone').addEventListener('scroll', () => majDefilementOnglets(), { passive: true });
+    // La largeur de la zone change aussi par les séparateurs de l'explorateur
+    // et de l'éditeur (et par la fenêtre) : ResizeObserver couvre tous les cas,
+    // le repli sur « resize » reste pour un Chromium sans ResizeObserver.
+    if (typeof ResizeObserver === 'function') {
+      new ResizeObserver(() => majDefilementOnglets()).observe(document.getElementById('tabsScrollZone'));
+    } else {
+      window.addEventListener('resize', () => majDefilementOnglets());
+    }
 
     // Issue #154 : Menu contextuel (clic droit) sur les onglets.
     // Permet d'étoiler / désétoiler un onglet pour le mettre en valeur.
@@ -3171,6 +3317,9 @@
         document.getElementById('settingsMailPrefix').value = settings.mailPrefix || '';
         document.getElementById('settingsMailDomain').value = settings.mailDomain || '';
         document.getElementById('settingsWebmailUrl').value = settings.webmailUrl || '';
+        document.getElementById('settingsOngletFixeActif').checked = settings.ongletFixeActif === true;
+        document.getElementById('settingsOngletFixeUrl').value = settings.ongletFixeUrl || '';
+        appliquerOngletFixe(settings); // issue #338
         loadedLanguage = settings.language || 'auto';
         const langSelect = document.getElementById('settingsLanguage');
         if (langSelect && langSelect.querySelector('option[value="' + loadedLanguage + '"]')) langSelect.value = loadedLanguage;
@@ -3193,13 +3342,21 @@
         language: (document.getElementById('settingsLanguage') || { value: loadedLanguage }).value,
         mailPrefix: document.getElementById('settingsMailPrefix').value,
         mailDomain: document.getElementById('settingsMailDomain').value,
-        webmailUrl: document.getElementById('settingsWebmailUrl').value
+        webmailUrl: document.getElementById('settingsWebmailUrl').value,
+        ongletFixeActif: document.getElementById('settingsOngletFixeActif').checked,
+        ongletFixeUrl: document.getElementById('settingsOngletFixeUrl').value
       };
+      // Issue #338 : onglet fixe coché sans adresse https valide -> rien n'est enregistré.
+      if (raw.ongletFixeActif && !window.normalizeOngletFixeUrl(raw.ongletFixeUrl)) {
+        showToast(_('Adresse du premier onglet invalide : une adresse https:// est attendue'), 'error');
+        return;
+      }
       try {
         var result = await ipcRenderer.invoke('settings:save', raw);
         if (result && result.ok) {
           applySettings(result.settings);
           renderAccounts(); // bouton webmail selon le réglage (issue #201)
+          appliquerOngletFixe(result.settings); // issue #338
           const languageChanged = result.settings.language !== loadedLanguage;
           loadedLanguage = result.settings.language;
           showToast(languageChanged

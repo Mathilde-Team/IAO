@@ -1,5 +1,60 @@
+## Issue #339 — flèches de défilement de la barre d'onglets (29/10/2026)
+
+### Ajouté
+- Quand la barre d'onglets déborde, des flèches gauche et droite encadrent la
+  zone défilante et font défiler les onglets (défilement lissé, ~80 % de la
+  zone visible par clic). Masquées quand la barre tient, désactivées à
+  l'extrême atteint (la paire reste affichée : la géométrie ne bouge pas).
+  Directions valables en LTR comme en RTL (contenu miroir).
+- L'onglet fixe (#338) est épinglé hors de la zone défilante (`#tabsBarFixe`) :
+  il ne défile jamais et reste visible. `lib/defilement-onglets.js` (pur) :
+  état des flèches (LTR et RTL via position normalisée, tolérance aux arrondis
+  sous-pixel) et pas de défilement.
+- L'onglet activé (clic, ouverture, fermeture d'un voisin) est amené dans la
+  partie visible de la zone ; la barre fine de défilement est retirée.
+- L'état des flèches suit les redimensionnements de la zone (fenêtre,
+  séparateurs de l'explorateur et de l'éditeur) via ResizeObserver.
+
+### Modifié
+- `index.html`/`assets/app.css` : la barre devient un conteneur (onglet fixe
+  épinglé, flèches, zone défilante `#tabsScrollZone`).
+
+### Tests
+- `test/defilement-onglets.test.js` ; harnais Electron : C9.5 (débordement,
+  défilement par flèches, onglet fixe immobile, onglet actif ramené, retour à
+  l'état).
+
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #335 — licence MIT et version des paquets (27/10/2026)
+
+### Modifié
+- `package.json` et `package-lock.json` : licence `ISC` → `MIT`, comme le fichier `LICENSE` (copyright X'o-noth).
+- `dist:win` et `dist:linux` ne codent plus `--app-version=1.0.0` : electron-packager prend la version de `package.json`.
+- Les paquets gardent `ThirdPartyNotices.txt` de Monaco (exclu jusqu'ici) et `docs/THIRD-PARTY-NOTICES.md` (le reste de `docs/` reste exclu), pour electron-packager et electron-builder.
+- `docs/THIRD-PARTY-NOTICES.md` : liste des notices embarquées.
+
+### Vérifié
+- `npm run dist:linux` et `electron-builder --linux dir` : licence MIT et version 1.0.0 dans le `package.json` embarqué, `LICENSE`, `docs/THIRD-PARTY-NOTICES.md`, notices Electron/Chromium et Monaco présentes.
+- README et `installer/` : README dit MIT, l'installeur ne mentionne pas de licence.
+
+### Tests
+- `test/licence-distribution.test.js`.
+## Issue #338 — premier onglet fixe (27/10/2026)
+
+### Ajouté
+- Réglages : « Ouvrir un premier onglet fixe » et « Adresse du premier onglet » (https). Une adresse invalide est refusée avant enregistrement.
+- Onglet en tête de la barre, sans croix ni glisser-déposer ni menu contextuel ; un clic le ramène à l'adresse définie. Décocher le réglage le retire.
+- `lib/onglet-fixe.js` : partition `persist:onglet-fixe`, `memeSite()` (même hôte ou sous-domaine, https), `configuration()`, `libelle()`.
+- `main.js` : navigations et popups de cet onglet jugées par `memeSite()` ; sortie du site bloquée et journalisée, popup du même site chargée dans l'onglet.
+- Les identifiants partagés des réglages (#278) y sont proposés (preload posé sur chaque session).
+- Traductions en/de/es/it.
+
+### Tests
+- `test/onglet-fixe.test.js`, `test/main-window-security.test.js` (#338), `test/settings.test.js` ; harnais C9.4.
+
+### Limites
+- Redirections HTTP vers un autre site non bloquées (connexion par fournisseur tiers possible) ; Ctrl+Tab et Alt+1..9 ignorent l'onglet fixe.
 ## Issue #333 — le nom de profil n'est plus saisi ni affiché (27/10/2026)
 
 ### Modifié
@@ -33,7 +88,6 @@
   `test/preload-sandbox.test.js` ; harnais Electron C8.0 (migration, perte du
   localStorage sans perte de compte) et C8.1 (perte de `profils.json`).
 - README (emplacement des données), `docs/PROJECT_CONTEXT.md` §5, CLAUDE.md invariant 3.
-
 ## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
 
 ### Ajouté

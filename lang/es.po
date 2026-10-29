@@ -134,6 +134,14 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Arrastrar para redimensionar el editor"
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Desplazar las pestañas a la izquierda"
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Desplazar las pestañas a la derecha"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Ninguna pestaña abierta — elija un servicio en la lista de cuentas"
 
@@ -544,6 +552,22 @@ msgstr "Dirección del webmail (Roundcube)"
 #: index.html
 msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
+
+#: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr "Abrir una primera pestaña fija"
+
+#: index.html
+msgid "Adresse du premier onglet"
+msgstr "Dirección de la primera pestaña"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr "Pestaña que no se puede cerrar ni mover; la navegación se queda en este sitio y un clic en la pestaña vuelve a esta dirección. Las credenciales compartidas de abajo sirven para iniciar sesión."
 
 #: index.html
 msgid "Identifiants des connecteurs (partagés)"
@@ -1616,6 +1640,10 @@ msgstr "No se puede guardar: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "No se pudieron cargar los ajustes"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr "Dirección de la primera pestaña no válida: se espera una dirección https://"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

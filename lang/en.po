@@ -132,6 +132,14 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Drag to resize the editor"
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Scroll tabs to the left"
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Scroll tabs to the right"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "No open tab — pick a service in the account list"
 
@@ -542,6 +550,22 @@ msgstr "Webmail address (Roundcube)"
 #: index.html
 msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
+
+#: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr "Open a fixed first tab"
+
+#: index.html
+msgid "Adresse du premier onglet"
+msgstr "First tab address"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr "This tab cannot be closed or moved; browsing stays on this site, and clicking the tab brings you back to this address. The shared credentials below are used to sign in."
 
 #: index.html
 msgid "Identifiants des connecteurs (partagés)"
@@ -1614,6 +1638,10 @@ msgstr "Cannot save: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Could not load the settings"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr "Invalid first tab address: an https:// address is expected"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"
