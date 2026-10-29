@@ -1,5 +1,19 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #335 — licence MIT et version des paquets (27/10/2026)
+
+### Modifié
+- `package.json` et `package-lock.json` : licence `ISC` → `MIT`, comme le fichier `LICENSE` (copyright X'o-noth).
+- `dist:win` et `dist:linux` ne codent plus `--app-version=1.0.0` : electron-packager prend la version de `package.json`.
+- Les paquets gardent `ThirdPartyNotices.txt` de Monaco (exclu jusqu'ici) et `docs/THIRD-PARTY-NOTICES.md` (le reste de `docs/` reste exclu), pour electron-packager et electron-builder.
+- `docs/THIRD-PARTY-NOTICES.md` : liste des notices embarquées.
+
+### Vérifié
+- `npm run dist:linux` et `electron-builder --linux dir` : licence MIT et version 1.0.0 dans le `package.json` embarqué, `LICENSE`, `docs/THIRD-PARTY-NOTICES.md`, notices Electron/Chromium et Monaco présentes.
+- README et `installer/` : README dit MIT, l'installeur ne mentionne pas de licence.
+
+### Tests
+- `test/licence-distribution.test.js`.
 ## Issue #311 (relecture du 27/10/2026) — comptes dans `profils.json` (27/10/2026)
 
 ### Modifié
@@ -23,7 +37,6 @@
   `test/preload-sandbox.test.js` ; harnais Electron C8.0 (migration, perte du
   localStorage sans perte de compte) et C8.1 (perte de `profils.json`).
 - README (emplacement des données), `docs/PROJECT_CONTEXT.md` §5, CLAUDE.md invariant 3.
-
 ## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
 
 ### Ajouté
