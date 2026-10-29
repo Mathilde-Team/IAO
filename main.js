@@ -4,6 +4,7 @@ const fs = require('fs');
 const fsPromises = fs.promises;
 
 const { decidePopup } = require('./lib/popup-guard');
+const ongletFixe = require('./lib/onglet-fixe');
 const { Scheduler, registerSchedulerIPC } = require('./scheduler');
 const { TachesService, registerTachesIPC } = require('./scheduler/taches-service');
 const schedulerCore = require('./scheduler/core');
@@ -294,6 +295,11 @@ function createWindow() {
         log('webview ' + hostOf(guestContents.getURL()), ev.level, ev.message, ev.sourceId, ev.lineNumber);
       }
     });
+    // Issue #338 : le premier onglet immuable reste sur son site.
+    if (estOngletFixe(guestContents)) {
+      verrouillerOngletFixe(guestContents);
+      return;
+    }
     guestContents.setWindowOpenHandler(({ url }) => {
       if (decidePopup(url) === 'allow') return { action: 'allow' };
       // Schéma non web (http:, data:, javascript:, URL illisible) : refus pur.
@@ -550,11 +556,73 @@ ipc.handle('accounts:disconnect-profile', async (event, profile) => {
   }
 });
 
+// --- Issue #311 : comptes dans <userData>/profils.json ---
+// Canaux SYNCHRONES (ipcRenderer.sendSync, preload.js) : le renderer lit ses
+// comptes avant de dessiner l'interface, et chaque écriture est sur le disque
+// quand saveAccounts() rend la main. Jamais de contenu de compte dans le journal.
+const profils = require('./lib/profils');
+
+ipc.on('profils:lire', (event) => {
+  const r = profils.lireProfils(app.getPath('userData'), { fs, path });
+  if (r.status === 'ok') debug('comptes', profils.NOM_FICHIER + ' lu : ' + r.comptes.length + ' compte(s).');
+  else if (r.status === 'absent') debug('comptes', profils.NOM_FICHIER + ' absent (premier démarrage ou migration).');
+  else {
+    log('comptes', 'error', profils.NOM_FICHIER + ' illisible (' + r.status + ') : ' + r.erreur +
+      (r.sauvegarde ? ' ; sauvegarde ' + profils.NOM_SAUVEGARDE + ' de ' + r.sauvegarde.length + ' compte(s) disponible.' : ' ; aucune sauvegarde lisible.'));
+  }
+  event.returnValue = r;
+});
+
+ipc.on('profils:ecrire', (event, comptes) => {
+  const r = profils.ecrireProfils(app.getPath('userData'), comptes, { fs, path });
+  if (r.ok) debug('comptes', profils.NOM_FICHIER + ' écrit : ' + r.nombre + ' compte(s).');
+  else log('comptes', 'error', 'échec de l\'écriture de ' + profils.NOM_FICHIER + ' : ' + r.erreur);
+  event.returnValue = r;
+});
+
 // --- IPC pour les réglages utilisateur (lot 18/09/2026, FEATURES.md P2) ---
 // Persistance dans <userData>/settings.json. La normalisation/validation est
 // faite côté renderer via lib/settings.js (fonctions pures testées).
 const { normalizeSettings, DEFAULT_SETTINGS } = require('./lib/settings');
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+
+// Issue #338 : adresse du premier onglet immuable, gardée en mémoire pour
+// juger chaque navigation de cet onglet (relue à chaque enregistrement).
+let urlOngletFixe = (() => {
+  try {
+    return ongletFixe.configuration(normalizeSettings(JSON.parse(fs.readFileSync(settingsPath, 'utf-8')))).url;
+  } catch (e) {
+    debug('onglet-fixe', 'réglages illisibles, onglet non configuré : ' + (e && e.message));
+    return '';
+  }
+})();
+
+function estOngletFixe(contenu) {
+  try {
+    return contenu.session === session.fromPartition(ongletFixe.PARTITION);
+  } catch (e) {
+    debug('onglet-fixe', 'session non identifiable : ' + (e && e.message));
+    return false;
+  }
+}
+
+// Navigation et popups de l'onglet immuable : même site que l'adresse des
+// réglages, sinon bloqué. Une popup du même site s'ouvre dans l'onglet.
+function verrouillerOngletFixe(contenu) {
+  contenu.on('will-navigate', (event, url) => {
+    if (ongletFixe.memeSite(url, urlOngletFixe)) return;
+    event.preventDefault();
+    log('onglet-fixe', 'info', 'sortie du site bloquée : ' + hostOf(url));
+  });
+  contenu.setWindowOpenHandler(({ url }) => {
+    if (ongletFixe.memeSite(url, urlOngletFixe)) {
+      contenu.loadURL(url).catch((e) => debug('onglet-fixe', 'chargement refusé : ' + (e && e.message)));
+    } else {
+      log('onglet-fixe', 'info', 'popup hors du site bloquée : ' + hostOf(url));
+    }
+    return { action: 'deny' };
+  });
+}
 
 ipc.handle('settings:load', async () => {
   try {
@@ -570,6 +638,7 @@ ipc.handle('settings:save', async (event, rawSettings) => {
   try {
     const normalized = normalizeSettings(rawSettings);
     await fsPromises.writeFile(settingsPath, JSON.stringify(normalized, null, 2), 'utf-8');
+    urlOngletFixe = ongletFixe.configuration(normalized).url;
     return { ok: true, settings: normalized };
   } catch (error) {
     console.error('Erreur sauvegarde réglages:', error);

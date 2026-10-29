@@ -551,6 +551,22 @@ msgid "https://mail.dmathilde.fr"
 msgstr ""
 
 #: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+msgid "Adresse du premier onglet"
+msgstr ""
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr ""
 
@@ -1620,6 +1636,10 @@ msgstr ""
 
 #: assets/app.js
 msgid "Impossible de charger les réglages"
+msgstr ""
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
 
 #: assets/app.js

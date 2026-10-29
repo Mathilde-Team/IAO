@@ -552,6 +552,22 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr "Open a fixed first tab"
+
+#: index.html
+msgid "Adresse du premier onglet"
+msgstr "First tab address"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr "This tab cannot be closed or moved; browsing stays on this site, and clicking the tab brings you back to this address. The shared credentials below are used to sign in."
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr "Connector credentials (shared)"
 
@@ -1622,6 +1638,10 @@ msgstr "Cannot save: {error}"
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Could not load the settings"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr "Invalid first tab address: an https:// address is expected"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

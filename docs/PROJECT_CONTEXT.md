@@ -143,9 +143,8 @@ iao/
 
 Deux endroits distincts, à ne pas confondre :
 
-1. **Métadonnées des comptes** → `localStorage` du renderer.
-   - Clé `ai_accounts` : tableau JSON de comptes.
-   - Clé `ai_accounts_backup` : **copie de sauvegarde** (1 seule génération) écrite automatiquement avant chaque écrasement de `ai_accounts` — sert à la récupération si `ai_accounts` est corrompu (voir §7, chantier C).
+1. **Métadonnées des comptes** → `<userData>/profils.json` (issue #311, `lib/profils.js`), écrit par le process principal via le canal synchrone `profils:ecrire` (écriture atomique ; version précédente dans `profils.json.bak`, fichier illisible mis de côté dans `profils.json.illisible`). Lu au démarrage par `profils:lire`. État de l'interface → `localStorage` du renderer :
+   - Clés `ai_accounts` / `ai_accounts_backup` : anciens emplacements des comptes, lus une seule fois pour migrer vers `profils.json` puis retirés.
    - Clés `ide_w`, `explorer_w` : largeurs mémorisées des colonnes.
    - Clé `collapsed_accounts` : tableau JSON des ids de comptes dont la carte est **repliée** (vue compacte). Lecture/écriture défensives (`try/catch`), purgée des ids de comptes supprimés à chaque écriture (`saveCollapsed()`).
    - **Stocké EN CLAIR** (pas de chiffrement — un mot de passe maître avait été prototypé puis retiré à la demande de l'utilisateur).
@@ -463,6 +462,13 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Notifications quand un cooldown se termine.
 
 ## 13. Dernières évolutions
+
+### Premier onglet fixe (issue #338, 27/10/2026)
+
+- Réglages : case « Ouvrir un premier onglet fixe » et adresse https (`ongletFixeActif`, `ongletFixeUrl`, normalisés par `lib/settings.js` ; http refusé avant enregistrement).
+- `assets/app.js` : `appliquerOngletFixe()` crée, met à jour ou retire l'onglet à chaque chargement ou enregistrement des réglages ; il vit hors de `tabs[]` (pas de persistance des onglets, pas de statistiques, pas d'étoile, pas de fermeture) et `renderTabsBar()` le place en tête.
+- `main.js` : `estOngletFixe()` reconnaît la session `persist:onglet-fixe` dans `did-attach-webview` ; `verrouillerOngletFixe()` bloque les navigations vers un autre site (`lib/onglet-fixe.js`, même hôte ou sous-domaine, https) et charge dans l'onglet les popups du même site.
+- Limites : les redirections HTTP vers un autre site (connexion par un fournisseur tiers) ne sont pas bloquées ; Ctrl+Tab et Alt+1..9 ne parcourent que les onglets de comptes.
 
 ### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
 
