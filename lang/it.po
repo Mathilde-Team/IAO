@@ -134,6 +134,14 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Trascina per ridimensionare l'editor"
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Scorri le schede verso sinistra"
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Scorri le schede verso destra"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Nessuna scheda aperta — scegli un servizio dall'elenco degli account"
 

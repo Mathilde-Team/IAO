@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "ลากเพื่อปรับขนาดตัวแก้ไข"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "คืนค่าแท็บที่เปิดไว้เมื่อเริ่มต้น"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "คืนค่าแท็บที่เปิดไว้เมื่อเริ่มต้น"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "ไม่มีแท็บที่เปิดอยู่ — เลือกบริการจากรายการบัญชี"
 
