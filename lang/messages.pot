@@ -129,6 +129,14 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr ""
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr ""
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr ""
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr ""
 

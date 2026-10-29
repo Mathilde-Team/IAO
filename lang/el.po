@@ -134,6 +134,18 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Σύρετε για αλλαγή μεγέθους του επεξεργαστή"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Επαναφορά ανοιχτών καρτελών κατά την εκκίνηση"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Επαναφορά ανοιχτών καρτελών κατά την εκκίνηση"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Καμία ανοιχτή καρτέλα — επιλέξτε μια υπηρεσία από τη λίστα λογαριασμών"
 
