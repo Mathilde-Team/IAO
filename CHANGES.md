@@ -162,6 +162,19 @@
 ### Limites
 - Les réglages de la fenêtre « Réglages » restent dans `settings.json`, et les comptes
   dans `profils.json` (#311, fusionnée depuis).
+## Issue #330 — confirmation de fermeture d'un onglet : option désactivée par défaut (27/10/2026)
+
+### Modifié
+- **`lib/settings.js`** : nouvelle clé `confirmTabClose`, `false` par défaut. L'ancienne clé
+  `confirmBeforeClose` (activée d'office, jamais demandée) n'est pas reprise : la
+  confirmation disparaît aussi sur les installations existantes, et la clé quitte
+  `settings.json` au prochain enregistrement des réglages. La case « Confirmer avant de
+  fermer un onglet » des réglages la réactive.
+- **`assets/app.js`**, **`index.html`** : `closeTab` et la fenêtre des réglages lisent la
+  nouvelle clé.
+- Tests : `test/settings.test.js`, `test/settings-applied.test.js`,
+  `test/main-settings.test.js` ; scénario Electron C12.2 (fermeture directe par défaut,
+  confirmation une fois la case cochée).
 
 ## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
 

@@ -1820,6 +1820,47 @@ async function run() {
       'bandeau d\'erreur affiché après fermeture : ' + (texte.match(/Invalid[^\n]*/) || [''])[0]);
   });
 
+  await test('C12.2 Fermeture d\'onglet sans confirmation par défaut, avec si la case est cochée (#330)', async () => {
+    const ouvrir = async () => {
+      await exec(`document.querySelector('#accountsList [data-action="open-service"][data-acc="acc_test_2"][data-svc="gemini"]').click(); 'ok'`);
+      await sleep(800);
+    };
+    const fermer = `(() => {
+      const t = [...document.querySelectorAll('#tabsBar .tab')].find(x => x.dataset.acc === 'acc_test_2' && x.dataset.svc === 'gemini');
+      if (!t) return 'absent';
+      closeTab(t.dataset.tab);
+      return document.getElementById('confirmModal').classList.contains('open') ? 'confirmation' : 'fermé';
+    })()`;
+    const reste = `[...document.querySelectorAll('#tabsBar .tab')].some(x => x.dataset.acc === 'acc_test_2' && x.dataset.svc === 'gemini')`;
+    assert(await exec(`(async () => { openSettingsModal(); await new Promise(r => setTimeout(r, 200));
+      const c = document.getElementById('settingsConfirmTabClose').checked; closeSettingsModal(); return c; })()`) === false,
+      'case « Confirmer avant de fermer un onglet » cochée par défaut');
+    await ouvrir();
+    assert(await exec(fermer) === 'fermé', 'une confirmation est apparue alors que le réglage est désactivé par défaut');
+    await sleep(300);
+    assert(!(await exec(reste)), 'onglet encore présent après fermeture');
+    // Case cochée : la confirmation revient ; « Oui » ferme l'onglet.
+    await exec(`(async () => {
+      openSettingsModal();
+      await new Promise(r => setTimeout(r, 200));
+      document.getElementById('settingsConfirmTabClose').checked = true;
+      await saveSettings();
+      return 'ok';
+    })()`);
+    await ouvrir();
+    assert(await exec(fermer) === 'confirmation', 'pas de confirmation alors que la case est cochée');
+    await exec('document.getElementById("confirmModalYes").click()');
+    await sleep(300);
+    assert(!(await exec(reste)), 'onglet encore présent après confirmation');
+    await exec(`(async () => {
+      openSettingsModal();
+      await new Promise(r => setTimeout(r, 200));
+      document.getElementById('settingsConfirmTabClose').checked = false;
+      await saveSettings();
+      return 'ok';
+    })()`);
+  });
+
   // =========================================================================
   // C13 — Temps de réponse des messages envoyés à la main (issue #206)
   // Le réseau est coupé : la webview Claude charge une page locale qui imite

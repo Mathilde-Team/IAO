@@ -1218,7 +1218,7 @@
       if (idx === -1) return;
 
       // Confirmation avant fermeture si le réglage est activé (lot 18/09/2026)
-      if (currentSettings && currentSettings.confirmBeforeClose) {
+      if (currentSettings && currentSettings.confirmTabClose) {
         const tab = tabs[idx];
         const acc = accounts.find(a => a.id === tab.accId);
         const svc = SERVICES.find(s => s.id === tab.svcId);
@@ -3382,7 +3382,7 @@
         document.getElementById('settingsEditorFontSize').value = settings.editorFontSize;
         document.getElementById('settingsTheme').value = settings.theme;
         document.getElementById('settingsEditorWordWrap').value = settings.editorWordWrap;
-        document.getElementById('settingsConfirmBeforeClose').checked = settings.confirmBeforeClose;
+        document.getElementById('settingsConfirmTabClose').checked = settings.confirmTabClose;
         document.getElementById('settingsShowAutomationWindows').checked = settings.showAutomationWindows;
         document.getElementById('settingsStartWithLastSession').checked = settings.startWithLastSession;
         // Issue #305 : capture HAR des 15 premières minutes d'une connexion.
@@ -3408,7 +3408,7 @@
         editorFontSize: parseInt(document.getElementById('settingsEditorFontSize').value, 10),
         editorWordWrap: document.getElementById('settingsEditorWordWrap').value,
         theme: document.getElementById('settingsTheme').value,
-        confirmBeforeClose: document.getElementById('settingsConfirmBeforeClose').checked,
+        confirmTabClose: document.getElementById('settingsConfirmTabClose').checked,
         showAutomationWindows: document.getElementById('settingsShowAutomationWindows').checked,
         startWithLastSession: document.getElementById('settingsStartWithLastSession').checked,
         harCapture: document.getElementById('settingsHarCapture').checked,
