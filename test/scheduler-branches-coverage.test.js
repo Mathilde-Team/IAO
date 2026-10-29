@@ -248,3 +248,36 @@ test('_executeAutomation : le prompt et le ZIP de la tâche remplacent ceux du j
   assert.deepEqual(received, { prompt: 'Fais X', zip: '/tmp/tache.zip' });
   assert.equal(task.status, 'failed');
 });
+
+// Issue #328 : le compte d'un onglet est reconnu par le dossier de sa session,
+// sans session.fromPartition (qui chargerait la session de chaque compte).
+test('#328 partitionDepuisStoragePath : minuscules, encodage URL, séparateurs Windows', () => {
+  const p = core.partitionDepuisStoragePath;
+  assert.equal(p('/home/u/.config/ai-manager/Partitions/profil_1'), 'profil_1');
+  assert.equal(p('/home/u/.config/ai-manager/Partitions/mon%20profil/'), 'mon profil');
+  assert.equal(p('C:\\Users\\u\\AppData\\Roaming\\ai-manager\\Partitions\\%C3%A9a\\b'), 'éa/b');
+  assert.equal(p('/x/Partitions/a%2520b'), 'a%20b');
+  assert.equal(p('/x/Partitions/ABC'), 'abc');
+  assert.equal(p('/x/ai-manager'), null, 'session par défaut : hors Partitions');
+  assert.equal(p('/x/Partitions/%E0%A4%A'), null, 'nom mal encodé');
+  assert.equal(p(''), null);
+  assert.equal(p(null), null);
+});
+
+test('#328 resolveProfileFromSession : storagePath reconnu sans créer aucune session', (t) => {
+  const vus = [];
+  const session = { fromPartition(partition) { vus.push(partition); return {}; } };
+  const { scheduler } = createScheduler(t, session);
+  scheduler.watchedPartitions = new Set(['Ancien']);
+  scheduler.accountsSnapshot = [{ profile: 'profil_1' }, { profile: 'Mon Profil' }, null];
+  const dossier = (nom) => ({ storagePath: '/home/u/.config/ai-manager/Partitions/' + nom });
+  assert.equal(scheduler.resolveProfileFromSession(dossier('profil_1')), 'profil_1');
+  assert.equal(scheduler.resolveProfileFromSession(dossier('mon%20profil')), 'Mon Profil');
+  assert.equal(scheduler.resolveProfileFromSession(dossier('ancien')), 'Ancien');
+  assert.equal(scheduler.resolveProfileFromSession(dossier('inconnu')), null);
+  assert.equal(scheduler.resolveProfileFromSession({ storagePath: '/home/u/.config/ai-manager' }), null);
+  assert.deepEqual(vus, [], 'session.fromPartition appelée : des sessions de comptes ont été chargées');
+  const messages = scheduler.log.map((l) => l.message);
+  assert.ok(messages.includes('Onglet non rattaché : partition « inconnu » inconnue des comptes.'));
+  assert.ok(messages.includes('Onglet non rattaché : sa session n\'est pas une partition de compte.'));
+});
