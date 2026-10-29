@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Træk for at ændre editorens størrelse"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Gendan åbne faner ved start"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Gendan åbne faner ved start"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Ingen fane åben — vælg en tjeneste i kontolisten"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Profilen gør det muligt at isolere cookies i Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Kontonavn"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Profilnavn"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

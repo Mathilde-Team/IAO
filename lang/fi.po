@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Muuta editorin kokoa vetämällä"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Palauta avoimet välilehdet käynnistettäessä"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Palauta avoimet välilehdet käynnistettäessä"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Ei avoimia välilehtiä — valitse palvelu tililuettelosta"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Profiilin avulla evästeet voidaan eristää Electronissa."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Tilin nimi"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Profiilin nimi"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

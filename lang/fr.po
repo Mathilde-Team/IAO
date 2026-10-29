@@ -131,19 +131,19 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr ""
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr ""
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr ""
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr ""
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr ""
-
-#: index.html
 msgid "Nom du compte"
-msgstr ""
-
-#: index.html
-msgid "Nom du Profil"
 msgstr ""
 
 #: index.html

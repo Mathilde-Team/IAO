@@ -388,13 +388,12 @@ async function run() {
       openModal();
       document.getElementById('inputName').value = 'Compte 319';
       document.getElementById('inputEmail').value = 'c319@example.com';
-      document.getElementById('inputProfile').value = 'profil_319';
       saveAccount();
       const comptes = window.iaoAPI.profilsLire().comptes; // #311 : comptes dans profils.json
-      const c = comptes.find(a => a.profile === 'profil_319');
+      const c = comptes.find(a => a.profile === 'compte_319'); // #333 : profil tiré du nom
       const services = c ? c.services.join(',') : null;
       if (c) {
-        window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'profil_319'));
+        window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'compte_319'));
       }
       localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
       return services;
@@ -878,7 +877,8 @@ async function run() {
     assert(JSON.stringify(after.noms) === JSON.stringify(seedAccounts.map((a) => a.name)), 'noms restaurés : ' + after.noms.join(','));
     assert(JSON.stringify(after.couleurs) === JSON.stringify(seedAccounts.map((a) => a.color)), 'couleurs restaurées : ' + after.couleurs.join(','));
     // Ordre d'affichage propre à la liste : comparaison sans ordre.
-    const attendues = seedAccounts.map((a) => a.email + ' • ' + a.profile).sort();
+    // Issue #333 : la carte montre l'adresse seule, plus le profil.
+    const attendues = seedAccounts.map((a) => a.email).sort();
     assert(JSON.stringify([...after.lignes].sort()) === JSON.stringify(attendues), 'lignes e-mail des cartes : ' + after.lignes.join(' | '));
   });
 
@@ -954,10 +954,35 @@ async function run() {
     assert(/docker\d+@dmathilde\.fr/.test(r.desc), 'description : ' + r.desc);
     assert(r.apres === r.avant + 2, 'attendu 2 comptes de plus : ' + r.avant + ' -> ' + r.apres);
     const n = Number(r.derniers[0].split(' ')[0]);
-    assert(r.derniers[0] === n + ' docker' + n + '@dmathilde.fr profil_' + n, 'compte 1 : ' + r.derniers[0]);
-    assert(r.derniers[1] === (n + 1) + ' docker' + (n + 1) + '@dmathilde.fr profil_' + (n + 1), 'compte 2 : ' + r.derniers[1]);
+    // Issue #333 : le profil reprend le nom du compte.
+    assert(r.derniers[0] === n + ' docker' + n + '@dmathilde.fr ' + n, 'compte 1 : ' + r.derniers[0]);
+    assert(r.derniers[1] === (n + 1) + ' docker' + (n + 1) + '@dmathilde.fr ' + (n + 1), 'compte 2 : ' + r.derniers[1]);
     assert(!r.ouvert, 'la fenêtre de création doit se fermer');
     assert(r.webmail === r.apres, 'un bouton webmail par carte attendu : ' + r.webmail);
+  });
+
+  await test('C9.1b Nom de profil ni saisi ni affiché, tiré du nom du compte (#333)', async () => {
+    const r = await exec(`(() => {
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : profils.json
+      openModal(comptes.find(a => a.profile === 'profil_1').id);
+      const champ = document.getElementById('inputProfile');
+      const libelles = [...document.querySelectorAll('#accountModal .form-label')].map(l => l.textContent);
+      closeModal();
+      const cartes = [...document.querySelectorAll('#accountsList .account-card .account-email')].map(e => e.textContent);
+      return { type: champ.type, profilAffiche: libelles.some(t => /profil/i.test(t)), cartes };
+    })()`);
+    assert(r.type === 'hidden', 'champ du profil visible : ' + r.type);
+    assert(!r.profilAffiche, 'libellé « Nom du profil » encore affiché');
+    assert(r.cartes.length > 0 && r.cartes.every(t => !/profil_\d/.test(t)), 'profil encore affiché sur une carte : ' + JSON.stringify(r.cartes));
+    // Un compte modifié garde son profil (ses sessions y sont).
+    const garde = await exec(`(() => {
+      const id = window.iaoAPI.profilsLire().comptes.find(a => a.profile === 'profil_1').id; // #311
+      openModal(id);
+      saveAccount();
+      const apres = window.iaoAPI.profilsLire().comptes.find(a => a.id === id); // #311
+      return apres ? apres.profile : null;
+    })()`);
+    assert(garde === 'profil_1', 'profil changé à la modification : ' + garde);
   });
 
   await test('C9.2 Mot de passe de messagerie : généré, masqué par défaut, bouton œil', async () => {
@@ -1119,6 +1144,116 @@ async function run() {
     })()`);
     assert(!retrait.onglet && !retrait.panneau, 'onglet fixe toujours présent après décochage');
   });
+  await test('C9.5 Barre d\'onglets pleine : flèches de défilement, onglet fixe immuable (#339)', async () => {
+    // Onglet fixe réactivé + 4 onglets de comptes ; la zone est rétrécie
+    // artificiellement (style) pour déborder sans ouvrir une multitude de
+    // webviews (mémoire du harnais, cf. commentaire /dev/shm plus haut).
+    // Tout est remis en place dans le finally : styles, réglages, onglets.
+    const r = await exec(`(async () => {
+      const pause = (ms) => new Promise(r => setTimeout(r, ms));
+      const zone = document.getElementById('tabsScrollZone');
+      const flecheG = document.getElementById('tabsArrowLeft');
+      const flecheD = document.getElementById('tabsArrowRight');
+      const res = {};
+      try {
+        openSettingsModal();
+        await pause(200);
+        document.getElementById('settingsOngletFixeActif').checked = true;
+        document.getElementById('settingsOngletFixeUrl').value = 'https://127.0.0.1:9/accueil';
+        await saveSettings();
+        await pause(200);
+        const svcOuvres = ['claude', 'chatgpt', 'gemini', 'zeta'];
+        for (const svc of svcOuvres) {
+          openService('acc_test_1', svc);
+          await pause(100);
+        }
+        // État initial : zone large, rien ne déborde, paire masquée.
+        res.avant = {
+          onglets: document.querySelectorAll('#tabsScrollZone .tab').length,
+          fixe: document.querySelector('#tabsBarFixe .tab') !== null,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden
+        };
+        // Zone rétrécie : débordement réel, paire affichée (layout stable),
+        // flèche gauche désactivée au début, flèche droite active.
+        zone.style.flex = 'none';
+        zone.style.width = '260px';
+        window.dispatchEvent(new Event('resize'));
+        await pause(150);
+        const rectFixeAvant = document.querySelector('#tabsBarFixe .tab').getBoundingClientRect();
+        res.debordement = {
+          deborde: zone.scrollWidth > zone.clientWidth,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden,
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled
+        };
+        // Défilement vers la droite : scrollLeft bouge, flèche gauche s'active,
+        // l'onglet fixe ne bouge pas (épinglé hors de la zone défilante) et
+        // reste actif s'il l'était (il ne participe pas au défilement).
+        document.querySelector('#tabsBarFixe .tab').click();
+        await pause(100);
+        res.fixeActifAvant = document.querySelector('#tabsBarFixe .tab').classList.contains('active');
+        flecheD.click();
+        await pause(700);
+        res.apresDroite = {
+          scrollLeft: Math.round(zone.scrollLeft),
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled,
+          fixeBouge: Math.abs(document.querySelector('#tabsBarFixe .tab').getBoundingClientRect().left - rectFixeAvant.left) > 1,
+          fixeActif: document.querySelector('#tabsBarFixe .tab').classList.contains('active')
+        };
+        // Retour vers la gauche : flèche gauche se désactive, flèche droite reste.
+        flecheG.click();
+        await pause(700);
+        res.apresGauche = {
+          scrollLeft: Math.round(zone.scrollLeft),
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled
+        };
+        // Onglet actif amené dans la zone visible par activateTab.
+        document.querySelector('#tabsScrollZone .tab[data-svc="zeta"]').click();
+        await pause(700);
+        const t = document.querySelector('#tabsScrollZone .tab[data-svc="zeta"]');
+        const zr = zone.getBoundingClientRect();
+        const tr = t.getBoundingClientRect();
+        res.actifVisible = tr.left >= zr.left - 1 && tr.right <= zr.right + 1;
+      } finally {
+        // Remise en état : zone, réglages, onglets ouverts.
+        zone.style.flex = '';
+        zone.style.width = '';
+        window.dispatchEvent(new Event('resize'));
+        await pause(200);
+        res.restaure = {
+          deborde: zone.scrollWidth > zone.clientWidth,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden
+        };
+        openSettingsModal();
+        await pause(200);
+        document.getElementById('settingsOngletFixeActif').checked = false;
+        await saveSettings();
+        for (const svc of ['zeta', 'gemini', 'chatgpt', 'claude']) {
+          const t = document.querySelector('#tabsScrollZone .tab[data-svc="' + svc + '"]');
+          if (t) closeTab(t.getAttribute('data-tab'));
+        }
+      }
+      return res;
+    })()`);
+    assert(r.avant.onglets === 4, '4 onglets de comptes attendus : ' + r.avant.onglets);
+    assert(r.avant.fixe, 'onglet fixe épinglé attendu dans #tabsBarFixe');
+    assert(r.avant.gauchesCachees && r.avant.droitesCachees, 'zone large : flèches masquées');
+    assert(r.debordement.deborde, 'zone rétrécie : elle doit déborder');
+    assert(!r.debordement.gauchesCachees && !r.debordement.droitesCachees,
+      'débordement : la paire de flèches doit être affichée');
+    assert(r.debordement.gaucheDesactive && !r.debordement.droiteDesactive,
+      'au début : flèche gauche désactivée, flèche droite active');
+    assert(r.fixeActifAvant, 'onglet fixe activé au clic');
+    assert(r.apresDroite.scrollLeft > 0, 'clic flèche droite : défilement attendu, scrollLeft=' + r.apresDroite.scrollLeft);
+    assert(!r.apresDroite.gaucheDesactive && !r.apresDroite.droiteDesactive,
+      'après défilement : flèche gauche active');
+    assert(!r.apresDroite.fixeBouge, 'l\'onglet fixe ne doit pas défiler');
+    assert(r.apresDroite.fixeActif, 'l\'onglet fixe actif doit le rester pendant le défilement');
+    assert(r.apresGauche.scrollLeft === 0 && r.apresGauche.gaucheDesactive && !r.apresGauche.droiteDesactive,
+      'retour au début : ' + JSON.stringify(r.apresGauche));
+    assert(r.actifVisible, 'l\'onglet activé doit être ramené dans la zone visible');
+    assert(!r.restaure.deborde && r.restaure.gauchesCachees && r.restaure.droitesCachees,
+      'zone restaurée : plus de flèches : ' + JSON.stringify(r.restaure));
+  });
 
   await test('C10.1 modale ordonnanceur : interface des tâches visible, liste vide', async () => {
     await exec('window.openSchedulerModal()');
@@ -1141,6 +1276,7 @@ async function run() {
       const sel = document.getElementById('tacheFormComptesMode');
       sel.value = 'liste'; sel.dispatchEvent(new Event('change'));
       document.querySelector('#tacheFormComptesChoix input[data-profile="profil_1"]').checked = true;
+      window.__libelleCompteC10 = document.querySelector('#tacheFormComptesChoix input[data-profile="profil_1"]').parentElement.textContent.trim();
       document.getElementById('tacheFormPrompt').value = 'Dis bonjour';
       document.getElementById('tacheFormProgDepuis').value = '${dansDeuxJoursLocal()}';
       document.getElementById('tacheFormProgTous').value = '2';
@@ -1148,6 +1284,9 @@ async function run() {
       document.getElementById('tacheFormActive').checked = true;
       'rempli'
     `);
+    // Issue #333 : l'ordonnanceur présente un compte par « nom - adresse mail », plus par son profil.
+    const libelleC10 = await exec('window.__libelleCompteC10');
+    assert(libelleC10 === 'Compte Test Un - test1@example.com', 'libellé du compte dans la tâche : ' + libelleC10);
     await exec('document.getElementById("tacheFormEnregistrer").click()');
     await sleep(800);
     const nbCartes = await exec('document.querySelectorAll("#tachesList .tache-card").length');
@@ -1798,8 +1937,8 @@ async function run() {
   // (série en cours ≥ 2), la dernière à 45 min de maintenant.
   const plans14 = [
     { profil: 'profil_1', services: ['claude', 'chatgpt', 'gemini', 'perplexity', 'grok'], min: 3, max: 7 },
-    { profil: 'profil_3', services: ['claude', 'chatgpt'], min: 1, max: 3 },
-    { profil: 'profil_4', services: ['suno'], min: 0, max: 1 }
+    { profil: '3', services: ['claude', 'chatgpt'], min: 1, max: 3 },
+    { profil: '4', services: ['suno'], min: 0, max: 1 }
   ];
   for (let jours = 59; jours >= 0; jours--) {
     const base = debutJour14(maintenant14 - jours * JOUR_MS);
@@ -1819,7 +1958,7 @@ async function run() {
   // l'heure d'exécution du harnais.
   sessions14.push({ id: id14('s'), profil: 'profil_1', service: 'claude',
     debut: maintenant14 - 45 * 60000, fin: maintenant14 - 10 * 60000, actifMs: 20 * 60000 });
-  sessions14.push({ id: id14('s'), profil: 'profil_3', service: 'claude',
+  sessions14.push({ id: id14('s'), profil: '3', service: 'claude',
     debut: debutJour14(maintenant14 - JOUR_MS) + 10 * 3600000,
     fin: debutJour14(maintenant14 - JOUR_MS) + 11 * 3600000, actifMs: 40 * 60000 });
 
@@ -1846,7 +1985,7 @@ async function run() {
       date: debutJour14(maintenant14 - jours * JOUR_MS) + (2 + Math.floor(alea14() * 18)) * 3600000 });
   }
   for (let jours = 50; jours >= 0; jours -= 10) {
-    quotas14.push({ id: id14('q'), profil: 'profil_3', service: 'claude',
+    quotas14.push({ id: id14('q'), profil: '3', service: 'claude',
       date: maintenant14 - jours * JOUR_MS - Math.floor(alea14() * 12) * 3600000 });
   }
 
@@ -1871,8 +2010,8 @@ async function run() {
   // Valeurs attendues, calculées depuis les fichiers (vérité terrain) : les
   // tests précédents n'ont PAS de session profil_3/profil_4 → leurs comptes
   // exacts viennent du semis seul.
-  const attenduSesProfil3 = sessions14.filter(s => s.profil === 'profil_3').length;
-  const attenduSesProfil4 = sessions14.filter(s => s.profil === 'profil_4').length;
+  const attenduSesProfil3 = sessions14.filter(s => s.profil === '3').length;
+  const attenduSesProfil4 = sessions14.filter(s => s.profil === '4').length;
   const attenduSesSuno = sessions14.filter(s => s.service === 'suno').length;
   const attenduSesSemaine = sessions14.filter(s => s.fin >= maintenant14 - 7 * JOUR_MS).length;
   const ongletsOuverts = await exec('document.querySelectorAll(\'#tabsBar .tab\').length');
@@ -1934,10 +2073,10 @@ async function run() {
     assert(r.cartes === 6, '6 cartes attendues : ' + r.cartes);
     // Tableaux : profil_3 et profil_4 ne viennent que du semis → valeurs exactes.
     // La clé (titre de la cellule) est le profil ; le nom affiché peut être
-    // « 3 »/« 4 » (comptes créés en série par C9.1, profils profil_3/profil_4).
+    // « 3 »/« 4 » (comptes créés en série par C9.1, profils « 3 »/« 4 » depuis #333).
     // Colonnes : nom | temps actif | durée ouverte | sessions | dernier.
-    const ligneP3 = r.lignesCompte.find(l => l[0].titre === 'profil_3');
-    const ligneP4 = r.lignesCompte.find(l => l[0].titre === 'profil_4');
+    const ligneP3 = r.lignesCompte.find(l => l[0].titre === '3');
+    const ligneP4 = r.lignesCompte.find(l => l[0].titre === '4');
     assert(ligneP3 && ligneP3[3].texte === String(attenduSesProfil3),
       'profil_3 : ' + attenduSesProfil3 + ' sessions attendues : ' + JSON.stringify(ligneP3));
     assert(ligneP4 && ligneP4[3].texte === String(attenduSesProfil4),

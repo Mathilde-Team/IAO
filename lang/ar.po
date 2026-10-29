@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "اسحب لتغيير حجم المحرر"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "استعادة علامات التبويب المفتوحة عند التشغيل"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "استعادة علامات التبويب المفتوحة عند التشغيل"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "لا توجد علامة تبويب مفتوحة — اختر خدمة من قائمة الحسابات"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "يتيح الملف الشخصي عزل ملفات تعريف الارتباط في Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "اسم الحساب"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "اسم الملف الشخصي"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

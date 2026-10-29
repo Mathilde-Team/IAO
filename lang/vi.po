@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Kéo để đổi kích thước trình soạn thảo"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Khôi phục các tab đang mở khi khởi động"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Khôi phục các tab đang mở khi khởi động"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Không có tab nào đang mở — hãy chọn một dịch vụ trong danh sách tài khoản"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Hồ sơ cho phép tách biệt cookie trong Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Tên tài khoản"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Tên hồ sơ"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

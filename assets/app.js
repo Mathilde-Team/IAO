@@ -594,6 +594,11 @@
         // des cooldowns par service. lastUsedAt = dernière ouverture manuelle ;
         // lastAutomationAt = dernier job d'ordonnanceur exécuté sur ce profil
         // (sert à choisir le profil "le plus ancien" avant d'en relancer un).
+        // Issue #333 : compte importé sans profil -> profil tiré de son nom.
+        if (!acc.profile || typeof acc.profile !== 'string') {
+          acc.profile = window.iaoProfilCompte.profilDepuisNom(acc.name, accounts.map(a => a.profile).filter(Boolean));
+          needsUpdate = true;
+        }
         if (!acc.automation || typeof acc.automation !== 'object') {
           acc.automation = { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 };
           needsUpdate = true;
@@ -787,7 +792,7 @@
               <div class="account-avatar" data-avatar-color="${color}">${initials}</div>
               <div class="account-info">
                 <div class="account-name">${escapeHtml(acc.name)} ${isActive ? '<span class="active-dot"></span>' : ''}</div>
-                <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span> • ` : ''}${escapeHtml(acc.profile)}</div>
+                <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span>` : ''}</div>
               </div>
               <div class="account-actions">
                 ${currentSettings && currentSettings.webmailUrl ? `<button class="btn btn--icon" data-action="open-webmail" data-acc="${id}" title="${escapeHtml(_('Ouvrir le webmail (adresse copiée)'))}"><span class="ic" data-icon="envelope"></span></button>` : ''}
@@ -955,7 +960,7 @@
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
-        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.profile }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
+        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.name }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
       `;
       pane.appendChild(toolbar);
       hydrateIcons(toolbar);
@@ -1120,9 +1125,15 @@
     // reflet visuel « inactif
     // depuis 5 min » via isTabIdle(t.lastFocusAt) (lib/activity-status.js).
     function renderTabsBar() {
-      const bar = document.getElementById('tabsBar');
+      // Issue #339 : l'onglet fixe est épinglé dans #tabsBarFixe (hors de la
+      // zone défilante : il ne bouge jamais au défilement), les onglets de
+      // comptes vivent dans la zone défilante #tabsScrollZone.
+      const conteneurFixe = document.getElementById('tabsBarFixe');
+      const zone = document.getElementById('tabsScrollZone');
       const now = Date.now();
-      bar.innerHTML = htmlOngletFixe() + tabs.map(t => {
+      conteneurFixe.innerHTML = htmlOngletFixe();
+      conteneurFixe.hidden = !ongletFixe;
+      zone.innerHTML = tabs.map(t => {
         const acc = accounts.find(a => a.id === t.accId);
         const svc = SERVICES.find(s => s.id === t.svcId);
         if (!acc || !svc) return '';
@@ -1142,7 +1153,31 @@
           </div>
         `;
       }).join('');
-      hydrateIcons(bar);
+      hydrateIcons(conteneurFixe);
+      hydrateIcons(zone);
+      majDefilementOnglets();
+    }
+
+    // Issue #339 : affiche ou masque les flèches de défilement selon le
+    // débordement de la zone. Helpers purs dans lib/defilement-onglets.js ;
+    // appelée après chaque rendu, au défilement (écouteur passif ci-dessous)
+    // et au redimensionnement de la fenêtre.
+    const DO = window.iaoDefilementOnglets;
+    function majDefilementOnglets() {
+      const zone = document.getElementById('tabsScrollZone');
+      const flecheGauche = document.getElementById('tabsArrowLeft');
+      const flecheDroite = document.getElementById('tabsArrowRight');
+      if (!zone || !flecheGauche || !flecheDroite) return;
+      const rtl = getComputedStyle(zone).direction === 'rtl';
+      const etat = DO.etatDefilement(zone.scrollLeft, zone.scrollWidth, zone.clientWidth, rtl);
+      // La paire de flèches est affichée ensemble dès que la zone déborde
+      // (layout stable : la zone garde la même largeur) ; chaque flèche est
+      // désactivée à son extrême. En RTL le contenu commence à droite : la
+      // flèche gauche mène vers la fin (apres), la droite vers le début.
+      flecheGauche.hidden = !etat.debordant;
+      flecheDroite.hidden = !etat.debordant;
+      flecheGauche.disabled = !(rtl ? etat.apres : etat.avant);
+      flecheDroite.disabled = !(rtl ? etat.avant : etat.apres);
     }
 
     // Affiche l'onglet demandé (et masque les autres) ; les webviews inactives
@@ -1160,6 +1195,11 @@
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
       document.getElementById('tabsEmpty').style.display = tabId ? 'none' : 'flex';
       renderTabsBar();
+      // Issue #339 : barre pleine — l'onglet activé (clic, ouverture de
+      // compte, fermeture du voisin) est amené dans la partie visible de la
+      // zone défilante. L'onglet fixe, épinglé hors de la zone, n'y passe pas.
+      const actif = document.querySelector('#tabsScrollZone .tab.active');
+      if (actif) actif.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
     }
 
     // Ferme un onglet : détruit sa <webview> (le process invité Chromium est
@@ -1210,11 +1250,39 @@
     document.getElementById('tabsBar').addEventListener('click', (e) => {
       const el = e.target.closest('[data-action]');
       if (!el) return;
+      // Issue #339 : flèche de défilement de la zone d'onglets. data-dir
+      // vaut -1 (gauche) ou 1 (droite) — jamais une donnée utilisateur.
+      if (el.getAttribute('data-action') === 'tabs-scroll') {
+        defilerZoneOnglets(Number(el.getAttribute('data-dir')) || 1);
+        return;
+      }
       const tabId = el.getAttribute('data-tab');
       if (el.getAttribute('data-action') === 'close-tab') closeTab(tabId);
       else if (ongletFixe && tabId === OF.ID_ONGLET) revenirOngletFixe(); // #338
       else activateTab(tabId);
     });
+
+    // Issue #339 : défilement d'un clic sur une flèche (lissé ; l'état des
+    // flèches est rafraîchi par l'événement scroll ci-dessous) et écouteurs
+    // qui rafraîchissent les flèches pendant le défilement et au
+    // redimensionnement de la fenêtre.
+    function defilerZoneOnglets(direction) {
+      const zone = document.getElementById('tabsScrollZone');
+      if (!zone) return;
+      // Direction physique (-1 vers la gauche, +1 vers la droite), identique
+      // en LTR et RTL : Chromium y rend scrollLeft négatif vers la fin du
+      // contenu, scrollBy(-pas) décale la zone vers la gauche dans les deux cas.
+      zone.scrollBy({ left: direction * DO.pasDefilement(zone.clientWidth), behavior: 'smooth' });
+    }
+    document.getElementById('tabsScrollZone').addEventListener('scroll', () => majDefilementOnglets(), { passive: true });
+    // La largeur de la zone change aussi par les séparateurs de l'explorateur
+    // et de l'éditeur (et par la fenêtre) : ResizeObserver couvre tous les cas,
+    // le repli sur « resize » reste pour un Chromium sans ResizeObserver.
+    if (typeof ResizeObserver === 'function') {
+      new ResizeObserver(() => majDefilementOnglets()).observe(document.getElementById('tabsScrollZone'));
+    } else {
+      window.addEventListener('resize', () => majDefilementOnglets());
+    }
 
     // Issue #154 : Menu contextuel (clic droit) sur les onglets.
     // Permet d'étoiler / désétoiler un onglet pour le mettre en valeur.
@@ -1447,7 +1515,7 @@
         const webview = t.paneEl.querySelector('webview');
         if (webview) webview.reload();
       });
-      showToast(_('Profil « {profile} » déconnecté — session effacée', { profile: acc.profile }));
+      showToast(_('Profil « {profile} » déconnecté — session effacée', { profile: acc.name }));
     }
     document.getElementById('tabsContent').addEventListener('click', (e) => {
       const el = e.target.closest('[data-action]');
@@ -1624,12 +1692,8 @@
         document.getElementById('editId').value = '';
         document.getElementById('inputName').value = '';
         document.getElementById('inputEmail').value = '';
-        // Suggère un profil NON collisionnant (`length+1` pouvait re-proposer un
-        // profil déjà pris après une suppression -> sessions partagées).
-        const used = new Set(accounts.map(a => a.profile));
-        let n = accounts.length + 1;
-        while (used.has('profil_' + n)) n++;
-        document.getElementById('inputProfile').value = 'profil_' + n;
+        // Issue #333 : le profil est tiré du nom à l'enregistrement (saveAccount).
+        document.getElementById('inputProfile').value = '';
       }
       // Issue #201 : mot de passe de messagerie, masqué ; relu depuis le coffre chiffré.
       const pass = document.getElementById('inputMailPassword');
@@ -1847,8 +1911,12 @@
       const id = document.getElementById('editId').value;
       const name = document.getElementById('inputName').value.trim();
       const email = document.getElementById('inputEmail').value.trim();
-      const profile = document.getElementById('inputProfile').value.trim();
-      if (!name || !email || !profile) return showToast(_('Remplissez tous les champs'), 'error');
+      if (!name || !email) return showToast(_('Remplissez tous les champs'), 'error');
+      // Issue #333 : un compte existant garde son profil (ses sessions y sont) ;
+      // un nouveau compte prend un profil tiré de son nom, unique.
+      const profile = id
+        ? document.getElementById('inputProfile').value.trim()
+        : window.iaoProfilCompte.profilDepuisNom(name, accounts.map(a => a.profile));
 
       // Unicité du profil (chantier audit 3.1) : deux comptes partageant le même
       // `profile` utiliseraient la MÊME partition Electron (persist:<profile>) →
@@ -2532,7 +2600,7 @@
       }
       conteneur.innerHTML = evenements.map(function(ev) {
         var ligne = '[' + escapeHtml(formatterDateTache(ev.date)) + '] ' +
-          escapeHtml(ev.nom || '') + (ev.profil ? ' · ' + escapeHtml(ev.profil) : '') +
+          escapeHtml(ev.nom || '') + (ev.profil ? ' · ' + escapeHtml(window.iaoProfilCompte.libelleProfil(ev.profil, accounts)) : '') +
           ' — ' + escapeHtml(texteResultatTache(ev));
         if (ev.detail) ligne += ' (' + escapeHtml(String(ev.detail)) + ')';
         return '<div>' + ligne + '</div>';
@@ -2598,7 +2666,7 @@
       }
       var lignes = avecClaude.map(function(a) {
         var coche = selectionnes.has(a.profile);
-        return '<label class="tache-form__compte"><input type="checkbox" data-profile="' + escapeHtml(a.profile) + '"' + (coche ? ' checked' : '') + '> ' + escapeHtml(a.profile) + '</label>';
+        return '<label class="tache-form__compte"><input type="checkbox" data-profile="' + escapeHtml(a.profile) + '"' + (coche ? ' checked' : '') + '> ' + escapeHtml(window.iaoProfilCompte.libelleCompte(a)) + '</label>';
       });
       for (var i = 0; i < indisponibles.length; i++) {
         var p = indisponibles[i];
@@ -2607,7 +2675,7 @@
           : _('compte supprimé');
         lignes.push('<label class="tache-form__compte tache-form__compte--indisponible">' +
           '<input type="checkbox" data-profile="' + escapeHtml(p) + '" checked disabled> ' +
-          escapeHtml(p) + ' <span class="tache-form__note">(' + escapeHtml(note) + ')</span></label>');
+          escapeHtml(window.iaoProfilCompte.libelleProfil(p, accounts)) + ' <span class="tache-form__note">(' + escapeHtml(note) + ')</span></label>');
       }
       conteneur.innerHTML = lignes.join('');
     }
@@ -3452,7 +3520,7 @@
             <div class="sched-job">
               <div class="sched-job__dot" data-dot-color="${color}"></div>
               <div class="sched-job__body">
-                <div class="sched-job__title">${escapeHtml(j.id)} — ${escapeHtml(j.service || _('service inconnu'))} · ${escapeHtml(j.profile || '—')}</div>
+                <div class="sched-job__title">${escapeHtml(j.id)} — ${escapeHtml(j.service || _('service inconnu'))} · ${escapeHtml(j.profile ? window.iaoProfilCompte.libelleProfil(j.profile, accounts) : '—')}</div>
                 <div class="sched-job__meta">${escapeHtml(label)} · ${escapeHtml(_('tentative {n}', { n: j.attempts || 1 }))}${fileName ? ' · ' + escapeHtml(fileName) : ''}</div>
                 ${actions.length ? `<div class="sched-job__actions">${actions.join('')}</div>` : ''}
               </div>
@@ -3706,7 +3774,7 @@
           showToast(_('Aucun compte vert disponible pour ce projet.'), 'warning');
           return;
         }
-        var names = res.map(function(a) { return a.name + ' (' + a.profile + ')'; });
+        var names = res.map(function(a) { return window.iaoProfilCompte.libelleProfil(a.profile, accounts); });
         var choice = prompt(_('Comptes verts disponibles :') + '\n' + names.map(function(n, i) { return (i+1) + '. ' + n; }).join('\n') + '\n\n' + _('Numéro du compte :'), '1');
         if (!choice) return;
         var idx = parseInt(choice, 10) - 1;

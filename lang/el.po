@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Σύρετε για αλλαγή μεγέθους του επεξεργαστή"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Επαναφορά ανοιχτών καρτελών κατά την εκκίνηση"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Επαναφορά ανοιχτών καρτελών κατά την εκκίνηση"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Καμία ανοιχτή καρτέλα — επιλέξτε μια υπηρεσία από τη λίστα λογαριασμών"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Το προφίλ επιτρέπει την απομόνωση των cookies στο Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Όνομα λογαριασμού"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Όνομα προφίλ"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

@@ -41,6 +41,10 @@
      ouvert » du 17/09/2026 — extraites vers lib/ dès l'écriture (invariant
      11) pour être testables par `node --test`. -->
 <script src="lib/tab-actions.js"></script>
+<!-- Issue #339 : helpers purs du défilement de la barre d'onglets (flèches
+     gauche/droite quand la barre déborde), testés par node --test
+     (test/defilement-onglets.test.js). -->
+<script src="lib/defilement-onglets.js"></script>
 <!-- tabStarKey / isTabStarred / toggleTabStar / serializeStarredTabs /
      deserializeStarredTabs : issue #154 « Onglets étoilés » — extraites vers
      lib/ dès l'écriture (invariant 11) pour être testables par `node --test`. -->
@@ -50,6 +54,8 @@
      l'ordonnanceur peut proposer la restauration depuis son instantané. -->
 <script src="lib/local-storage-json.js"></script>
 <script src="lib/comptes-serie.js"></script>
+<!-- Issue #333 : profil tiré du nom du compte, libellé « nom - adresse mail ». -->
+<script src="lib/profil-compte.js"></script>
 <script src="lib/service-icons.js"></script>
 <script src="lib/services-actifs.js"></script>
 <script src="lib/taches-runner.js"></script>
@@ -194,7 +200,15 @@
 
     <!-- Zone IA : onglets (un onglet par service/compte ouvert) -->
     <div class="ai-area" id="aiArea">
-      <div class="tabs-bar" id="tabsBar"></div>
+      <!-- Issue #339 : l'onglet fixe (#338) est épinglé hors de la zone
+           défilante (il ne bouge jamais) ; les onglets de comptes défilent
+           dans la zone, guidés par des flèches quand la barre déborde. -->
+      <div class="tabs-bar" id="tabsBar">
+        <div class="tabs-bar__fixe" id="tabsBarFixe" hidden></div>
+        <button type="button" class="tabs-arrow" id="tabsArrowLeft" data-action="tabs-scroll" data-dir="-1" title="Faire défiler les onglets vers la gauche" hidden><span class="ic" data-icon="chevron-left"></span></button>
+        <div class="tabs-bar__scroll" id="tabsScrollZone"></div>
+        <button type="button" class="tabs-arrow" id="tabsArrowRight" data-action="tabs-scroll" data-dir="1" title="Faire défiler les onglets vers la droite" hidden><span class="ic" data-icon="chevron-right"></span></button>
+      </div>
       <div class="tabs-content" id="tabsContent">
         <div class="tabs-empty" id="tabsEmpty"><span class="ic" data-icon="robot"></span><span>Aucun onglet ouvert — choisissez un service dans la liste des comptes</span></div>
       </div>
@@ -206,11 +220,11 @@
 <div class="modal-overlay" id="accountModal">
   <div class="modal">
     <div class="modal__title" id="modalTitle">Ajouter un compte</div>
-    <div class="modal__desc">Le profil permet d'isoler les cookies dans Electron.</div>
     <input type="hidden" id="editId">
     <div class="form-group"><label class="form-label">Nom du compte</label><input class="form-input" id="inputName" type="text"></div>
     <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="inputEmail" type="email"></div>
-    <div class="form-group"><label class="form-label">Nom du Profil</label><input class="form-input" id="inputProfile" type="text"></div>
+    <!-- Issue #333 : profil ni saisi ni affiché ; il reprend le nom du compte à la création. -->
+    <input id="inputProfile" type="hidden">
     <div class="form-group">
       <label class="form-label" for="inputMailPassword">Mot de passe de la messagerie</label>
       <div class="form-pass">

@@ -1,5 +1,32 @@
+## Issue #339 — flèches de défilement de la barre d'onglets (29/10/2026)
+
+### Ajouté
+- Quand la barre d'onglets déborde, des flèches gauche et droite encadrent la
+  zone défilante et font défiler les onglets (défilement lissé, ~80 % de la
+  zone visible par clic). Masquées quand la barre tient, désactivées à
+  l'extrême atteint (la paire reste affichée : la géométrie ne bouge pas).
+  Directions valables en LTR comme en RTL (contenu miroir).
+- L'onglet fixe (#338) est épinglé hors de la zone défilante (`#tabsBarFixe`) :
+  il ne défile jamais et reste visible. `lib/defilement-onglets.js` (pur) :
+  état des flèches (LTR et RTL via position normalisée, tolérance aux arrondis
+  sous-pixel) et pas de défilement.
+- L'onglet activé (clic, ouverture, fermeture d'un voisin) est amené dans la
+  partie visible de la zone ; la barre fine de défilement est retirée.
+- L'état des flèches suit les redimensionnements de la zone (fenêtre,
+  séparateurs de l'explorateur et de l'éditeur) via ResizeObserver.
+
+### Modifié
+- `index.html`/`assets/app.css` : la barre devient un conteneur (onglet fixe
+  épinglé, flèches, zone défilante `#tabsScrollZone`).
+
+### Tests
+- `test/defilement-onglets.test.js` ; harnais Electron : C9.5 (débordement,
+  défilement par flèches, onglet fixe immobile, onglet actif ramené, retour à
+  l'état).
+
 # Rapport de modifications — IAO (18/09/2026)
 
+<<<<<<< HEAD
 ## Issue #329 — sauvegarde complète de tout le dossier de données (29/10/2026)
 
 ### Ajouté
@@ -21,6 +48,16 @@
 - `test/sauvegarde-complete.test.js` (10) : chemins retenus/exclus, secrets transportables scrypt+AES-256-GCM (mot de passe faux → null), round-trip, entrées mal formées.
 - `test/main-sauvegarde.test.js` (15) : handlers IPC complets — création (annulations, exclusions, secret illisible omis, échec d'écriture) et restauration (mot de passe faux refusé avant toute écriture, rechiffrement au trousseau local, entrée de zip au nom dangereux refusée, fichier non zip).
 - `test/main-harness.test.js` : deux canaux IPC `sauvegarde-complete:creer` / `sauvegarde-complete:restaurer` dans la liste de référence.
+=======
+## Issue #316 — documentation des raccourcis clavier (29/10/2026)
+
+### Ajouté
+- `docs/raccourcis.md` : page « Raccourcis clavier » du guide utilisateur — palette `Ctrl+K` (ouverture, `Entrée`, `Échap`), onglets (`Ctrl+Tab` / `Ctrl+Maj+Tab` / `Alt+1..9`), `Ctrl+S` de l'éditeur, et le comportement des touches quand le focus est dans une page IA (webview).
+- `mkdocs.yml` : entrée « Raccourcis clavier » dans la navigation du guide utilisateur ; lien depuis la page d'accueil (`docs/index.md`).
+
+### Vérifié
+- `mkdocs build --strict` : la nouvelle page est construite, liens valides.
+>>>>>>> origin/dev
 
 ## Issue #335 — licence MIT et version des paquets (27/10/2026)
 
@@ -51,6 +88,16 @@
 
 ### Limites
 - Redirections HTTP vers un autre site non bloquées (connexion par fournisseur tiers possible) ; Ctrl+Tab et Alt+1..9 ignorent l'onglet fixe.
+## Issue #333 — le nom de profil n'est plus saisi ni affiché (27/10/2026)
+
+### Modifié
+- Le formulaire de compte ne demande plus de « Nom du Profil » : à la création, le profil Electron est tiré du nom du compte (`lib/profil-compte.js` : sans accents, minuscules, `[a-z0-9_-]`, 64 caractères au plus, rendu unique par suffixe `_2`, `_3`…).
+- Un compte modifié garde son profil (ses cookies et sessions y sont rangés) ; les anciens comptes sans profil en reçoivent un au démarrage.
+- La carte d'un compte n'affiche plus le profil ; l'ordonnanceur, l'historique des tâches et les messages présentent un compte par « nom - adresse mail ».
+- Création en série : le profil vaut le numéro du compte (`profil_<n>` si déjà pris).
+
+### Tests
+- `test/profil-compte.test.js`, `test/comptes-serie.test.js` ; harnais : C9.1b et contrôle du libellé dans C10.
 ## Issue #311 (relecture du 27/10/2026) — comptes dans `profils.json` (27/10/2026)
 
 ### Modifié

@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Seret untuk mengubah ukuran editor"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Pulihkan tab yang terbuka saat mulai"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Pulihkan tab yang terbuka saat mulai"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Tidak ada tab terbuka — pilih layanan dari daftar akun"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Profil memungkinkan isolasi cookie di Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Nama akun"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Nama profil"
 
 #: index.html
 msgid "Mot de passe de la messagerie"

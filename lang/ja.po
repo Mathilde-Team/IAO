@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "ドラッグしてエディターのサイズを変更"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "起動時に開いていたタブを復元する"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "起動時に開いていたタブを復元する"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "開いているタブはありません — アカウント一覧からサービスを選んでください"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "プロファイルにより Electron の Cookie が分離されます。"
-
-#: index.html
 msgid "Nom du compte"
 msgstr "アカウント名"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "プロファイル名"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
