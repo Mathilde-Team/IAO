@@ -12,12 +12,14 @@
 - L'écriture et la lecture du zip sont des fonctions pures sans dépendance npm (`lib/ecriture-zip.js`, `lib/sauvegarde-complete.js`), testées via `node --test` (invariants 7 et 11).
 
 ### Vérifié
-- `node --test` : 1351 tests, les 9 échecs pré-existants du dev sont inchangés (dialogues de dossier et openZip, déjà documentés).
+- `node --test` : 1373 tests, les 9 échecs pré-existants du dev sont inchangés (dialogues de dossier et openZip, déjà documentés).
 - `scripts/i18n-update.sh --check` : catalogues synchronisés pour les 30 langues.
+- Couverture : `lib/ecriture-zip.js` et `lib/sauvegarde-complete.js` à 100 % (lignes et branches), handlers de `main.js` à 100 % des lignes.
 
 ### Tests
-- `test/ecriture-zip.test.js` : format zip conforme au lecteur existant (bloc local, répertoire central, offsets, DOS time/date), noms sûrs.
-- `test/sauvegarde-complete.test.js` : chemins retenus/exclus, secrets transportables scrypt+AES-256-GCM (mot de passe faux → null), round-trip.
+- `test/ecriture-zip.test.js` (12) : format zip conforme au lecteur existant (bloc local, répertoire central, offsets, DOS time/date), noms sûrs, plafond ZIP64 injectable.
+- `test/sauvegarde-complete.test.js` (10) : chemins retenus/exclus, secrets transportables scrypt+AES-256-GCM (mot de passe faux → null), round-trip, entrées mal formées.
+- `test/main-sauvegarde.test.js` (15) : handlers IPC complets — création (annulations, exclusions, secret illisible omis, échec d'écriture) et restauration (mot de passe faux refusé avant toute écriture, rechiffrement au trousseau local, entrée de zip au nom dangereux refusée, fichier non zip).
 - `test/main-harness.test.js` : deux canaux IPC `sauvegarde-complete:creer` / `sauvegarde-complete:restaurer` dans la liste de référence.
 
 ## Issue #335 — licence MIT et version des paquets (27/10/2026)

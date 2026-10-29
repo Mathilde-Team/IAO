@@ -85,3 +85,25 @@ test('secretsPortables : coffre mal formé -> sauvegarde vide, sans planter', ()
   assert.deepEqual(portables.entrees, {});
   assert.equal(s.secretsPortables('pas un objet', 'x', dechiffre, crypto).entrees && Object.keys(s.secretsPortables('pas un objet', 'x', dechiffre, crypto).entrees).length, 0);
 });
+
+test('cheminsASauvegarder : entrée non liste -> liste vide, sans planter', () => {
+  assert.deepEqual(s.cheminsASauvegarder(null), []);
+  assert.deepEqual(s.cheminsASauvegarder('profils.json'), []);
+});
+
+test('secretsPortables : clé vide ou valeur non texte -> entrée omise', () => {
+  const coffre = { '': chiffre('a'), 'nombre': 42, 'bon': chiffre('b') };
+  const portables = s.secretsPortables(coffre, 'mdp', dechiffre, crypto);
+  assert.deepEqual(Object.keys(portables.entrees), ['bon']);
+});
+
+test('secretsEnClair : entrées mal formées -> null net (aucune écriture partielle)', () => {
+  const base = s.secretsPortables({ 'p': chiffre('x') }, 'mdp', dechiffre, crypto);
+  const casse = (modif) => s.secretsEnClair(Object.assign(JSON.parse(JSON.stringify(base)), modif), 'mdp', crypto);
+  // entrée nulle, entrée non objet, puis chaque champ manquant
+  assert.equal(casse({ entrees: { p: null } }), null);
+  assert.equal(casse({ entrees: { p: 'chiffre' } }), null);
+  assert.equal(casse({ entrees: { p: { tag: base.entrees.p.tag, donnees: base.entrees.p.donnees } } }), null);
+  assert.equal(casse({ entrees: { p: { iv: base.entrees.p.iv, donnees: base.entrees.p.donnees } } }), null);
+  assert.equal(casse({ entrees: { p: { iv: base.entrees.p.iv, tag: base.entrees.p.tag } } }), null);
+});

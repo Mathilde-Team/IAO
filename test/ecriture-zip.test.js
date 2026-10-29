@@ -88,3 +88,35 @@ test('ecrireZip : fichier sur disque relu de bout en bout', () => {
   assert.equal(contenu.toString('utf8'), '{"ok":true}');
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('ecrireZip : date fournie (Date) et date par défaut, deux en-têtes valides', () => {
+  // côté « Date » du ternaire de dateHeureDOS, puis repli sur l'heure courante.
+  const avecDate = z.ecrireZip([{ nom: 'a.txt', contenu: 'x', date: new Date('2026-10-29T12:00:00Z') }]);
+  const sansDate = z.ecrireZip([{ nom: 'a.txt', contenu: 'x' }]);
+  assert.deepEqual(lireZip(avecDate).map(e => e.nom), ['a.txt']);
+  assert.deepEqual(lireZip(sansDate).map(e => e.nom), ['a.txt']);
+});
+
+test('nomSure : deux points hors racine, refus seulement en position de lecteur', () => {
+  assert.equal(z.nomSure('1:x'), false); // « 1: » lu comme racine de lecteur
+  assert.equal(z.nomSure('ab:c/du.txt'), true); // deux points plus loin : accepté
+});
+
+test('ecrireZip : entrée sans nom (repli sur « ») refusée, entrées non liste -> archive vide', () => {
+  assert.throws(() => z.ecrireZip([{ nom: 42, contenu: 'x' }]), /non sûr/);
+  assert.deepEqual(lireZip(z.ecrireZip(null)).map(e => e.nom), []);
+  assert.deepEqual(lireZip(z.ecrireZip(undefined)).map(e => e.nom), []);
+});
+
+test('ecrireZip : plafond ZIP64 injectable, refus net avant écriture (garde de #329)', () => {
+  // entrée seule trop grande
+  assert.throws(() => z.ecrireZip([{ nom: 'gros.txt', contenu: 'x'.repeat(50) }], { plafond: 10 }),
+    /entrée trop grande/);
+  // cumul des contenus au-delà du plafond
+  assert.throws(() => z.ecrireZip([
+    { nom: 'a.txt', contenu: 'xxxxxx' }, { nom: 'b.txt', contenu: 'xxxxxx' }
+  ], { plafond: 10 }), /archive trop grande/);
+  // offset cumulé (en-têtes + contenus) au-delà du plafond
+  assert.throws(() => z.ecrireZip([{ nom: 'a.txt', contenu: 'x' }], { plafond: 10 }),
+    /archive trop grande/);
+});
