@@ -963,7 +963,7 @@ async function run() {
 
   await test('C9.1b Nom de profil ni saisi ni affiché, tiré du nom du compte (#333)', async () => {
     const r = await exec(`(() => {
-      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : profils.json
       openModal(comptes.find(a => a.profile === 'profil_1').id);
       const champ = document.getElementById('inputProfile');
       const libelles = [...document.querySelectorAll('#accountModal .form-label')].map(l => l.textContent);
@@ -976,10 +976,10 @@ async function run() {
     assert(r.cartes.length > 0 && r.cartes.every(t => !/profil_\d/.test(t)), 'profil encore affiché sur une carte : ' + JSON.stringify(r.cartes));
     // Un compte modifié garde son profil (ses sessions y sont).
     const garde = await exec(`(() => {
-      const id = JSON.parse(localStorage.getItem('ai_accounts')).find(a => a.profile === 'profil_1').id;
+      const id = window.iaoAPI.profilsLire().comptes.find(a => a.profile === 'profil_1').id; // #311
       openModal(id);
       saveAccount();
-      const apres = JSON.parse(localStorage.getItem('ai_accounts')).find(a => a.id === id);
+      const apres = window.iaoAPI.profilsLire().comptes.find(a => a.id === id); // #311
       return apres ? apres.profile : null;
     })()`);
     assert(garde === 'profil_1', 'profil changé à la modification : ' + garde);
