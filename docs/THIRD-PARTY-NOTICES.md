@@ -12,6 +12,17 @@ Il embarque les composants suivants, tous en local (aucun CDN).
 | Monaco Editor | `node_modules/monaco-editor` | MIT, © Microsoft | [microsoft/monaco-editor](https://github.com/microsoft/monaco-editor) |
 | Electron | exécutable | MIT, © contributeurs Electron | [electron/electron](https://github.com/electron/electron) |
 
+## Dans les paquets distribués
+
+Les paquets (`npm run dist:win`, `dist:linux`, AppImage, deb) embarquent
+(issue #335) :
+
+- `LICENSE` d'IAO et ce fichier (`docs/THIRD-PARTY-NOTICES.md`), dans `resources/app.asar` ;
+- `LICENSE` (ou `LICENSE.electron.txt`) d'Electron et `LICENSES.chromium.html`, à côté de l'exécutable ;
+- `LICENSE` et `ThirdPartyNotices.txt` de Monaco, dans `resources/app.asar.unpacked/node_modules/monaco-editor/`.
+
+La version des paquets est celle de `package.json`.
+
 ## Logos des services
 
 Les logos de `lib/service-icons.js` (issue #324) restent des marques de leurs

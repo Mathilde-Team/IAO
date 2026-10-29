@@ -15,6 +15,8 @@
 //   window.iaoAPI.resolveMonacoBase()          → URL absolue de Monaco
 //   window.iaoAPI.preferencesLire()            → préférences de preferences.json (#331)
 //   window.iaoAPI.preferencesEcrire(prefs)     → écriture de preferences.json (#331)
+//   window.iaoAPI.profilsLire()                → comptes de profils.json (#311)
+//   window.iaoAPI.profilsEcrire(comptes)       → écriture de profils.json (#311)
 //
 // Aucun autre accès Node n'est exposé : le renderer ne peut appeler QUE
 // les canaux IPC whitelistés par le process principal (main.js).
@@ -33,6 +35,12 @@ contextBridge.exposeInMainWorld('iaoAPI', {
   // avant que l'appelant rende la main.
   preferencesLire: () => ipcRenderer.sendSync('preferences:lire'),
   preferencesEcrire: (prefs) => ipcRenderer.sendSync('preferences:ecrire', prefs),
+  // Issue #311 : les comptes vivent dans <userData>/profils.json. Lecture et
+  // écriture SYNCHRONES, sur deux canaux fixes seulement : le renderer charge
+  // ses comptes avant de dessiner l'interface, et une écriture est sur le
+  // disque quand saveAccounts() rend la main (relance, fermeture juste après).
+  profilsLire: () => ipcRenderer.sendSync('profils:lire'),
+  profilsEcrire: (comptes) => ipcRenderer.sendSync('profils:ecrire', comptes),
 
   // URL absolue (file:///…/node_modules/monaco-editor/min/vs) du dossier
   // Monaco, calculée depuis l'URL de la page avec l'API URL standard (pas

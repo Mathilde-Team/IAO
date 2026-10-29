@@ -99,6 +99,7 @@ function loadMain() {
   };
 
   // Canaux synchrones (ipcMain.on + event.returnValue), issue #331.
+  // Canaux synchrones (ipcMain.on + event.returnValue), issue #311.
   const envoyerSync = (channel, ...args) => {
     const quiet = console.error;
     console.error = () => {};
@@ -262,5 +263,50 @@ test('#331 preferences:ecrire invalide et preferences:lire illisible : journalis
     fs.mkdirSync(dossier, { recursive: true });
     fs.writeFileSync(path.join(dossier, 'preferences.json'), '{tronqué');
     assert.equal(h.envoyerSync('preferences:lire').status, 'corrompu');
+  } finally { h.cleanup(); }
+});
+
+// --- profils:lire / profils:ecrire (issue #311) -------------------------------
+
+test('#311 profils:lire : premier démarrage -> absent', () => {
+  const h = loadMain();
+  try {
+    assert.deepEqual(h.envoyerSync('profils:lire'), { status: 'absent' });
+  } finally { h.cleanup(); }
+});
+
+test('#311 profils:ecrire puis profils:lire : comptes dans <userData>/profils.json', () => {
+  const h = loadMain();
+  try {
+    const comptes = [{ id: 'a1', name: 'Alice', email: 'a@x.fr', profile: 'alice' }];
+    assert.deepEqual(h.envoyerSync('profils:ecrire', comptes), { ok: true, nombre: 1 });
+    const fichier = path.join(h.tmp, 'userData', 'profils.json');
+    assert.deepEqual(JSON.parse(fs.readFileSync(fichier, 'utf-8')), comptes);
+    assert.deepEqual(h.envoyerSync('profils:lire'), { status: 'ok', comptes });
+  } finally { h.cleanup(); }
+});
+
+test('#311 profils:ecrire : liste invalide -> { ok: false }, rien d\'écrit', () => {
+  const h = loadMain();
+  try {
+    const r = h.envoyerSync('profils:ecrire', { pas: 'un tableau' });
+    assert.equal(r.ok, false);
+    assert.equal(fs.existsSync(path.join(h.tmp, 'userData', 'profils.json')), false);
+  } finally { h.cleanup(); }
+});
+
+test('#311 profils:lire : fichier illisible -> corrompu, avec ou sans sauvegarde', () => {
+  const h = loadMain();
+  try {
+    const dossier = path.join(h.tmp, 'userData');
+    fs.mkdirSync(dossier, { recursive: true });
+    fs.writeFileSync(path.join(dossier, 'profils.json'), '{tronqué');
+    const sans = h.envoyerSync('profils:lire');
+    assert.equal(sans.status, 'corrompu');
+    assert.equal(sans.sauvegarde, null);
+    fs.writeFileSync(path.join(dossier, 'profils.json.bak'), JSON.stringify([{ id: 'b' }]));
+    const avec = h.envoyerSync('profils:lire');
+    assert.equal(avec.status, 'corrompu');
+    assert.deepEqual(avec.sauvegarde, [{ id: 'b' }]);
   } finally { h.cleanup(); }
 });

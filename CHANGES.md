@@ -1,5 +1,57 @@
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #335 — licence MIT et version des paquets (27/10/2026)
+
+### Modifié
+- `package.json` et `package-lock.json` : licence `ISC` → `MIT`, comme le fichier `LICENSE` (copyright X'o-noth).
+- `dist:win` et `dist:linux` ne codent plus `--app-version=1.0.0` : electron-packager prend la version de `package.json`.
+- Les paquets gardent `ThirdPartyNotices.txt` de Monaco (exclu jusqu'ici) et `docs/THIRD-PARTY-NOTICES.md` (le reste de `docs/` reste exclu), pour electron-packager et electron-builder.
+- `docs/THIRD-PARTY-NOTICES.md` : liste des notices embarquées.
+
+### Vérifié
+- `npm run dist:linux` et `electron-builder --linux dir` : licence MIT et version 1.0.0 dans le `package.json` embarqué, `LICENSE`, `docs/THIRD-PARTY-NOTICES.md`, notices Electron/Chromium et Monaco présentes.
+- README et `installer/` : README dit MIT, l'installeur ne mentionne pas de licence.
+
+### Tests
+- `test/licence-distribution.test.js`.
+## Issue #338 — premier onglet fixe (27/10/2026)
+
+### Ajouté
+- Réglages : « Ouvrir un premier onglet fixe » et « Adresse du premier onglet » (https). Une adresse invalide est refusée avant enregistrement.
+- Onglet en tête de la barre, sans croix ni glisser-déposer ni menu contextuel ; un clic le ramène à l'adresse définie. Décocher le réglage le retire.
+- `lib/onglet-fixe.js` : partition `persist:onglet-fixe`, `memeSite()` (même hôte ou sous-domaine, https), `configuration()`, `libelle()`.
+- `main.js` : navigations et popups de cet onglet jugées par `memeSite()` ; sortie du site bloquée et journalisée, popup du même site chargée dans l'onglet.
+- Les identifiants partagés des réglages (#278) y sont proposés (preload posé sur chaque session).
+- Traductions en/de/es/it.
+
+### Tests
+- `test/onglet-fixe.test.js`, `test/main-window-security.test.js` (#338), `test/settings.test.js` ; harnais C9.4.
+
+### Limites
+- Redirections HTTP vers un autre site non bloquées (connexion par fournisseur tiers possible) ; Ctrl+Tab et Alt+1..9 ignorent l'onglet fixe.
+## Issue #311 (relecture du 27/10/2026) — comptes dans `profils.json` (27/10/2026)
+
+### Modifié
+- **Les comptes quittent le localStorage** : nom, adresse, profil, couleur, services,
+  cooldowns et automatisation sont dans `<userData>/profils.json`
+  (`~/.config/ai-manager`, `%APPDATA%\ai-manager`). `saveAccounts()` (création,
+  modification, suppression, import, restauration) l'écrit par le process principal ;
+  le localStorage ne garde que l'état de l'interface (onglets, étoiles, ordre, repli).
+- **`lib/profils.js`** (nouveau) : lecture tolérante (`absent` / `ok` / `corrompu` /
+  `erreur`), écriture atomique (fichier temporaire puis renommage), version précédente
+  dans `profils.json.bak`, fichier illisible mis de côté dans `profils.json.illisible`.
+- **`main.js`** : canaux synchrones `profils:lire` et `profils:ecrire` (aucun contenu de
+  compte journalisé) ; **`preload.js`** : `iaoAPI.profilsLire()` / `profilsEcrire()`.
+  Synchrones pour que les comptes soient lus avant le premier affichage et qu'un compte
+  créé juste avant une relance soit déjà sur le disque.
+- **Migration** : au premier démarrage sans `profils.json`, les comptes du localStorage
+  (`ai_accounts`) y sont recopiés, puis les anciennes clés retirées.
+- Restauration d'un `profils.json` illisible : depuis `profils.json.bak` (modale
+  existante « Données de comptes illisibles »).
+- Tests : `test/profils.test.js`, `test/main-accounts.test.js`,
+  `test/preload-sandbox.test.js` ; harnais Electron C8.0 (migration, perte du
+  localStorage sans perte de compte) et C8.1 (perte de `profils.json`).
+- README (emplacement des données), `docs/PROJECT_CONTEXT.md` §5, CLAUDE.md invariant 3.
 ## Issue #331 — préférences de l'interface dans un fichier (27/10/2026)
 
 ### Modifié
@@ -21,7 +73,7 @@
 
 ### Limites
 - Les réglages de la fenêtre « Réglages » restent dans `settings.json`, et les comptes
-  dans le `localStorage` tant que #311 n'est pas fusionnée.
+  dans `profils.json` (#311, fusionnée depuis).
 
 ## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
 

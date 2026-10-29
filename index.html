@@ -83,6 +83,7 @@
      normalizeWordWrap/normalizeBoolean/settingsChanged : lot « Panneau de
      réglages » du 18/09/2026 — extraites vers lib/ dès l'écriture (invariant 11). -->
 <script src="lib/settings.js"></script>
+<script src="lib/onglet-fixe.js"></script>
 <!-- copyText : issue #138 (clic sur l'e-mail d'un compte -> presse-papiers),
      extraite vers lib/ dès l'écriture (invariant 11), dépendances injectées. -->
 <script src="lib/copy-text.js"></script>
@@ -574,6 +575,16 @@
       <div>
         <label class="settings-label" for="settingsWebmailUrl">Adresse du webmail (Roundcube)</label>
         <input type="url" id="settingsWebmailUrl" class="settings-input settings-input--wide" placeholder="https://mail.dmathilde.fr" spellcheck="false">
+      </div>
+
+      <!-- Premier onglet immuable (issue #338) -->
+      <div>
+        <label class="settings-checkbox-label">
+          <input type="checkbox" id="settingsOngletFixeActif"> Ouvrir un premier onglet fixe
+        </label>
+        <label class="settings-label" for="settingsOngletFixeUrl">Adresse du premier onglet</label>
+        <input type="url" id="settingsOngletFixeUrl" class="settings-input settings-input--wide" placeholder="https://github.com/Mathilde-Team" spellcheck="false">
+        <span class="settings-hint">Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter.</span>
       </div>
 
       <!-- Identifiants des connecteurs, partagés entre profils (issue #278) -->

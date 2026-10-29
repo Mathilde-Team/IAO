@@ -82,3 +82,10 @@ test('#331 : preferencesLire / preferencesEcrire passent par deux canaux synchro
   assert.deepEqual(exposed.iaoAPI.preferencesEcrire({ ide_w: '1px' }), { status: 'ok' });
   assert.deepEqual(invoked, [['sync', 'preferences:lire'], ['sync', 'preferences:ecrire', { ide_w: '1px' }]]);
 });
+
+test('#311 : profilsLire / profilsEcrire passent par deux canaux synchrones fixes', () => {
+  const { exposed, invoked } = runPreloadSandboxed('file:///home/u/IAO/index.html');
+  assert.deepEqual(exposed.iaoAPI.profilsLire(), { status: 'ok' });
+  assert.deepEqual(exposed.iaoAPI.profilsEcrire([{ id: 'a' }]), { status: 'ok' });
+  assert.deepEqual(invoked, [['sync', 'profils:lire'], ['sync', 'profils:ecrire', [{ id: 'a' }]]]);
+});

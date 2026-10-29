@@ -251,8 +251,11 @@ async function run() {
     (args.length ? ', ' + args.map(a => JSON.stringify(a)).join(', ') : '') + ')'
   );
 
-  // Seed : initApp lit localStorage AU DÉMARRAGE -> on écrit puis on RECHARGE
+  // Seed : initApp lit ses comptes AU DÉMARRAGE -> on écrit puis on RECHARGE
   // la page (renderAccounts n'est pas exposée globalement, à dessein).
+  // Issue #311 : les comptes sont semés dans l'ancien emplacement
+  // (localStorage) ; le rechargement les migre dans <userData>/profils.json
+  // (vérifié par C8.0).
   // startWithLastSession est activé pour tester la restauration des onglets.
   const saved = await ipc('settings:save', { startWithLastSession: true });
   assert(saved && saved.ok, 'settings:save a échoué : ' + JSON.stringify(saved));
@@ -391,11 +394,11 @@ async function run() {
       document.getElementById('inputEmail').value = 'c319@example.com';
       document.getElementById('inputProfile').value = 'profil_319';
       saveAccount();
-      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : comptes dans profils.json
       const c = comptes.find(a => a.profile === 'profil_319');
       const services = c ? c.services.join(',') : null;
       if (c) {
-        localStorage.setItem('ai_accounts', JSON.stringify(comptes.filter(a => a.profile !== 'profil_319')));
+        window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'profil_319'));
       }
       // la suite du harnais attend la sélection par défaut
       (() => { const p = window.iaoAPI.preferencesLire().preferences || {}; delete p.ai_active_services; window.iaoAPI.preferencesEcrire(p); })(); // #331 : préférences dans preferences.json
@@ -856,10 +859,31 @@ async function run() {
   // =========================================================================
   console.log('\n--- C8 : Restauration des comptes au démarrage ---');
 
-  await test('C8.1 localStorage vidé : modale « Comptes retrouvés », restauration sans import', async () => {
+  const profilsJson = path.join(app.getPath('userData'), 'profils.json');
+  await test('C8.0 comptes dans profils.json (#311) : migration unique, localStorage vidé sans effet', async () => {
+    assert(fs.existsSync(profilsJson), 'profils.json absent après la migration du seed');
+    const fichier = JSON.parse(fs.readFileSync(profilsJson, 'utf-8'));
+    assert(JSON.stringify(fichier.map((a) => a.profile)) === JSON.stringify(seedAccounts.map((a) => a.profile)),
+      'profils.json : ' + fichier.map((a) => a.profile).join(','));
+    const anciennes = await exec(`[localStorage.getItem('ai_accounts'), localStorage.getItem('ai_accounts_backup')]`);
+    assert(anciennes[0] === null && anciennes[1] === null, 'anciennes clés de comptes encore dans le localStorage');
+    // Perte du localStorage (cas de l'issue #311) : les comptes restent.
+    await exec(`localStorage.removeItem('ai_accounts'); localStorage.removeItem('ai_accounts_backup'); localStorage.removeItem('ai_open_tabs'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const cartes = await exec(`document.querySelectorAll('#accountsList .account-card').length`);
+    assert(cartes === seedAccounts.length, 'cartes après perte du localStorage : ' + cartes);
+    const modale = await exec(`document.getElementById('snapshotRestore') !== null`);
+    assert(!modale, 'modale de restauration affichée alors que profils.json est lisible');
+  });
+
+  await test('C8.1 profils.json perdu : modale « Comptes retrouvés », restauration sans import', async () => {
     // L'instantané de l'ordonnanceur contient les comptes du seed (synchronisés
-    // au démarrage). On simule la perte du localStorage de l'interface.
+    // au démarrage). On simule la perte de profils.json et du localStorage.
     await ipc('scheduler:sync-accounts', seedAccounts);
+    fs.rmSync(profilsJson, { force: true });
+    fs.rmSync(profilsJson + '.bak', { force: true });
     await exec(`localStorage.removeItem('ai_accounts'); localStorage.removeItem('ai_accounts_backup'); localStorage.removeItem('ai_open_tabs'); 'ok'`);
     win.webContents.reload();
     await sleep(300);
@@ -876,10 +900,10 @@ async function run() {
       setTimeout(() => resolve({
         modal: document.getElementById('snapshotRestore') !== null,
         cards: document.querySelectorAll('#accountsList .account-card').length,
-        stored: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.profile),
-        emails: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.email),
-        couleurs: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.color),
-        noms: JSON.parse(localStorage.getItem('ai_accounts') || '[]').map((a) => a.name),
+        stored: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.profile),
+        emails: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.email),
+        couleurs: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.color),
+        noms: (window.iaoAPI.profilsLire().comptes || []).map((a) => a.name),
         lignes: [...document.querySelectorAll('#accountsList .account-email')].map((e) => e.textContent.trim())
       }), 200);
     })`);
@@ -958,10 +982,10 @@ async function run() {
       await saveSettings();
       openSerieModal();
       const desc = document.getElementById('serieDesc').textContent;
-      const avant = JSON.parse(localStorage.getItem('ai_accounts')).length;
+      const avant = window.iaoAPI.profilsLire().comptes.length;
       document.getElementById('serieNombre').value = '2';
       await createSerie();
-      const comptes = JSON.parse(localStorage.getItem('ai_accounts'));
+      const comptes = window.iaoAPI.profilsLire().comptes;
       return { desc, avant, apres: comptes.length, derniers: comptes.slice(-2).map(c => c.name + ' ' + c.email + ' ' + c.profile),
         ouvert: document.getElementById('serieModal').classList.contains('open'),
         webmail: document.querySelectorAll('#accountsList [data-action="open-webmail"]').length };
@@ -977,7 +1001,7 @@ async function run() {
 
   await test('C9.2 Mot de passe de messagerie : généré, masqué par défaut, bouton œil', async () => {
     const r = await exec(`(() => {
-      const acc = JSON.parse(localStorage.getItem('ai_accounts')).slice(-1)[0];
+      const acc = window.iaoAPI.profilsLire().comptes.slice(-1)[0];
       openModal(acc.id);
       const pass = document.getElementById('inputMailPassword');
       const masque = pass.type;
@@ -1004,7 +1028,7 @@ async function run() {
         const wv = document.getElementById(t.dataset.tab).querySelector('webview');
         window.__liens310 = [];
         wv.loadURL = (u) => { window.__liens310.push(u); return Promise.resolve(); };
-        const acc = JSON.parse(localStorage.getItem('ai_accounts')).find(a => a.id === 'acc_test_1');
+        const acc = window.iaoAPI.profilsLire().comptes.find(a => a.id === 'acc_test_1');
         resolve({ tab: t.dataset.tab, svc: t.dataset.svc, profil: acc.profile });
       }, 200);
     })`);
@@ -1072,6 +1096,68 @@ async function run() {
   };
   const dansDeuxJoursISO = () => new Date(Date.now() + 2 * 86400000).toISOString();
 
+
+  await test('C9.4 Premier onglet fixe : réglage, en tête, ni fermeture ni déplacement, retour à l\'adresse, retrait (#338)', async () => {
+    const r = await exec(`(async () => {
+      const pause = (ms) => new Promise(r => setTimeout(r, ms));
+      const toasts = () => [...document.querySelectorAll('#toastContainer .toast')].map(t => t.textContent.trim()).join(' | ');
+      openSettingsModal();
+      await pause(200);
+      // http:// refusé : message, rien d'enregistré, pas d'onglet.
+      document.getElementById('settingsOngletFixeActif').checked = true;
+      document.getElementById('settingsOngletFixeUrl').value = 'http://127.0.0.1:9/';
+      await saveSettings();
+      const refus = toasts();
+      const ongletApresRefus = document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null;
+      const modaleOuverte = document.getElementById('settingsModal').classList.contains('open');
+      document.getElementById('settingsOngletFixeUrl').value = 'https://127.0.0.1:9/accueil';
+      await saveSettings();
+      await pause(300);
+      const bar = document.getElementById('tabsBar');
+      const fixe = bar.querySelector('[data-tab="tab_fixe"]');
+      const wv = document.querySelector('#tab_fixe webview');
+      const etat = {
+        refus, ongletApresRefus, modaleOuverte,
+        premier: bar.querySelector('.tab') ? bar.querySelector('.tab').getAttribute('data-tab') : null,
+        libelle: fixe ? fixe.querySelector('.tab__label').textContent.trim() : null,
+        fermeture: fixe ? fixe.querySelector('.tab__close') !== null : null,
+        deplacable: fixe ? fixe.getAttribute('draggable') : null,
+        partition: wv ? wv.getAttribute('partition') : null,
+        src: wv ? wv.getAttribute('src') : null
+      };
+      // Fermeture impossible, menu contextuel absent.
+      closeTab('tab_fixe');
+      fixe.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 5, clientY: 5 }));
+      etat.toujoursLa = document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null;
+      etat.menu = document.querySelector('.ctx-menu') !== null;
+      // Clic : l'onglet passe au premier plan.
+      document.querySelector('#tabsBar [data-tab="tab_fixe"]').click();
+      await pause(100);
+      etat.actif = document.getElementById('tab_fixe').classList.contains('active');
+      etat.barreActive = document.querySelector('#tabsBar [data-tab="tab_fixe"]').classList.contains('active');
+      return etat;
+    })()`);
+    assert(/https:\/\//.test(r.refus), 'message d\'adresse invalide attendu : ' + r.refus);
+    assert(!r.ongletApresRefus && r.modaleOuverte, 'adresse invalide : ni onglet ni fermeture des réglages');
+    assert(r.premier === 'tab_fixe', 'onglet fixe en tête attendu : ' + r.premier);
+    assert(r.libelle === '127.0.0.1', 'libellé : ' + r.libelle);
+    assert(r.fermeture === false && r.deplacable === 'false', 'ni croix ni glisser attendus');
+    assert(r.partition === 'persist:onglet-fixe' && r.src === 'https://127.0.0.1:9/accueil', 'webview : ' + r.partition + ' ' + r.src);
+    assert(r.toujoursLa && !r.menu, 'onglet fermé ou menu contextuel affiché');
+    assert(r.actif && r.barreActive, 'onglet fixe non activé au clic');
+    const enregistres = await ipc('settings:load');
+    assert(enregistres.ongletFixeActif === true && enregistres.ongletFixeUrl === 'https://127.0.0.1:9/accueil',
+      'réglages enregistrés : ' + JSON.stringify([enregistres.ongletFixeActif, enregistres.ongletFixeUrl]));
+    // Décoché : l'onglet disparaît.
+    const retrait = await exec(`(async () => {
+      openSettingsModal();
+      await new Promise(r => setTimeout(r, 200));
+      document.getElementById('settingsOngletFixeActif').checked = false;
+      await saveSettings();
+      return { onglet: document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null, panneau: document.getElementById('tab_fixe') !== null };
+    })()`);
+    assert(!retrait.onglet && !retrait.panneau, 'onglet fixe toujours présent après décochage');
+  });
 
   await test('C10.1 modale ordonnanceur : interface des tâches visible, liste vide', async () => {
     await exec('window.openSchedulerModal()');

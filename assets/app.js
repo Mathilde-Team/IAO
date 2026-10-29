@@ -352,9 +352,12 @@
     // Icônes statiques du HTML (chantier D) : on remplit les <span class="ic">.
     hydrateIcons(document);
 
-    // === Stockage résilient des comptes (chantier C) ===
-    // Toute la persistance passe désormais par ces helpers : lecture tolérante
-    // aux données corrompues + une génération de backup avant chaque écrasement.
+    // === Stockage résilient des comptes (chantier C, puis issue #311) ===
+    // Issue #311 : les comptes vivent dans <userData>/profils.json (process
+    // principal, lib/profils.js : écriture atomique, version précédente dans
+    // profils.json.bak). Le localStorage ne garde que l'état de l'interface
+    // (onglets, étoiles, ordre, repli). Les deux clés ci-dessous ne sont plus
+    // que LUES, une fois, pour migrer une installation antérieure.
     const STORE_KEY = 'ai_accounts';
     const BACKUP_KEY = 'ai_accounts_backup';
     const TABS_KEY = 'ai_open_tabs'; // lot 18/09/2026 : restauration des onglets au démarrage
@@ -396,18 +399,24 @@
       return r;
     }
 
-    // Sauvegarde la liste de comptes. Avant d'écraser, on copie l'ancienne valeur
-    // dans BACKUP_KEY — mais UNIQUEMENT si elle est elle-même un JSON valide, pour
-    // ne jamais détruire un bon backup en y recopiant une valeur corrompue.
+    // Issue #311 : écriture synchrone de profils.json par le process principal
+    // (profils:ecrire). La version précédente lisible passe dans
+    // profils.json.bak ; un fichier illisible est mis de côté, jamais écrasé
+    // sans copie. Renvoie { ok, nombre } ou { ok: false, erreur }.
+    function ecrireProfils(list) {
+      try {
+        return window.iaoAPI.profilsEcrire(list) || { ok: false, erreur: 'pas de réponse' };
+      } catch (e) {
+        return { ok: false, erreur: (e && e.message) || String(e) };
+      }
+    }
+
+    // Sauvegarde la liste de comptes dans profils.json (issue #311).
     function saveAccounts(list) {
       dbg('comptes', 'enregistrement de ' + list.length + ' compte(s)');
       try {
-        const prev = localStorage.getItem(STORE_KEY);
-        if (prev != null) {
-          try { JSON.parse(prev); localStorage.setItem(BACKUP_KEY, prev); }
-          catch (_) { /* valeur actuelle illisible : on préserve le backup existant */ }
-        }
-        localStorage.setItem(STORE_KEY, JSON.stringify(list));
+        const r = ecrireProfils(list);
+        if (!r.ok) throw new Error(r.erreur);
         // Ordonnanceur (chantier E) : on pousse un instantané des comptes
         // (profil + état d'automatisation) au process principal, seul capable
         // de choisir un profil "le plus ancien" indépendamment des fenêtres
@@ -416,7 +425,7 @@
         try { ipcRenderer.invoke('scheduler:sync-accounts', list).catch(() => {}); } catch (_) { /* ignore */ }
         return true;
       } catch (e) {
-        console.error('[storage] échec écriture des comptes :', e);
+        console.error('[storage] échec écriture des comptes (profils.json) :', e);
         showToast(_('Impossible d\'enregistrer les comptes (stockage plein ?)'), 'error');
         return false;
       }
@@ -472,15 +481,41 @@
     }
 
     // Chargement initial tolérant : l'app ne plante JAMAIS au démarrage, même si
-    // ai_accounts est corrompu (le cas échéant on propose la restauration plus bas).
+    // profils.json est illisible (le cas échéant on propose la restauration plus bas).
     let dataCorrupt = false;
     let accounts = [];
     let accountsLoadStatus = 'empty'; // issue #186 : signalé à main.js pour iao.log
+    let profilsSauvegarde = null;     // issue #311 : profils.json.bak si profils.json est illisible
     (function loadAccounts() {
+      let p;
+      try { p = window.iaoAPI.profilsLire() || { status: 'erreur', erreur: 'pas de réponse' }; }
+      catch (e) { p = { status: 'erreur', erreur: (e && e.message) || String(e) }; }
+      if (p.status === 'ok') { accounts = p.comptes; accountsLoadStatus = 'ok'; return; }
+      if (p.status !== 'absent') {
+        console.error('[storage] profils.json illisible (' + p.status + ') :', p.erreur);
+        dataCorrupt = true;
+        profilsSauvegarde = Array.isArray(p.sauvegarde) ? p.sauvegarde : null;
+        accountsLoadStatus = p.status === 'corrompu' ? 'corrupt' : 'erreur';
+        return;
+      }
+      // profils.json absent : premier démarrage, ou installation antérieure
+      // à #311 dont les comptes sont encore dans le localStorage. Migration
+      // unique : les comptes lus y sont recopiés dans profils.json.
       const r = readJSON(STORE_KEY);
       accountsLoadStatus = r.status;
-      if (r.status === 'ok' && Array.isArray(r.data)) accounts = r.data;
-      else if (r.status === 'corrupt') dataCorrupt = true;
+      if (r.status === 'ok' && Array.isArray(r.data)) {
+        accounts = r.data;
+        if (accounts.length > 0) {
+          const w = ecrireProfils(accounts);
+          if (w.ok) {
+            // Les anciennes clés sont retirées : sinon, profils.json supprimé à
+            // la main, des comptes périmés reviendraient au démarrage suivant.
+            try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(BACKUP_KEY); }
+            catch (e) { console.warn('[storage] anciennes clés de comptes non retirées :', e); }
+            dbg('comptes', 'migration : ' + accounts.length + ' compte(s) du localStorage recopié(s) dans profils.json');
+          } else console.error('[storage] migration des comptes vers profils.json impossible :', w.erreur);
+        }
+      } else if (r.status === 'corrupt') dataCorrupt = true;
       // 'empty' ou JSON valide non-tableau -> accounts reste []
     })();
 
@@ -1005,6 +1040,88 @@
       }, M.INTERVALLE_LECTURE_MS);
     }
 
+    // Issue #338 : premier onglet immuable, hors de tabs[] (ni fermeture, ni
+    // déplacement, ni étoile, ni statistiques de compte). Session propre
+    // (persist:onglet-fixe) ; main.js bloque toute sortie du site.
+    const OF = window.iaoOngletFixe;
+    let ongletFixe = null; // { url, paneEl, webview }
+
+    function htmlOngletFixe() {
+      if (!ongletFixe) return '';
+      const cls = 'tab tab--fixe' + (activeTabId === OF.ID_ONGLET ? ' active' : '');
+      return `
+          <div class="${cls}" draggable="false" data-action="activate-tab" data-tab="${OF.ID_ONGLET}" title="${escapeHtml(ongletFixe.url)}">
+            <span class="ic" data-icon="house"></span>
+            <span class="tab__text">
+              <span class="tab__label">${escapeHtml(OF.libelle(ongletFixe.url))}</span>
+            </span>
+          </div>
+        `;
+    }
+
+    function chargerOngletFixe(url) {
+      try {
+        ongletFixe.webview.loadURL(url).catch((e) => dbg('onglets', 'onglet fixe : chargement refusé', e && e.message));
+      } catch (e) {
+        // webview pas encore prête (avant dom-ready) : l'attribut suffit.
+        dbg('onglets', 'onglet fixe : chargement par attribut', e && e.message);
+        ongletFixe.webview.setAttribute('src', url);
+      }
+    }
+
+    // Crée, met à jour ou retire l'onglet selon les réglages.
+    function appliquerOngletFixe(reglages) {
+      const conf = OF.configuration(reglages);
+      if (!conf.actif) {
+        if (!ongletFixe) return;
+        ongletFixe.paneEl.remove();
+        ongletFixe = null;
+        dbg('onglets', 'onglet fixe retiré');
+        if (activeTabId === OF.ID_ONGLET) activateTab(tabs.length ? tabs[0].id : null);
+        else renderTabsBar();
+        return;
+      }
+      if (ongletFixe) {
+        if (ongletFixe.url !== conf.url) {
+          ongletFixe.url = conf.url;
+          chargerOngletFixe(conf.url);
+          dbg('onglets', 'onglet fixe : nouvelle adresse', OF.libelle(conf.url));
+        }
+        renderTabsBar();
+        return;
+      }
+      const pane = document.createElement('div');
+      pane.className = 'tab-pane';
+      pane.id = OF.ID_ONGLET;
+      const webview = document.createElement('webview');
+      webview.setAttribute('partition', OF.PARTITION);
+      webview.setAttribute('src', conf.url);
+      webview.setAttribute('allowpopups', ''); // popups jugées par main.js (même site -> dans l'onglet)
+      webview.style.width = '100%';
+      webview.style.height = '100%';
+      webview.addEventListener('did-fail-load', (ev) => {
+        if (ev.isMainFrame) dbg('onglets', 'onglet fixe : échec de chargement', ev.errorCode, ev.errorDescription);
+      });
+      pane.appendChild(webview);
+      document.getElementById('tabsContent').appendChild(pane);
+      ongletFixe = { url: conf.url, paneEl: pane, webview };
+      dbg('onglets', 'onglet fixe ouvert', OF.libelle(conf.url));
+      if (!activeTabId) activateTab(OF.ID_ONGLET);
+      else renderTabsBar();
+    }
+
+    // Clic sur l'onglet : l'affiche et revient à l'adresse définie.
+    function revenirOngletFixe() {
+      activateTab(OF.ID_ONGLET);
+      let actuelle = '';
+      try {
+        actuelle = ongletFixe.webview.getURL();
+      } catch (e) {
+        dbg('onglets', 'onglet fixe : adresse courante illisible', e && e.message);
+      }
+      if (actuelle !== ongletFixe.url) chargerOngletFixe(ongletFixe.url);
+    }
+
     // Réaffiche la barre d'onglets à partir de tabs[] (source de vérité unique).
     // Délégation d'événements (chantier A) : aucun onclick avec donnée interpolée.
     // Issue #324 : logo du service + nom du compte (service en infobulle) ;
@@ -1013,7 +1130,7 @@
     function renderTabsBar() {
       const bar = document.getElementById('tabsBar');
       const now = Date.now();
-      bar.innerHTML = tabs.map(t => {
+      bar.innerHTML = htmlOngletFixe() + tabs.map(t => {
         const acc = accounts.find(a => a.id === t.accId);
         const svc = SERVICES.find(s => s.id === t.svcId);
         if (!acc || !svc) return '';
@@ -1087,7 +1204,7 @@
 
       if (activeTabId === tabId) {
         const next = tabs[idx] || tabs[idx - 1] || null;
-        activateTab(next ? next.id : null);
+        activateTab(next ? next.id : (ongletFixe ? OF.ID_ONGLET : null)); // #338
       } else {
         renderTabsBar();
       }
@@ -1103,6 +1220,7 @@
       if (!el) return;
       const tabId = el.getAttribute('data-tab');
       if (el.getAttribute('data-action') === 'close-tab') closeTab(tabId);
+      else if (ongletFixe && tabId === OF.ID_ONGLET) revenirOngletFixe(); // #338
       else activateTab(tabId);
     });
 
@@ -3139,6 +3257,9 @@
         document.getElementById('settingsMailPrefix').value = settings.mailPrefix || '';
         document.getElementById('settingsMailDomain').value = settings.mailDomain || '';
         document.getElementById('settingsWebmailUrl').value = settings.webmailUrl || '';
+        document.getElementById('settingsOngletFixeActif').checked = settings.ongletFixeActif === true;
+        document.getElementById('settingsOngletFixeUrl').value = settings.ongletFixeUrl || '';
+        appliquerOngletFixe(settings); // issue #338
         loadedLanguage = settings.language || 'auto';
         const langSelect = document.getElementById('settingsLanguage');
         if (langSelect && langSelect.querySelector('option[value="' + loadedLanguage + '"]')) langSelect.value = loadedLanguage;
@@ -3161,13 +3282,21 @@
         language: (document.getElementById('settingsLanguage') || { value: loadedLanguage }).value,
         mailPrefix: document.getElementById('settingsMailPrefix').value,
         mailDomain: document.getElementById('settingsMailDomain').value,
-        webmailUrl: document.getElementById('settingsWebmailUrl').value
+        webmailUrl: document.getElementById('settingsWebmailUrl').value,
+        ongletFixeActif: document.getElementById('settingsOngletFixeActif').checked,
+        ongletFixeUrl: document.getElementById('settingsOngletFixeUrl').value
       };
+      // Issue #338 : onglet fixe coché sans adresse https valide -> rien n'est enregistré.
+      if (raw.ongletFixeActif && !window.normalizeOngletFixeUrl(raw.ongletFixeUrl)) {
+        showToast(_('Adresse du premier onglet invalide : une adresse https:// est attendue'), 'error');
+        return;
+      }
       try {
         var result = await ipcRenderer.invoke('settings:save', raw);
         if (result && result.ok) {
           applySettings(result.settings);
           renderAccounts(); // bouton webmail selon le réglage (issue #201)
+          appliquerOngletFixe(result.settings); // issue #338
           const languageChanged = result.settings.language !== loadedLanguage;
           loadedLanguage = result.settings.language;
           showToast(languageChanged
@@ -3659,16 +3788,20 @@
       document.body.appendChild(overlay);
     }
 
-    // Récupération des données (chantier C) : si ai_accounts était illisible au
+    // Récupération des données (chantier C) : si profils.json (ou, avant
+    // migration, ai_accounts) était illisible au
     // démarrage, on propose de restaurer la sauvegarde plutôt que de perdre en
     // silence les comptes de l'utilisateur.
     if (dataCorrupt) showRecoveryUI();
 
     // Construit et affiche la modale de récupération. Restaure depuis
-    // ai_accounts_backup si un backup valide existe, sinon informe simplement.
+    // profils.json.bak (ou ai_accounts_backup) si une sauvegarde valide existe,
+    // sinon informe simplement.
     // (Fonction déclarée -> hoistée, l'appel ci-dessus la voit.)
     function showRecoveryUI() {
-      const b = readJSON(BACKUP_KEY);
+      // Issue #311 : sauvegarde profils.json.bak, ou, pour une installation pas
+      // encore migrée, l'ancien ai_accounts_backup du localStorage.
+      const b = profilsSauvegarde ? { status: 'ok', data: profilsSauvegarde } : readJSON(BACKUP_KEY);
       const hasBackup = b.status === 'ok' && Array.isArray(b.data);
 
       const overlay = document.createElement('div');
