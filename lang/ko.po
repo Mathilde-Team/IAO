@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "드래그하여 편집기 크기 조절"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "시작 시 열린 탭 복원"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "시작 시 열린 탭 복원"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "열린 탭 없음 — 계정 목록에서 서비스를 선택하세요"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "프로필을 사용하면 Electron에서 쿠키를 분리할 수 있습니다."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "계정 이름"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "프로필 이름"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
@@ -554,6 +558,46 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "웹메일 주소 (Roundcube)"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "계정 삭제"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Créer une sauvegarde…"
+msgstr "백업 복원"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde…"
+msgstr "백업 복원"
+
+#: index.html
+msgid "Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr "커넥터 로그인 정보(공유)"
 
@@ -572,6 +616,22 @@ msgstr "비밀번호"
 #: index.html
 msgid "Chiffrés par le trousseau du système, partagés entre les profils — les cookies et le 2FA restent propres à chaque profil. Au focus d'un champ de connexion, un menu propose les identifiants du site."
 msgstr "시스템 키링으로 암호화되어 프로필 간에 공유됩니다. 쿠키와 2FA는 프로필마다 따로 유지됩니다. 로그인 입력란에 포커스가 가면 메뉴에서 사이트의 로그인 정보를 제안합니다."
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "메일 비밀번호"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "비밀번호 표시"
+
+#: index.html
+msgid "Valider"
+msgstr ""
 
 #: assets/app.js
 msgid "L'assistant conversationnel d'Anthropic. Il excelle en rédaction, en analyse de longs documents, en programmation et dans les raisonnements qui demandent plusieurs étapes."
@@ -1608,8 +1668,66 @@ msgid "Enregistrement impossible : {error}"
 msgstr "저장할 수 없음: {error}"
 
 #: assets/app.js
+#, fuzzy
+#| msgid "Créer mon premier compte"
+msgid "Créer une sauvegarde complète"
+msgstr "첫 계정 만들기"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "백업 복원"
+
+#: assets/app.js
+msgid "Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le."
+msgstr ""
+
+#: assets/app.js
+msgid "Celui choisi à la création de cette sauvegarde."
+msgstr ""
+
+#: assets/app.js
+msgid "Choisissez un mot de passe de sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe ne correspondent pas"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Erreur lors de la sauvegarde"
+msgid "Échec de la création de la sauvegarde"
+msgstr "저장 중 오류"
+
+#: assets/app.js
+msgid "Sauvegarde créée : {count} fichiers"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect"
+msgstr "메일 비밀번호"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de la lecture du fichier"
+msgid "Échec de la restauration"
+msgstr "파일 읽기 실패"
+
+#: assets/app.js
+msgid "Sauvegarde restaurée — IAO va redémarrer"
+msgstr ""
+
+#: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "설정을 불러올 수 없습니다"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr ""
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

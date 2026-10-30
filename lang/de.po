@@ -134,20 +134,20 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "Ziehen, um die Größe des Editors zu ändern"
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "Tabs nach links scrollen"
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr "Tabs nach rechts scrollen"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "Kein Tab offen — wählen Sie einen Dienst aus der Kontenliste"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "Das Profil isoliert die Cookies in Electron."
-
-#: index.html
 msgid "Nom du compte"
 msgstr "Kontoname"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "Profilname"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
@@ -554,6 +554,44 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr "Festen ersten Tab öffnen"
+
+#: index.html
+msgid "Adresse du premier onglet"
+msgstr "Adresse des ersten Tabs"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr "Dieser Tab lässt sich weder schließen noch verschieben; die Navigation bleibt auf dieser Website, ein Klick auf den Tab führt zu dieser Adresse zurück. Die unten geteilten Zugangsdaten dienen zur Anmeldung."
+
+#: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "Konto löschen"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Créer une sauvegarde…"
+msgstr "Backup wiederherstellen"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde…"
+msgstr "Backup wiederherstellen"
+
+#: index.html
+msgid "Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr "Zugangsdaten der Konnektoren (gemeinsam)"
 
@@ -572,6 +610,22 @@ msgstr "Passwort"
 #: index.html
 msgid "Chiffrés par le trousseau du système, partagés entre les profils — les cookies et le 2FA restent propres à chaque profil. Au focus d'un champ de connexion, un menu propose les identifiants du site."
 msgstr "Vom System-Schlüsselbund verschlüsselt und zwischen den Profilen geteilt — Cookies und 2FA bleiben pro Profil getrennt. Beim Fokus auf ein Anmeldefeld schlägt ein Menü die Zugangsdaten der Website vor."
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "E-Mail-Passwort"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "Passwort anzeigen"
+
+#: index.html
+msgid "Valider"
+msgstr ""
 
 #: assets/app.js
 msgid "L'assistant conversationnel d'Anthropic. Il excelle en rédaction, en analyse de longs documents, en programmation et dans les raisonnements qui demandent plusieurs étapes."
@@ -1622,8 +1676,66 @@ msgid "Enregistrement impossible : {error}"
 msgstr "Speichern nicht möglich: {error}"
 
 #: assets/app.js
+#, fuzzy
+#| msgid "Créer mon premier compte"
+msgid "Créer une sauvegarde complète"
+msgstr "Mein erstes Konto erstellen"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "Backup wiederherstellen"
+
+#: assets/app.js
+msgid "Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le."
+msgstr ""
+
+#: assets/app.js
+msgid "Celui choisi à la création de cette sauvegarde."
+msgstr ""
+
+#: assets/app.js
+msgid "Choisissez un mot de passe de sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe ne correspondent pas"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Erreur lors de la sauvegarde"
+msgid "Échec de la création de la sauvegarde"
+msgstr "Fehler beim Speichern"
+
+#: assets/app.js
+msgid "Sauvegarde créée : {count} fichiers"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect"
+msgstr "E-Mail-Passwort"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de la lecture du fichier"
+msgid "Échec de la restauration"
+msgstr "Lesen der Datei fehlgeschlagen"
+
+#: assets/app.js
+msgid "Sauvegarde restaurée — IAO va redémarrer"
+msgstr ""
+
+#: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Einstellungen konnten nicht geladen werden"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr "Ungültige Adresse des ersten Tabs: eine https://-Adresse wird erwartet"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

@@ -101,14 +101,14 @@ test('settings:load : fichier corrompu (JSON invalide) -> réglages par défaut'
 test('settings:load : fichier valide -> réglages normalisés', async () => {
   const h = loadMain();
   try {
-    const stored = { editorFontSize: '20', editorWordWrap: 'on', theme: 'dark', confirmBeforeClose: false };
+    const stored = { editorFontSize: '20', editorWordWrap: 'on', theme: 'dark', confirmTabClose: false };
     fs.writeFileSync(h.settingsPath, JSON.stringify(stored), 'utf-8');
     const result = await h.load();
     assert.deepEqual(result, normalizeSettings(stored));
     assert.equal(result.editorFontSize, 20);
     assert.equal(result.theme, 'dark');
     assert.equal(result.editorWordWrap, 'on');
-    assert.equal(result.confirmBeforeClose, false);
+    assert.equal(result.confirmTabClose, false);
   } finally { h.cleanup(); }
 });
 

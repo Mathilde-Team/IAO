@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "ลากเพื่อปรับขนาดตัวแก้ไข"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "คืนค่าแท็บที่เปิดไว้เมื่อเริ่มต้น"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "คืนค่าแท็บที่เปิดไว้เมื่อเริ่มต้น"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "ไม่มีแท็บที่เปิดอยู่ — เลือกบริการจากรายการบัญชี"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "โปรไฟล์ช่วยแยกคุกกี้ใน Electron"
-
-#: index.html
 msgid "Nom du compte"
 msgstr "ชื่อบัญชี"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "ชื่อโปรไฟล์"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
@@ -554,6 +558,46 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "ที่อยู่เว็บเมล (Roundcube)"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "ลบบัญชี"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Créer une sauvegarde…"
+msgstr "กู้คืนข้อมูลสำรอง"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde…"
+msgstr "กู้คืนข้อมูลสำรอง"
+
+#: index.html
+msgid "Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr "ข้อมูลเข้าสู่ระบบของตัวเชื่อมต่อ (ใช้ร่วมกัน)"
 
@@ -572,6 +616,22 @@ msgstr "รหัสผ่าน"
 #: index.html
 msgid "Chiffrés par le trousseau du système, partagés entre les profils — les cookies et le 2FA restent propres à chaque profil. Au focus d'un champ de connexion, un menu propose les identifiants du site."
 msgstr "เข้ารหัสด้วยพวงกุญแจของระบบและใช้ร่วมกันระหว่างโปรไฟล์ — คุกกี้และ 2FA ยังคงแยกตามแต่ละโปรไฟล์ เมื่อช่องเข้าสู่ระบบได้รับโฟกัส เมนูจะเสนอข้อมูลเข้าสู่ระบบของเว็บไซต์"
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "รหัสผ่านอีเมล"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "แสดงรหัสผ่าน"
+
+#: index.html
+msgid "Valider"
+msgstr ""
 
 #: assets/app.js
 msgid "L'assistant conversationnel d'Anthropic. Il excelle en rédaction, en analyse de longs documents, en programmation et dans les raisonnements qui demandent plusieurs étapes."
@@ -1608,8 +1668,66 @@ msgid "Enregistrement impossible : {error}"
 msgstr "ไม่สามารถบันทึกได้: {error}"
 
 #: assets/app.js
+#, fuzzy
+#| msgid "Créer mon premier compte"
+msgid "Créer une sauvegarde complète"
+msgstr "สร้างบัญชีแรกของฉัน"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "กู้คืนข้อมูลสำรอง"
+
+#: assets/app.js
+msgid "Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le."
+msgstr ""
+
+#: assets/app.js
+msgid "Celui choisi à la création de cette sauvegarde."
+msgstr ""
+
+#: assets/app.js
+msgid "Choisissez un mot de passe de sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe ne correspondent pas"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Erreur lors de la sauvegarde"
+msgid "Échec de la création de la sauvegarde"
+msgstr "เกิดข้อผิดพลาดขณะบันทึก"
+
+#: assets/app.js
+msgid "Sauvegarde créée : {count} fichiers"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect"
+msgstr "รหัสผ่านอีเมล"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de la lecture du fichier"
+msgid "Échec de la restauration"
+msgstr "อ่านไฟล์ไม่สำเร็จ"
+
+#: assets/app.js
+msgid "Sauvegarde restaurée — IAO va redémarrer"
+msgstr ""
+
+#: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "โหลดการตั้งค่าไม่ได้"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr ""
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

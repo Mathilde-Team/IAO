@@ -134,20 +134,24 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr "संपादक का आकार बदलने के लिए खींचें"
 
 #: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la gauche"
+msgstr "शुरू होने पर खुले टैब बहाल करें"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer les onglets ouverts au démarrage"
+msgid "Faire défiler les onglets vers la droite"
+msgstr "शुरू होने पर खुले टैब बहाल करें"
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr "कोई टैब खुला नहीं — खातों की सूची से कोई सेवा चुनें"
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr "प्रोफ़ाइल Electron में कुकीज़ को अलग रखने देती है।"
-
-#: index.html
 msgid "Nom du compte"
 msgstr "खाते का नाम"
-
-#: index.html
-msgid "Nom du Profil"
-msgstr "प्रोफ़ाइल का नाम"
 
 #: index.html
 msgid "Mot de passe de la messagerie"
@@ -554,6 +558,46 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "वेबमेल पता (Roundcube)"
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Supprimer le compte"
+msgid "Sauvegarde complète"
+msgstr "खाता हटाएँ"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Créer une sauvegarde…"
+msgstr "बैकअप बहाल करें"
+
+#: index.html
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde…"
+msgstr "बैकअप बहाल करें"
+
+#: index.html
+msgid "Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr "कनेक्टर के लॉगिन विवरण (साझा)"
 
@@ -572,6 +616,22 @@ msgstr "पासवर्ड"
 #: index.html
 msgid "Chiffrés par le trousseau du système, partagés entre les profils — les cookies et le 2FA restent propres à chaque profil. Au focus d'un champ de connexion, un menu propose les identifiants du site."
 msgstr "सिस्टम कीरिंग द्वारा एन्क्रिप्ट किए गए और प्रोफ़ाइलों के बीच साझा — कुकीज़ और 2FA हर प्रोफ़ाइल के लिए अलग रहते हैं। किसी लॉगिन फ़ील्ड पर फ़ोकस होने पर, एक मेनू साइट के लॉगिन विवरण सुझाता है।"
+
+#: index.html
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde"
+msgstr "ईमेल का पासवर्ड"
+
+#: index.html
+#, fuzzy
+#| msgid "Afficher le mot de passe"
+msgid "Confirmer le mot de passe"
+msgstr "पासवर्ड दिखाएँ"
+
+#: index.html
+msgid "Valider"
+msgstr ""
 
 #: assets/app.js
 msgid "L'assistant conversationnel d'Anthropic. Il excelle en rédaction, en analyse de longs documents, en programmation et dans les raisonnements qui demandent plusieurs étapes."
@@ -1622,8 +1682,66 @@ msgid "Enregistrement impossible : {error}"
 msgstr "सहेजना संभव नहीं: {error}"
 
 #: assets/app.js
+#, fuzzy
+#| msgid "Créer mon premier compte"
+msgid "Créer une sauvegarde complète"
+msgstr "मेरा पहला खाता बनाएँ"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Restaurer la sauvegarde"
+msgid "Restaurer une sauvegarde complète"
+msgstr "बैकअप बहाल करें"
+
+#: assets/app.js
+msgid "Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le."
+msgstr ""
+
+#: assets/app.js
+msgid "Celui choisi à la création de cette sauvegarde."
+msgstr ""
+
+#: assets/app.js
+msgid "Choisissez un mot de passe de sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe ne correspondent pas"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Erreur lors de la sauvegarde"
+msgid "Échec de la création de la sauvegarde"
+msgstr "सहेजते समय त्रुटि"
+
+#: assets/app.js
+msgid "Sauvegarde créée : {count} fichiers"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Mot de passe de la messagerie"
+msgid "Mot de passe de la sauvegarde incorrect"
+msgstr "ईमेल का पासवर्ड"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Échec de la lecture du fichier"
+msgid "Échec de la restauration"
+msgstr "फ़ाइल पढ़ना विफल"
+
+#: assets/app.js
+msgid "Sauvegarde restaurée — IAO va redémarrer"
+msgstr ""
+
+#: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "सेटिंग्स लोड नहीं हो सकीं"
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
+msgstr ""
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

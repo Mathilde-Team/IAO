@@ -1,5 +1,101 @@
+## Issue #339 — flèches de défilement de la barre d'onglets (29/10/2026)
+
+### Ajouté
+- Quand la barre d'onglets déborde, des flèches gauche et droite encadrent la
+  zone défilante et font défiler les onglets (défilement lissé, ~80 % de la
+  zone visible par clic). Masquées quand la barre tient, désactivées à
+  l'extrême atteint (la paire reste affichée : la géométrie ne bouge pas).
+  Directions valables en LTR comme en RTL (contenu miroir).
+- L'onglet fixe (#338) est épinglé hors de la zone défilante (`#tabsBarFixe`) :
+  il ne défile jamais et reste visible. `lib/defilement-onglets.js` (pur) :
+  état des flèches (LTR et RTL via position normalisée, tolérance aux arrondis
+  sous-pixel) et pas de défilement.
+- L'onglet activé (clic, ouverture, fermeture d'un voisin) est amené dans la
+  partie visible de la zone ; la barre fine de défilement est retirée.
+- L'état des flèches suit les redimensionnements de la zone (fenêtre,
+  séparateurs de l'explorateur et de l'éditeur) via ResizeObserver.
+
+### Modifié
+- `index.html`/`assets/app.css` : la barre devient un conteneur (onglet fixe
+  épinglé, flèches, zone défilante `#tabsScrollZone`).
+
+### Tests
+- `test/defilement-onglets.test.js` ; harnais Electron : C9.5 (débordement,
+  défilement par flèches, onglet fixe immobile, onglet actif ramené, retour à
+  l'état).
+
 # Rapport de modifications — IAO (18/09/2026)
 
+## Issue #329 — sauvegarde complète de tout le dossier de données (29/10/2026)
+
+### Ajouté
+- Page Réglages, boutons « Sauvegarde complète » : la sauvegarde copie tout ce qui est utile dans le dossier de données (profils, secrets transportables, sessions Chromium, statistiques, capture HAR, historique — sauf les journaux) dans un fichier `iao-sauvegarde-<date>.zip`.
+- Les mots de passe de messagerie sont déchiffrés du trousseau puis rechiffrés avec le mot de passe de la sauvegarde (AES-256-GCM) : le fichier est restaurable sur une autre machine ou pour un autre utilisateur, même après une réinstallation.
+- La restauration remplace le contenu actuel du dossier de données puis propose de redémarrer IAO.
+
+### Modifié
+- Le mot de passe de la sauvegarde n'est jamais écrit en clair ni dans `iao.log` ; sans lui, la sauvegarde ne contient que des données de comptes sans mots de passe. Un mot de passe incorrect est refusé avant qu'aucun fichier ne soit écrasé.
+- L'écriture et la lecture du zip sont des fonctions pures sans dépendance npm (`lib/ecriture-zip.js`, `lib/sauvegarde-complete.js`), testées via `node --test` (invariants 7 et 11).
+
+### Vérifié
+- `node --test` : 1373 tests, les 9 échecs pré-existants du dev sont inchangés (dialogues de dossier et openZip, déjà documentés).
+- `scripts/i18n-update.sh --check` : catalogues synchronisés pour les 30 langues.
+- Couverture : `lib/ecriture-zip.js` et `lib/sauvegarde-complete.js` à 100 % (lignes et branches), handlers de `main.js` à 100 % des lignes.
+
+### Tests
+- `test/ecriture-zip.test.js` (12) : format zip conforme au lecteur existant (bloc local, répertoire central, offsets, DOS time/date), noms sûrs, plafond ZIP64 injectable.
+- `test/sauvegarde-complete.test.js` (10) : chemins retenus/exclus, secrets transportables scrypt+AES-256-GCM (mot de passe faux → null), round-trip, entrées mal formées.
+- `test/main-sauvegarde.test.js` (15) : handlers IPC complets — création (annulations, exclusions, secret illisible omis, échec d'écriture) et restauration (mot de passe faux refusé avant toute écriture, rechiffrement au trousseau local, entrée de zip au nom dangereux refusée, fichier non zip).
+- `test/main-harness.test.js` : deux canaux IPC `sauvegarde-complete:creer` / `sauvegarde-complete:restaurer` dans la liste de référence.
+
+## Issue #316 — documentation des raccourcis clavier (29/10/2026)
+
+### Ajouté
+- `docs/raccourcis.md` : page « Raccourcis clavier » du guide utilisateur — palette `Ctrl+K` (ouverture, `Entrée`, `Échap`), onglets (`Ctrl+Tab` / `Ctrl+Maj+Tab` / `Alt+1..9`), `Ctrl+S` de l'éditeur, et le comportement des touches quand le focus est dans une page IA (webview).
+- `mkdocs.yml` : entrée « Raccourcis clavier » dans la navigation du guide utilisateur ; lien depuis la page d'accueil (`docs/index.md`).
+
+### Vérifié
+- `mkdocs build --strict` : la nouvelle page est construite, liens valides.
+
+## Issue #335 — licence MIT et version des paquets (27/10/2026)
+
+### Modifié
+- `package.json` et `package-lock.json` : licence `ISC` → `MIT`, comme le fichier `LICENSE` (copyright X'o-noth).
+- `dist:win` et `dist:linux` ne codent plus `--app-version=1.0.0` : electron-packager prend la version de `package.json`.
+- Les paquets gardent `ThirdPartyNotices.txt` de Monaco (exclu jusqu'ici) et `docs/THIRD-PARTY-NOTICES.md` (le reste de `docs/` reste exclu), pour electron-packager et electron-builder.
+- `docs/THIRD-PARTY-NOTICES.md` : liste des notices embarquées.
+
+### Vérifié
+- `npm run dist:linux` et `electron-builder --linux dir` : licence MIT et version 1.0.0 dans le `package.json` embarqué, `LICENSE`, `docs/THIRD-PARTY-NOTICES.md`, notices Electron/Chromium et Monaco présentes.
+- README et `installer/` : README dit MIT, l'installeur ne mentionne pas de licence.
+
+### Tests
+- `test/licence-distribution.test.js`.
+## Issue #338 — premier onglet fixe (27/10/2026)
+
+### Ajouté
+- Réglages : « Ouvrir un premier onglet fixe » et « Adresse du premier onglet » (https). Une adresse invalide est refusée avant enregistrement.
+- Onglet en tête de la barre, sans croix ni glisser-déposer ni menu contextuel ; un clic le ramène à l'adresse définie. Décocher le réglage le retire.
+- `lib/onglet-fixe.js` : partition `persist:onglet-fixe`, `memeSite()` (même hôte ou sous-domaine, https), `configuration()`, `libelle()`.
+- `main.js` : navigations et popups de cet onglet jugées par `memeSite()` ; sortie du site bloquée et journalisée, popup du même site chargée dans l'onglet.
+- Les identifiants partagés des réglages (#278) y sont proposés (preload posé sur chaque session).
+- Traductions en/de/es/it.
+
+### Tests
+- `test/onglet-fixe.test.js`, `test/main-window-security.test.js` (#338), `test/settings.test.js` ; harnais C9.4.
+
+### Limites
+- Redirections HTTP vers un autre site non bloquées (connexion par fournisseur tiers possible) ; Ctrl+Tab et Alt+1..9 ignorent l'onglet fixe.
+## Issue #333 — le nom de profil n'est plus saisi ni affiché (27/10/2026)
+
+### Modifié
+- Le formulaire de compte ne demande plus de « Nom du Profil » : à la création, le profil Electron est tiré du nom du compte (`lib/profil-compte.js` : sans accents, minuscules, `[a-z0-9_-]`, 64 caractères au plus, rendu unique par suffixe `_2`, `_3`…).
+- Un compte modifié garde son profil (ses cookies et sessions y sont rangés) ; les anciens comptes sans profil en reçoivent un au démarrage.
+- La carte d'un compte n'affiche plus le profil ; l'ordonnanceur, l'historique des tâches et les messages présentent un compte par « nom - adresse mail ».
+- Création en série : le profil vaut le numéro du compte (`profil_<n>` si déjà pris).
+
+### Tests
+- `test/profil-compte.test.js`, `test/comptes-serie.test.js` ; harnais : C9.1b et contrôle du libellé dans C10.
 ## Issue #311 (relecture du 27/10/2026) — comptes dans `profils.json` (27/10/2026)
 
 ### Modifié
@@ -23,6 +119,62 @@
   `test/preload-sandbox.test.js` ; harnais Electron C8.0 (migration, perte du
   localStorage sans perte de compte) et C8.1 (perte de `profils.json`).
 - README (emplacement des données), `docs/PROJECT_CONTEXT.md` §5, CLAUDE.md invariant 3.
+## Issue #328 — mémoire : seules les sessions des onglets ouverts sont chargées (27/10/2026)
+
+### Corrigé
+- **`scheduler/index.js`** (`resolveProfileFromSession`) : à chaque onglet ouvert, le compte
+  de l'onglet était cherché par `session.fromPartition('persist:<profil>')` sur chaque
+  compte connu, dans l'ordre de la liste, jusqu'au bon. Or cet appel **crée** la session
+  (cookies, cache, contexte réseau) quand elle n'existe pas : ouvrir un onglet du dernier
+  compte chargeait en mémoire la session de tous les autres. Le compte est maintenant
+  reconnu par le dossier de la session de l'onglet (`storagePath`,
+  `<userData>/Partitions/<profil>`), sans créer aucune session. La comparaison
+  d'origine ne sert plus qu'à une session sans dossier (jamais le cas d'un onglet IAO).
+- **`scheduler/core.js`** : `partitionDepuisStoragePath` (fonction pure) relit le nom
+  écrit par Electron, en minuscules et encodé façon URL (« Mon Profil » ->
+  `mon%20profil`), séparateurs Windows compris.
+- Tests : `test/scheduler-branches-coverage.test.js` ; scénario Electron C15.1 (ouvrir
+  un onglet du dernier compte ne crée que la session de ce compte ; il échoue sans le
+  correctif : session de `profil_3` chargée).
+
+### Non modifié
+- L'ancien ordonnanceur (désactivé par défaut depuis #199) surveille encore toutes les
+  partitions quand on l'active (`_watchAllPartitions`).
+## Issue #331 — préférences de l'interface dans un fichier (27/10/2026)
+
+### Modifié
+- Les préférences de l'interface ne sont plus dans le `localStorage` mais dans
+  `<userData>/preferences.json` : IA à portée de main, ordre des comptes, onglets
+  étoilés, cartes repliées, largeur de l'éditeur et de l'explorateur. Elles survivent
+  à la perte du `localStorage`. Seuls les onglets ouverts y restent.
+- `lib/preferences.js` (lecture filtrée sur les clés connues, écriture atomique, fichier
+  illisible mis de côté dans `preferences.json.illisible`) ; `lib/magasin-preferences.js`
+  (même interface que `localStorage` pour `assets/app.js`) ; canaux synchrones
+  `preferences:lire` / `preferences:ecrire` exposés par le preload.
+- Migration unique : sans `preferences.json`, les clés encore dans le `localStorage` y
+  sont recopiées, puis retirées une fois le fichier écrit.
+
+### Testé
+- `test/preferences.test.js`, `test/main-accounts.test.js`, `test/preload-sandbox.test.js` ;
+  harnais C1.8 (migration, plus rien dans le `localStorage`, choix des IA conservé
+  après la perte du `localStorage`).
+
+### Limites
+- Les réglages de la fenêtre « Réglages » restent dans `settings.json`, et les comptes
+  dans `profils.json` (#311, fusionnée depuis).
+## Issue #330 — confirmation de fermeture d'un onglet : option désactivée par défaut (27/10/2026)
+
+### Modifié
+- **`lib/settings.js`** : nouvelle clé `confirmTabClose`, `false` par défaut. L'ancienne clé
+  `confirmBeforeClose` (activée d'office, jamais demandée) n'est pas reprise : la
+  confirmation disparaît aussi sur les installations existantes, et la clé quitte
+  `settings.json` au prochain enregistrement des réglages. La case « Confirmer avant de
+  fermer un onglet » des réglages la réactive.
+- **`assets/app.js`**, **`index.html`** : `closeTab` et la fenêtre des réglages lisent la
+  nouvelle clé.
+- Tests : `test/settings.test.js`, `test/settings-applied.test.js`,
+  `test/main-settings.test.js` ; scénario Electron C12.2 (fermeture directe par défaut,
+  confirmation une fois la case cochée).
 
 ## Issue #310 (relecture) — codes et liens de connexion reçus par mail (27/10/2026)
 

@@ -98,6 +98,7 @@ function loadMain() {
     finally { console.error = quiet; }
   };
 
+  // Canaux synchrones (ipcMain.on + event.returnValue), issue #331.
   // Canaux synchrones (ipcMain.on + event.returnValue), issue #311.
   const envoyerSync = (channel, ...args) => {
     const quiet = console.error;
@@ -229,6 +230,39 @@ test('accounts:disconnect-profile : échec de clearStorageData -> clear_failed',
     h.state.clearImpl = async () => { throw new Error('boom'); };
     assert.deepEqual(await h.invoke('accounts:disconnect-profile', 'profil_4'), { ok: false, error: 'clear_failed' });
     assert.deepEqual(h.state.partitions, ['persist:profil_4']);
+  } finally { h.cleanup(); }
+});
+
+// --- preferences:lire / preferences:ecrire (issue #331) -----------------------
+
+const CLES_PREFS = ['ai_active_services', 'ai_account_order', 'ai_starred_tabs', 'collapsed_accounts', 'ide_w', 'explorer_w'];
+
+test('#331 preferences:lire : premier démarrage -> absent, avec la liste des clés', () => {
+  const h = loadMain();
+  try {
+    assert.deepEqual(h.envoyerSync('preferences:lire'), { cles: CLES_PREFS, status: 'absent' });
+  } finally { h.cleanup(); }
+});
+
+test('#331 preferences:ecrire puis preferences:lire : <userData>/preferences.json', () => {
+  const h = loadMain();
+  try {
+    const prefs = { ai_active_services: ['claude'], ide_w: '420px' };
+    assert.deepEqual(h.envoyerSync('preferences:ecrire', prefs), { ok: true, cles: 2 });
+    const fichier = path.join(h.tmp, 'userData', 'preferences.json');
+    assert.deepEqual(JSON.parse(fs.readFileSync(fichier, 'utf-8')), prefs);
+    assert.deepEqual(h.envoyerSync('preferences:lire'), { cles: CLES_PREFS, status: 'ok', preferences: prefs });
+  } finally { h.cleanup(); }
+});
+
+test('#331 preferences:ecrire invalide et preferences:lire illisible : journalisés, rien d\'écrit', () => {
+  const h = loadMain();
+  try {
+    assert.equal(h.envoyerSync('preferences:ecrire', ['pas un objet']).ok, false);
+    const dossier = path.join(h.tmp, 'userData');
+    fs.mkdirSync(dossier, { recursive: true });
+    fs.writeFileSync(path.join(dossier, 'preferences.json'), '{tronqué');
+    assert.equal(h.envoyerSync('preferences:lire').status, 'corrompu');
   } finally { h.cleanup(); }
 });
 

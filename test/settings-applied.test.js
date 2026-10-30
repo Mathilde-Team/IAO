@@ -78,13 +78,18 @@ test('buildApplySettingsPlan shouldRestoreTabs false par défaut', function() {
 
 // --- buildApplySettingsPlan : shouldConfirmClose --------------------------
 
-test('buildApplySettingsPlan shouldConfirmClose true par défaut', function() {
+test('buildApplySettingsPlan shouldConfirmClose false par défaut (#330)', function() {
   var plan = settings.buildApplySettingsPlan({});
+  assert.strictEqual(plan.shouldConfirmClose, false);
+});
+
+test('buildApplySettingsPlan shouldConfirmClose true si la case est cochée (#330)', function() {
+  var plan = settings.buildApplySettingsPlan({ confirmTabClose: true });
   assert.strictEqual(plan.shouldConfirmClose, true);
 });
 
 test('buildApplySettingsPlan shouldConfirmClose false si désactivé', function() {
-  var plan = settings.buildApplySettingsPlan({ confirmBeforeClose: false });
+  var plan = settings.buildApplySettingsPlan({ confirmTabClose: false });
   assert.strictEqual(plan.shouldConfirmClose, false);
 });
 
@@ -93,7 +98,7 @@ test('buildApplySettingsPlan shouldConfirmClose false si désactivé', function(
 test('buildApplySettingsPlan gère null', function() {
   var plan = settings.buildApplySettingsPlan(null);
   assert.strictEqual(plan.themeAttr, 'iao');
-  assert.strictEqual(plan.shouldConfirmClose, true);
+  assert.strictEqual(plan.shouldConfirmClose, false);
   assert.strictEqual(plan.shouldRestoreTabs, false);
 });
 

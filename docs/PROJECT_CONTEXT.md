@@ -147,8 +147,9 @@ Deux endroits distincts, à ne pas confondre :
    - Clés `ai_accounts` / `ai_accounts_backup` : anciens emplacements des comptes, lus une seule fois pour migrer vers `profils.json` puis retirés.
    - Clés `ide_w`, `explorer_w` : largeurs mémorisées des colonnes.
    - Clé `collapsed_accounts` : tableau JSON des ids de comptes dont la carte est **repliée** (vue compacte). Lecture/écriture défensives (`try/catch`), purgée des ids de comptes supprimés à chaque écriture (`saveCollapsed()`).
+   - **Préférences de l'interface → `<userData>/preferences.json`** (issue #331, `lib/preferences.js` côté process principal, `lib/magasin-preferences.js` côté renderer, canaux synchrones `preferences:lire` / `preferences:ecrire`) : `ai_active_services` (IA à portée de main), `ai_account_order` (ordre des comptes), `ai_starred_tabs` (onglets étoilés), `collapsed_accounts` (ids des cartes **repliées**, purgés des comptes supprimés par `saveCollapsed()`), `ide_w` / `explorer_w` (largeurs des colonnes). Écriture atomique ; un fichier illisible est mis de côté dans `preferences.json.illisible` et l'interface repart des valeurs par défaut. Au premier démarrage sans ce fichier, les clés encore présentes dans le `localStorage` y sont recopiées puis retirées. Seuls les onglets ouverts (`ai_open_tabs`) restent dans le `localStorage`.
    - **Stocké EN CLAIR** (pas de chiffrement — un mot de passe maître avait été prototypé puis retiré à la demande de l'utilisateur).
-   - **Chargement résilient** : le `JSON.parse` de `ai_accounts` est protégé (`readJSON`). Une donnée corrompue ne plante plus l'app ; une modale propose de restaurer `ai_accounts_backup`. Les écritures de **`ai_accounts`** passent toutes par `saveAccounts()`. (`ide_w`/`explorer_w` restent des chaînes lues/écrites en direct — lectures et écritures désormais enveloppées d'un `try/catch`.)
+   - **Chargement résilient** : le `JSON.parse` de `ai_accounts` est protégé (`readJSON`). Une donnée corrompue ne plante plus l'app ; une modale propose de restaurer `ai_accounts_backup`. Les écritures de **`ai_accounts`** passent toutes par `saveAccounts()`. (`ide_w`/`explorer_w` restent des chaînes, lues et écrites via `prefStore` dans un `try/catch`.)
 
 2. **Sessions de connexion IA (cookies/tokens)** → dossier de données Electron.
    - Chemin : `%APPDATA%\ai-manager\Partitions\profil_X\` (un dossier par profil).
@@ -199,7 +200,7 @@ Les boutons de service d'une carte sont posés dans `.services-grid`, une **gril
 ## 7. Fonctionnalités & fonctions clés (dans `index.html`)
 
 - `renderAccounts()` — rend les cartes de comptes (avatar, boutons de service, cooldowns). **Toutes les données de compte sont échappées** (`escapeHtml`) et les cartes n'ont **plus d'`onclick` inline** : les actions passent par des `data-*` lus par la délégation d'événements (voir plus bas). Quand la liste est **vide**, affiche un bouton d'appel à l'action « Créer mon premier compte ».
-- **Vue compacte (repli/dépli des cartes)** : cliquer sur le **header** d'une carte (`data-action="toggle-collapse"` sur `.account-header` — les boutons éditer/supprimer imbriqués gardent la priorité via `closest()`) replie/déplie sa grille de services ; repliée, la carte affiche un badge **« N/9 »** (services hors cooldown / total, ambré si un cooldown est actif, resynchronisé par le tick des cooldowns) + un chevron pivoté. Un bouton global « Tout replier / Tout déplier » (`#btnToggleAllCards`, dans l'en-tête de la liste) bascule toutes les cartes. Fonctions : `toggleCardCollapse(accId)`, `toggleAllCards()`, `saveCollapsed()` ; état persisté dans `localStorage.collapsed_accounts` (voir §5) ; défaut = tout déplié ; `openService` **déplie automatiquement** la carte du compte utilisé (utile depuis la palette Ctrl+K). Animation CSS pure (`grid-template-rows: 1fr → 0fr` sur `.services-wrap`, enfant `overflow:hidden`).
+- **Vue compacte (repli/dépli des cartes)** : cliquer sur le **header** d'une carte (`data-action="toggle-collapse"` sur `.account-header` — les boutons éditer/supprimer imbriqués gardent la priorité via `closest()`) replie/déplie sa grille de services ; repliée, la carte affiche un badge **« N/9 »** (services hors cooldown / total, ambré si un cooldown est actif, resynchronisé par le tick des cooldowns) + un chevron pivoté. Un bouton global « Tout replier / Tout déplier » (`#btnToggleAllCards`, dans l'en-tête de la liste) bascule toutes les cartes. Fonctions : `toggleCardCollapse(accId)`, `toggleAllCards()`, `saveCollapsed()` ; état persisté dans `preferences.json`, clé `collapsed_accounts` (voir §5) ; défaut = tout déplié ; `openService` **déplie automatiquement** la carte du compte utilisé (utile depuis la palette Ctrl+K). Animation CSS pure (`grid-template-rows: 1fr → 0fr` sur `.services-wrap`, enfant `overflow:hidden`).
 - `openService(accId, svcId)` — **réutilise l'onglet existant** pour ce couple (compte, service) s'il y en a un (simple `activateTab`, aucun rechargement) ; sinon crée un onglet et sa `<webview partition="persist:<profil>" src="<url>">`. Déplie la carte du compte si elle était repliée.
 - **Bouton « Ajouter un compte »** : un `+` en tête de la liste (à côté du titre « Comptes enregistrés ») + le bouton « Créer mon premier compte » de l'état vide. Les deux portent `data-action="add"` → `openModal()` en mode ajout. *(Avant ce lot, aucun bouton d'ajout n'existait dans l'UI.)*
 - `openModal()` / `saveAccount()` / `openDeleteModal()` / `confirmDelete()` — CRUD des comptes.
@@ -462,6 +463,13 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Notifications quand un cooldown se termine.
 
 ## 13. Dernières évolutions
+
+### Premier onglet fixe (issue #338, 27/10/2026)
+
+- Réglages : case « Ouvrir un premier onglet fixe » et adresse https (`ongletFixeActif`, `ongletFixeUrl`, normalisés par `lib/settings.js` ; http refusé avant enregistrement).
+- `assets/app.js` : `appliquerOngletFixe()` crée, met à jour ou retire l'onglet à chaque chargement ou enregistrement des réglages ; il vit hors de `tabs[]` (pas de persistance des onglets, pas de statistiques, pas d'étoile, pas de fermeture) et `renderTabsBar()` le place en tête.
+- `main.js` : `estOngletFixe()` reconnaît la session `persist:onglet-fixe` dans `did-attach-webview` ; `verrouillerOngletFixe()` bloque les navigations vers un autre site (`lib/onglet-fixe.js`, même hôte ou sous-domaine, https) et charge dans l'onglet les popups du même site.
+- Limites : les redirections HTTP vers un autre site (connexion par un fournisseur tiers) ne sont pas bloquées ; Ctrl+Tab et Alt+1..9 ne parcourent que les onglets de comptes.
 
 ### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
 

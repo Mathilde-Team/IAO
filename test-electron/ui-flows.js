@@ -211,6 +211,10 @@ async function run() {
     ses.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_d, cb) => cb({ cancel: true }));
   };
   app.on('session-created', blockNetwork);
+  // Issue #328 : dossiers des sessions créées, pour vérifier que seules celles
+  // des onglets ouverts sont chargées.
+  const sessionsCreees = [];
+  app.on('session-created', (ses) => { sessionsCreees.push(ses.storagePath); });
 
   // Chargement de l'application RÉELLE
   require('../main.js');
@@ -262,8 +266,12 @@ async function run() {
   await exec(`
     localStorage.setItem('ai_accounts', ${JSON.stringify(JSON.stringify(seedAccounts))});
     localStorage.setItem('ai_open_tabs', ${JSON.stringify(JSON.stringify(seedTabs))});
+    localStorage.setItem('ai_starred_tabs', '["migration|331"]'); // #331 : recopié dans preferences.json (C1.8)
     'injected'
   `);
+  // #331 : le premier chargement a déjà créé preferences.json ; on le retire
+  // pour que le rechargement fasse la migration depuis le localStorage (C1.8).
+  fs.rmSync(path.join(app.getPath('userData'), 'preferences.json'), { force: true });
   if (MEASURE_COVERAGE) {
     try { await v8cov.startCoverage(win.webContents); }
     catch (e) { console.log('COV démarrage impossible : ' + e.message); }
@@ -388,15 +396,15 @@ async function run() {
       openModal();
       document.getElementById('inputName').value = 'Compte 319';
       document.getElementById('inputEmail').value = 'c319@example.com';
-      document.getElementById('inputProfile').value = 'profil_319';
       saveAccount();
       const comptes = window.iaoAPI.profilsLire().comptes; // #311 : comptes dans profils.json
-      const c = comptes.find(a => a.profile === 'profil_319');
+      const c = comptes.find(a => a.profile === 'compte_319'); // #333 : profil tiré du nom
       const services = c ? c.services.join(',') : null;
       if (c) {
-        window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'profil_319'));
+        window.iaoAPI.profilsEcrire(comptes.filter(a => a.profile !== 'compte_319'));
       }
-      localStorage.removeItem('ai_active_services'); // la suite du harnais attend la sélection par défaut
+      // la suite du harnais attend la sélection par défaut
+      (() => { const p = window.iaoAPI.preferencesLire().preferences || {}; delete p.ai_active_services; window.iaoAPI.preferencesEcrire(p); })(); // #331 : préférences dans preferences.json
       return services;
     })()`);
     win.webContents.reload();
@@ -424,11 +432,11 @@ async function run() {
       const carte = document.querySelector('#accountsList .account-card');
       return { boutons: carte.querySelectorAll('[data-action="open-service"]').length,
         total: list.querySelectorAll('[data-svc-id]').length,
-        stocke: JSON.parse(localStorage.getItem('ai_active_services')).length };
+        stocke: window.iaoAPI.preferencesLire().preferences.ai_active_services.length };
     })()`);
     const un = await choisir(['claude']);
     const tous = await choisir('tous');
-    await exec(`localStorage.removeItem('ai_active_services'); 'ok'`);
+    await exec(`(() => { const p = window.iaoAPI.preferencesLire().preferences || {}; delete p.ai_active_services; window.iaoAPI.preferencesEcrire(p); })(); 'ok'`);
     win.webContents.reload();
     await sleep(300);
     await waitLoaded();
@@ -436,6 +444,40 @@ async function run() {
     assert(un.boutons === 1 && un.stocke === 1, 'une seule IA : ' + JSON.stringify(un));
     assert(tous.total > 9 && tous.boutons === tous.total && tous.stocke === tous.total, 'toutes les IA : ' + JSON.stringify(tous));
     assert(defaut === 9, 'retour à la sélection par défaut : ' + defaut);
+  });
+
+  // Issue #331 : préférences de l'interface dans <userData>/preferences.json.
+  await test('C1.8 Préférences dans preferences.json : migration unique, plus rien dans le localStorage (#331)', async () => {
+    const fichierPrefs = path.join(app.getPath('userData'), 'preferences.json');
+    assert(fs.existsSync(fichierPrefs), 'preferences.json absent après le démarrage');
+    const migre = JSON.parse(fs.readFileSync(fichierPrefs, 'utf-8'));
+    assert(Array.isArray(migre.ai_starred_tabs) && migre.ai_starred_tabs.includes('migration|331'),
+      'étoile du localStorage non recopiée : ' + JSON.stringify(migre.ai_starred_tabs));
+    const r = await exec(`(() => {
+      openServicesModal();
+      const list = document.getElementById('servicesList');
+      [...list.querySelectorAll('[data-svc-id]')].forEach((cb) => {
+        const coche = cb.dataset.svcId === 'claude';
+        if (cb.checked !== coche) { cb.checked = coche; list.onchange({ target: cb }); }
+      });
+      saveServicesModal();
+      return ['ai_active_services', 'ai_starred_tabs', 'ai_account_order', 'collapsed_accounts', 'ide_w', 'explorer_w']
+        .filter((k) => localStorage.getItem(k) !== null);
+    })()`);
+    assert(r.length === 0, 'clés encore dans le localStorage : ' + r.join(','));
+    const ecrit = JSON.parse(fs.readFileSync(fichierPrefs, 'utf-8'));
+    assert(JSON.stringify(ecrit.ai_active_services) === '["claude"]', 'preferences.json : ' + JSON.stringify(ecrit.ai_active_services));
+    // Perte du localStorage : la préférence reste (elle est dans le fichier).
+    await exec(`localStorage.removeItem('ai_active_services'); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
+    const boutons = await exec(`document.querySelector('#accountsList .account-card').querySelectorAll('[data-action="open-service"]').length`);
+    assert(boutons === 1, 'choix des IA perdu au rechargement : ' + boutons);
+    await exec(`(() => { const p = window.iaoAPI.preferencesLire().preferences || {}; delete p.ai_active_services; p.ai_starred_tabs = []; window.iaoAPI.preferencesEcrire(p); })(); 'ok'`);
+    win.webContents.reload();
+    await sleep(300);
+    await waitLoaded();
   });
 
   // =========================================================================
@@ -878,7 +920,8 @@ async function run() {
     assert(JSON.stringify(after.noms) === JSON.stringify(seedAccounts.map((a) => a.name)), 'noms restaurés : ' + after.noms.join(','));
     assert(JSON.stringify(after.couleurs) === JSON.stringify(seedAccounts.map((a) => a.color)), 'couleurs restaurées : ' + after.couleurs.join(','));
     // Ordre d'affichage propre à la liste : comparaison sans ordre.
-    const attendues = seedAccounts.map((a) => a.email + ' • ' + a.profile).sort();
+    // Issue #333 : la carte montre l'adresse seule, plus le profil.
+    const attendues = seedAccounts.map((a) => a.email).sort();
     assert(JSON.stringify([...after.lignes].sort()) === JSON.stringify(attendues), 'lignes e-mail des cartes : ' + after.lignes.join(' | '));
   });
 
@@ -954,10 +997,35 @@ async function run() {
     assert(/docker\d+@dmathilde\.fr/.test(r.desc), 'description : ' + r.desc);
     assert(r.apres === r.avant + 2, 'attendu 2 comptes de plus : ' + r.avant + ' -> ' + r.apres);
     const n = Number(r.derniers[0].split(' ')[0]);
-    assert(r.derniers[0] === n + ' docker' + n + '@dmathilde.fr profil_' + n, 'compte 1 : ' + r.derniers[0]);
-    assert(r.derniers[1] === (n + 1) + ' docker' + (n + 1) + '@dmathilde.fr profil_' + (n + 1), 'compte 2 : ' + r.derniers[1]);
+    // Issue #333 : le profil reprend le nom du compte.
+    assert(r.derniers[0] === n + ' docker' + n + '@dmathilde.fr ' + n, 'compte 1 : ' + r.derniers[0]);
+    assert(r.derniers[1] === (n + 1) + ' docker' + (n + 1) + '@dmathilde.fr ' + (n + 1), 'compte 2 : ' + r.derniers[1]);
     assert(!r.ouvert, 'la fenêtre de création doit se fermer');
     assert(r.webmail === r.apres, 'un bouton webmail par carte attendu : ' + r.webmail);
+  });
+
+  await test('C9.1b Nom de profil ni saisi ni affiché, tiré du nom du compte (#333)', async () => {
+    const r = await exec(`(() => {
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : profils.json
+      openModal(comptes.find(a => a.profile === 'profil_1').id);
+      const champ = document.getElementById('inputProfile');
+      const libelles = [...document.querySelectorAll('#accountModal .form-label')].map(l => l.textContent);
+      closeModal();
+      const cartes = [...document.querySelectorAll('#accountsList .account-card .account-email')].map(e => e.textContent);
+      return { type: champ.type, profilAffiche: libelles.some(t => /profil/i.test(t)), cartes };
+    })()`);
+    assert(r.type === 'hidden', 'champ du profil visible : ' + r.type);
+    assert(!r.profilAffiche, 'libellé « Nom du profil » encore affiché');
+    assert(r.cartes.length > 0 && r.cartes.every(t => !/profil_\d/.test(t)), 'profil encore affiché sur une carte : ' + JSON.stringify(r.cartes));
+    // Un compte modifié garde son profil (ses sessions y sont).
+    const garde = await exec(`(() => {
+      const id = window.iaoAPI.profilsLire().comptes.find(a => a.profile === 'profil_1').id; // #311
+      openModal(id);
+      saveAccount();
+      const apres = window.iaoAPI.profilsLire().comptes.find(a => a.id === id); // #311
+      return apres ? apres.profile : null;
+    })()`);
+    assert(garde === 'profil_1', 'profil changé à la modification : ' + garde);
   });
 
   await test('C9.2 Mot de passe de messagerie : généré, masqué par défaut, bouton œil', async () => {
@@ -1058,6 +1126,178 @@ async function run() {
   const dansDeuxJoursISO = () => new Date(Date.now() + 2 * 86400000).toISOString();
 
 
+  await test('C9.4 Premier onglet fixe : réglage, en tête, ni fermeture ni déplacement, retour à l\'adresse, retrait (#338)', async () => {
+    const r = await exec(`(async () => {
+      const pause = (ms) => new Promise(r => setTimeout(r, ms));
+      const toasts = () => [...document.querySelectorAll('#toastContainer .toast')].map(t => t.textContent.trim()).join(' | ');
+      openSettingsModal();
+      await pause(200);
+      // http:// refusé : message, rien d'enregistré, pas d'onglet.
+      document.getElementById('settingsOngletFixeActif').checked = true;
+      document.getElementById('settingsOngletFixeUrl').value = 'http://127.0.0.1:9/';
+      await saveSettings();
+      const refus = toasts();
+      const ongletApresRefus = document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null;
+      const modaleOuverte = document.getElementById('settingsModal').classList.contains('open');
+      document.getElementById('settingsOngletFixeUrl').value = 'https://127.0.0.1:9/accueil';
+      await saveSettings();
+      await pause(300);
+      const bar = document.getElementById('tabsBar');
+      const fixe = bar.querySelector('[data-tab="tab_fixe"]');
+      const wv = document.querySelector('#tab_fixe webview');
+      const etat = {
+        refus, ongletApresRefus, modaleOuverte,
+        premier: bar.querySelector('.tab') ? bar.querySelector('.tab').getAttribute('data-tab') : null,
+        libelle: fixe ? fixe.querySelector('.tab__label').textContent.trim() : null,
+        fermeture: fixe ? fixe.querySelector('.tab__close') !== null : null,
+        deplacable: fixe ? fixe.getAttribute('draggable') : null,
+        partition: wv ? wv.getAttribute('partition') : null,
+        src: wv ? wv.getAttribute('src') : null
+      };
+      // Fermeture impossible, menu contextuel absent.
+      closeTab('tab_fixe');
+      fixe.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 5, clientY: 5 }));
+      etat.toujoursLa = document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null;
+      etat.menu = document.querySelector('.ctx-menu') !== null;
+      // Clic : l'onglet passe au premier plan.
+      document.querySelector('#tabsBar [data-tab="tab_fixe"]').click();
+      await pause(100);
+      etat.actif = document.getElementById('tab_fixe').classList.contains('active');
+      etat.barreActive = document.querySelector('#tabsBar [data-tab="tab_fixe"]').classList.contains('active');
+      return etat;
+    })()`);
+    assert(/https:\/\//.test(r.refus), 'message d\'adresse invalide attendu : ' + r.refus);
+    assert(!r.ongletApresRefus && r.modaleOuverte, 'adresse invalide : ni onglet ni fermeture des réglages');
+    assert(r.premier === 'tab_fixe', 'onglet fixe en tête attendu : ' + r.premier);
+    assert(r.libelle === '127.0.0.1', 'libellé : ' + r.libelle);
+    assert(r.fermeture === false && r.deplacable === 'false', 'ni croix ni glisser attendus');
+    assert(r.partition === 'persist:onglet-fixe' && r.src === 'https://127.0.0.1:9/accueil', 'webview : ' + r.partition + ' ' + r.src);
+    assert(r.toujoursLa && !r.menu, 'onglet fermé ou menu contextuel affiché');
+    assert(r.actif && r.barreActive, 'onglet fixe non activé au clic');
+    const enregistres = await ipc('settings:load');
+    assert(enregistres.ongletFixeActif === true && enregistres.ongletFixeUrl === 'https://127.0.0.1:9/accueil',
+      'réglages enregistrés : ' + JSON.stringify([enregistres.ongletFixeActif, enregistres.ongletFixeUrl]));
+    // Décoché : l'onglet disparaît.
+    const retrait = await exec(`(async () => {
+      openSettingsModal();
+      await new Promise(r => setTimeout(r, 200));
+      document.getElementById('settingsOngletFixeActif').checked = false;
+      await saveSettings();
+      return { onglet: document.querySelector('#tabsBar [data-tab="tab_fixe"]') !== null, panneau: document.getElementById('tab_fixe') !== null };
+    })()`);
+    assert(!retrait.onglet && !retrait.panneau, 'onglet fixe toujours présent après décochage');
+  });
+  await test('C9.5 Barre d\'onglets pleine : flèches de défilement, onglet fixe immuable (#339)', async () => {
+    // Onglet fixe réactivé + 4 onglets de comptes ; la zone est rétrécie
+    // artificiellement (style) pour déborder sans ouvrir une multitude de
+    // webviews (mémoire du harnais, cf. commentaire /dev/shm plus haut).
+    // Tout est remis en place dans le finally : styles, réglages, onglets.
+    const r = await exec(`(async () => {
+      const pause = (ms) => new Promise(r => setTimeout(r, ms));
+      const zone = document.getElementById('tabsScrollZone');
+      const flecheG = document.getElementById('tabsArrowLeft');
+      const flecheD = document.getElementById('tabsArrowRight');
+      const res = {};
+      try {
+        openSettingsModal();
+        await pause(200);
+        document.getElementById('settingsOngletFixeActif').checked = true;
+        document.getElementById('settingsOngletFixeUrl').value = 'https://127.0.0.1:9/accueil';
+        await saveSettings();
+        await pause(200);
+        const svcOuvres = ['claude', 'chatgpt', 'gemini', 'zeta'];
+        for (const svc of svcOuvres) {
+          openService('acc_test_1', svc);
+          await pause(100);
+        }
+        // État initial : zone large, rien ne déborde, paire masquée.
+        res.avant = {
+          onglets: document.querySelectorAll('#tabsScrollZone .tab').length,
+          fixe: document.querySelector('#tabsBarFixe .tab') !== null,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden
+        };
+        // Zone rétrécie : débordement réel, paire affichée (layout stable),
+        // flèche gauche désactivée au début, flèche droite active.
+        zone.style.flex = 'none';
+        zone.style.width = '260px';
+        window.dispatchEvent(new Event('resize'));
+        await pause(150);
+        const rectFixeAvant = document.querySelector('#tabsBarFixe .tab').getBoundingClientRect();
+        res.debordement = {
+          deborde: zone.scrollWidth > zone.clientWidth,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden,
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled
+        };
+        // Défilement vers la droite : scrollLeft bouge, flèche gauche s'active,
+        // l'onglet fixe ne bouge pas (épinglé hors de la zone défilante) et
+        // reste actif s'il l'était (il ne participe pas au défilement).
+        document.querySelector('#tabsBarFixe .tab').click();
+        await pause(100);
+        res.fixeActifAvant = document.querySelector('#tabsBarFixe .tab').classList.contains('active');
+        flecheD.click();
+        await pause(700);
+        res.apresDroite = {
+          scrollLeft: Math.round(zone.scrollLeft),
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled,
+          fixeBouge: Math.abs(document.querySelector('#tabsBarFixe .tab').getBoundingClientRect().left - rectFixeAvant.left) > 1,
+          fixeActif: document.querySelector('#tabsBarFixe .tab').classList.contains('active')
+        };
+        // Retour vers la gauche : flèche gauche se désactive, flèche droite reste.
+        flecheG.click();
+        await pause(700);
+        res.apresGauche = {
+          scrollLeft: Math.round(zone.scrollLeft),
+          gaucheDesactive: flecheG.disabled, droiteDesactive: flecheD.disabled
+        };
+        // Onglet actif amené dans la zone visible par activateTab.
+        document.querySelector('#tabsScrollZone .tab[data-svc="zeta"]').click();
+        await pause(700);
+        const t = document.querySelector('#tabsScrollZone .tab[data-svc="zeta"]');
+        const zr = zone.getBoundingClientRect();
+        const tr = t.getBoundingClientRect();
+        res.actifVisible = tr.left >= zr.left - 1 && tr.right <= zr.right + 1;
+      } finally {
+        // Remise en état : zone, réglages, onglets ouverts.
+        zone.style.flex = '';
+        zone.style.width = '';
+        window.dispatchEvent(new Event('resize'));
+        await pause(200);
+        res.restaure = {
+          deborde: zone.scrollWidth > zone.clientWidth,
+          gauchesCachees: flecheG.hidden, droitesCachees: flecheD.hidden
+        };
+        openSettingsModal();
+        await pause(200);
+        document.getElementById('settingsOngletFixeActif').checked = false;
+        await saveSettings();
+        for (const svc of ['zeta', 'gemini', 'chatgpt', 'claude']) {
+          const t = document.querySelector('#tabsScrollZone .tab[data-svc="' + svc + '"]');
+          if (t) closeTab(t.getAttribute('data-tab'));
+        }
+      }
+      return res;
+    })()`);
+    assert(r.avant.onglets === 4, '4 onglets de comptes attendus : ' + r.avant.onglets);
+    assert(r.avant.fixe, 'onglet fixe épinglé attendu dans #tabsBarFixe');
+    assert(r.avant.gauchesCachees && r.avant.droitesCachees, 'zone large : flèches masquées');
+    assert(r.debordement.deborde, 'zone rétrécie : elle doit déborder');
+    assert(!r.debordement.gauchesCachees && !r.debordement.droitesCachees,
+      'débordement : la paire de flèches doit être affichée');
+    assert(r.debordement.gaucheDesactive && !r.debordement.droiteDesactive,
+      'au début : flèche gauche désactivée, flèche droite active');
+    assert(r.fixeActifAvant, 'onglet fixe activé au clic');
+    assert(r.apresDroite.scrollLeft > 0, 'clic flèche droite : défilement attendu, scrollLeft=' + r.apresDroite.scrollLeft);
+    assert(!r.apresDroite.gaucheDesactive && !r.apresDroite.droiteDesactive,
+      'après défilement : flèche gauche active');
+    assert(!r.apresDroite.fixeBouge, 'l\'onglet fixe ne doit pas défiler');
+    assert(r.apresDroite.fixeActif, 'l\'onglet fixe actif doit le rester pendant le défilement');
+    assert(r.apresGauche.scrollLeft === 0 && r.apresGauche.gaucheDesactive && !r.apresGauche.droiteDesactive,
+      'retour au début : ' + JSON.stringify(r.apresGauche));
+    assert(r.actifVisible, 'l\'onglet activé doit être ramené dans la zone visible');
+    assert(!r.restaure.deborde && r.restaure.gauchesCachees && r.restaure.droitesCachees,
+      'zone restaurée : plus de flèches : ' + JSON.stringify(r.restaure));
+  });
+
   await test('C10.1 modale ordonnanceur : interface des tâches visible, liste vide', async () => {
     await exec('window.openSchedulerModal()');
     await sleep(800);
@@ -1079,6 +1319,7 @@ async function run() {
       const sel = document.getElementById('tacheFormComptesMode');
       sel.value = 'liste'; sel.dispatchEvent(new Event('change'));
       document.querySelector('#tacheFormComptesChoix input[data-profile="profil_1"]').checked = true;
+      window.__libelleCompteC10 = document.querySelector('#tacheFormComptesChoix input[data-profile="profil_1"]').parentElement.textContent.trim();
       document.getElementById('tacheFormPrompt').value = 'Dis bonjour';
       document.getElementById('tacheFormProgDepuis').value = '${dansDeuxJoursLocal()}';
       document.getElementById('tacheFormProgTous').value = '2';
@@ -1086,6 +1327,9 @@ async function run() {
       document.getElementById('tacheFormActive').checked = true;
       'rempli'
     `);
+    // Issue #333 : l'ordonnanceur présente un compte par « nom - adresse mail », plus par son profil.
+    const libelleC10 = await exec('window.__libelleCompteC10');
+    assert(libelleC10 === 'Compte Test Un - test1@example.com', 'libellé du compte dans la tâche : ' + libelleC10);
     await exec('document.getElementById("tacheFormEnregistrer").click()');
     await sleep(800);
     const nbCartes = await exec('document.querySelectorAll("#tachesList .tache-card").length');
@@ -1576,6 +1820,47 @@ async function run() {
       'bandeau d\'erreur affiché après fermeture : ' + (texte.match(/Invalid[^\n]*/) || [''])[0]);
   });
 
+  await test('C12.2 Fermeture d\'onglet sans confirmation par défaut, avec si la case est cochée (#330)', async () => {
+    const ouvrir = async () => {
+      await exec(`document.querySelector('#accountsList [data-action="open-service"][data-acc="acc_test_2"][data-svc="gemini"]').click(); 'ok'`);
+      await sleep(800);
+    };
+    const fermer = `(() => {
+      const t = [...document.querySelectorAll('#tabsBar .tab')].find(x => x.dataset.acc === 'acc_test_2' && x.dataset.svc === 'gemini');
+      if (!t) return 'absent';
+      closeTab(t.dataset.tab);
+      return document.getElementById('confirmModal').classList.contains('open') ? 'confirmation' : 'fermé';
+    })()`;
+    const reste = `[...document.querySelectorAll('#tabsBar .tab')].some(x => x.dataset.acc === 'acc_test_2' && x.dataset.svc === 'gemini')`;
+    assert(await exec(`(async () => { openSettingsModal(); await new Promise(r => setTimeout(r, 200));
+      const c = document.getElementById('settingsConfirmTabClose').checked; closeSettingsModal(); return c; })()`) === false,
+      'case « Confirmer avant de fermer un onglet » cochée par défaut');
+    await ouvrir();
+    assert(await exec(fermer) === 'fermé', 'une confirmation est apparue alors que le réglage est désactivé par défaut');
+    await sleep(300);
+    assert(!(await exec(reste)), 'onglet encore présent après fermeture');
+    // Case cochée : la confirmation revient ; « Oui » ferme l'onglet.
+    await exec(`(async () => {
+      openSettingsModal();
+      await new Promise(r => setTimeout(r, 200));
+      document.getElementById('settingsConfirmTabClose').checked = true;
+      await saveSettings();
+      return 'ok';
+    })()`);
+    await ouvrir();
+    assert(await exec(fermer) === 'confirmation', 'pas de confirmation alors que la case est cochée');
+    await exec('document.getElementById("confirmModalYes").click()');
+    await sleep(300);
+    assert(!(await exec(reste)), 'onglet encore présent après confirmation');
+    await exec(`(async () => {
+      openSettingsModal();
+      await new Promise(r => setTimeout(r, 200));
+      document.getElementById('settingsConfirmTabClose').checked = false;
+      await saveSettings();
+      return 'ok';
+    })()`);
+  });
+
   // =========================================================================
   // C13 — Temps de réponse des messages envoyés à la main (issue #206)
   // Le réseau est coupé : la webview Claude charge une page locale qui imite
@@ -1736,8 +2021,8 @@ async function run() {
   // (série en cours ≥ 2), la dernière à 45 min de maintenant.
   const plans14 = [
     { profil: 'profil_1', services: ['claude', 'chatgpt', 'gemini', 'perplexity', 'grok'], min: 3, max: 7 },
-    { profil: 'profil_3', services: ['claude', 'chatgpt'], min: 1, max: 3 },
-    { profil: 'profil_4', services: ['suno'], min: 0, max: 1 }
+    { profil: '3', services: ['claude', 'chatgpt'], min: 1, max: 3 },
+    { profil: '4', services: ['suno'], min: 0, max: 1 }
   ];
   for (let jours = 59; jours >= 0; jours--) {
     const base = debutJour14(maintenant14 - jours * JOUR_MS);
@@ -1757,7 +2042,7 @@ async function run() {
   // l'heure d'exécution du harnais.
   sessions14.push({ id: id14('s'), profil: 'profil_1', service: 'claude',
     debut: maintenant14 - 45 * 60000, fin: maintenant14 - 10 * 60000, actifMs: 20 * 60000 });
-  sessions14.push({ id: id14('s'), profil: 'profil_3', service: 'claude',
+  sessions14.push({ id: id14('s'), profil: '3', service: 'claude',
     debut: debutJour14(maintenant14 - JOUR_MS) + 10 * 3600000,
     fin: debutJour14(maintenant14 - JOUR_MS) + 11 * 3600000, actifMs: 40 * 60000 });
 
@@ -1784,7 +2069,7 @@ async function run() {
       date: debutJour14(maintenant14 - jours * JOUR_MS) + (2 + Math.floor(alea14() * 18)) * 3600000 });
   }
   for (let jours = 50; jours >= 0; jours -= 10) {
-    quotas14.push({ id: id14('q'), profil: 'profil_3', service: 'claude',
+    quotas14.push({ id: id14('q'), profil: '3', service: 'claude',
       date: maintenant14 - jours * JOUR_MS - Math.floor(alea14() * 12) * 3600000 });
   }
 
@@ -1809,8 +2094,8 @@ async function run() {
   // Valeurs attendues, calculées depuis les fichiers (vérité terrain) : les
   // tests précédents n'ont PAS de session profil_3/profil_4 → leurs comptes
   // exacts viennent du semis seul.
-  const attenduSesProfil3 = sessions14.filter(s => s.profil === 'profil_3').length;
-  const attenduSesProfil4 = sessions14.filter(s => s.profil === 'profil_4').length;
+  const attenduSesProfil3 = sessions14.filter(s => s.profil === '3').length;
+  const attenduSesProfil4 = sessions14.filter(s => s.profil === '4').length;
   const attenduSesSuno = sessions14.filter(s => s.service === 'suno').length;
   const attenduSesSemaine = sessions14.filter(s => s.fin >= maintenant14 - 7 * JOUR_MS).length;
   const ongletsOuverts = await exec('document.querySelectorAll(\'#tabsBar .tab\').length');
@@ -1872,10 +2157,10 @@ async function run() {
     assert(r.cartes === 6, '6 cartes attendues : ' + r.cartes);
     // Tableaux : profil_3 et profil_4 ne viennent que du semis → valeurs exactes.
     // La clé (titre de la cellule) est le profil ; le nom affiché peut être
-    // « 3 »/« 4 » (comptes créés en série par C9.1, profils profil_3/profil_4).
+    // « 3 »/« 4 » (comptes créés en série par C9.1, profils « 3 »/« 4 » depuis #333).
     // Colonnes : nom | temps actif | durée ouverte | sessions | dernier.
-    const ligneP3 = r.lignesCompte.find(l => l[0].titre === 'profil_3');
-    const ligneP4 = r.lignesCompte.find(l => l[0].titre === 'profil_4');
+    const ligneP3 = r.lignesCompte.find(l => l[0].titre === '3');
+    const ligneP4 = r.lignesCompte.find(l => l[0].titre === '4');
     assert(ligneP3 && ligneP3[3].texte === String(attenduSesProfil3),
       'profil_3 : ' + attenduSesProfil3 + ' sessions attendues : ' + JSON.stringify(ligneP3));
     assert(ligneP4 && ligneP4[3].texte === String(attenduSesProfil4),
@@ -1982,6 +2267,41 @@ async function run() {
     assert(apresRep.trim() === '', 'reponses.jsonl doit être vidé : ' + apresRep.length + ' caractères');
     const apresQuo = fs.readFileSync(fichierQuotas14, 'utf-8');
     assert(apresQuo.trim() === '', 'quotas.jsonl doit être vidé : ' + apresQuo.length + ' caractères');
+  });
+
+  // =========================================================================
+  // C15 — Mémoire : seules les sessions des onglets ouverts (issue #328)
+  // En fin de harnais : l'onglet ouvert ici ajoute une session aux
+  // statistiques, que C11 et C14 comptent.
+  // =========================================================================
+  console.log('\n--- C15 : sessions chargées à la demande ---');
+  await test('C15.1 ouvrir un onglet ne charge que la session de son compte (#328)', async () => {
+    // Onglet ouvert sur le DERNIER compte de la liste : avant #328, son compte
+    // était cherché en chargeant la session de chaque compte placé avant lui
+    // (session.fromPartition), onglet ouvert ou non. Une session déjà chargée
+    // le reste après fermeture de l'onglet (Electron) : on ne compte donc que
+    // les sessions créées par cette ouverture.
+    const avant = sessionsCreees.length;
+    const cible = await exec(`(() => {
+      const comptes = window.iaoAPI.profilsLire().comptes; // #311 : comptes dans profils.json
+      const dernier = comptes[comptes.length - 1];
+      const bouton = document.querySelector('#accountsList [data-action="open-service"][data-acc="' + dernier.id + '"]');
+      bouton.click();
+      return { acc: dernier.id, svc: bouton.dataset.svc, profil: dernier.profile.toLowerCase(), rang: comptes.length };
+    })()`);
+    await sleep(1500); // <webview> attachée (did-attach-webview)
+    const { partitionDepuisStoragePath } = require('../scheduler/core');
+    const nouvelles = sessionsCreees.slice(avant).map(partitionDepuisStoragePath).filter((p) => p !== null);
+    await exec(`(() => {
+      const t = [...document.querySelectorAll('#tabsBar .tab')].find(x => x.dataset.acc === ${JSON.stringify(cible.acc)} && x.dataset.svc === ${JSON.stringify(cible.svc)});
+      if (t) closeTab(t.dataset.tab);
+      const oui = document.getElementById('confirmModalYes');
+      if (oui && oui.offsetParent !== null) oui.click();
+      return 'ok';
+    })()`);
+    assert(cible.rang >= 3, 'cas non significatif : ' + cible.rang + ' compte(s)');
+    const autres = nouvelles.filter((p) => p !== cible.profil);
+    assert(autres.length === 0, 'sessions d\'autres comptes chargées à l\'ouverture de « ' + cible.profil + ' » : ' + autres.join(', '));
   });
 
   // =========================================================================

@@ -41,6 +41,10 @@
      ouvert » du 17/09/2026 — extraites vers lib/ dès l'écriture (invariant
      11) pour être testables par `node --test`. -->
 <script src="lib/tab-actions.js"></script>
+<!-- Issue #339 : helpers purs du défilement de la barre d'onglets (flèches
+     gauche/droite quand la barre déborde), testés par node --test
+     (test/defilement-onglets.test.js). -->
+<script src="lib/defilement-onglets.js"></script>
 <!-- tabStarKey / isTabStarred / toggleTabStar / serializeStarredTabs /
      deserializeStarredTabs : issue #154 « Onglets étoilés » — extraites vers
      lib/ dès l'écriture (invariant 11) pour être testables par `node --test`. -->
@@ -49,7 +53,11 @@
      Statut « erreur » si l'accès au stockage lève — le renderer survit et
      l'ordonnanceur peut proposer la restauration depuis son instantané. -->
 <script src="lib/local-storage-json.js"></script>
+<!-- Issue #331 : préférences de l'interface dans preferences.json. -->
+<script src="lib/magasin-preferences.js"></script>
 <script src="lib/comptes-serie.js"></script>
+<!-- Issue #333 : profil tiré du nom du compte, libellé « nom - adresse mail ». -->
+<script src="lib/profil-compte.js"></script>
 <script src="lib/service-icons.js"></script>
 <script src="lib/services-actifs.js"></script>
 <script src="lib/taches-runner.js"></script>
@@ -81,6 +89,7 @@
      normalizeWordWrap/normalizeBoolean/settingsChanged : lot « Panneau de
      réglages » du 18/09/2026 — extraites vers lib/ dès l'écriture (invariant 11). -->
 <script src="lib/settings.js"></script>
+<script src="lib/onglet-fixe.js"></script>
 <!-- copyText : issue #138 (clic sur l'e-mail d'un compte -> presse-papiers),
      extraite vers lib/ dès l'écriture (invariant 11), dépendances injectées. -->
 <script src="lib/copy-text.js"></script>
@@ -193,7 +202,15 @@
 
     <!-- Zone IA : onglets (un onglet par service/compte ouvert) -->
     <div class="ai-area" id="aiArea">
-      <div class="tabs-bar" id="tabsBar"></div>
+      <!-- Issue #339 : l'onglet fixe (#338) est épinglé hors de la zone
+           défilante (il ne bouge jamais) ; les onglets de comptes défilent
+           dans la zone, guidés par des flèches quand la barre déborde. -->
+      <div class="tabs-bar" id="tabsBar">
+        <div class="tabs-bar__fixe" id="tabsBarFixe" hidden></div>
+        <button type="button" class="tabs-arrow" id="tabsArrowLeft" data-action="tabs-scroll" data-dir="-1" title="Faire défiler les onglets vers la gauche" hidden><span class="ic" data-icon="chevron-left"></span></button>
+        <div class="tabs-bar__scroll" id="tabsScrollZone"></div>
+        <button type="button" class="tabs-arrow" id="tabsArrowRight" data-action="tabs-scroll" data-dir="1" title="Faire défiler les onglets vers la droite" hidden><span class="ic" data-icon="chevron-right"></span></button>
+      </div>
       <div class="tabs-content" id="tabsContent">
         <div class="tabs-empty" id="tabsEmpty"><span class="ic" data-icon="robot"></span><span>Aucun onglet ouvert — choisissez un service dans la liste des comptes</span></div>
       </div>
@@ -205,11 +222,11 @@
 <div class="modal-overlay" id="accountModal">
   <div class="modal">
     <div class="modal__title" id="modalTitle">Ajouter un compte</div>
-    <div class="modal__desc">Le profil permet d'isoler les cookies dans Electron.</div>
     <input type="hidden" id="editId">
     <div class="form-group"><label class="form-label">Nom du compte</label><input class="form-input" id="inputName" type="text"></div>
     <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="inputEmail" type="email"></div>
-    <div class="form-group"><label class="form-label">Nom du Profil</label><input class="form-input" id="inputProfile" type="text"></div>
+    <!-- Issue #333 : profil ni saisi ni affiché ; il reprend le nom du compte à la création. -->
+    <input id="inputProfile" type="hidden">
     <div class="form-group">
       <label class="form-label" for="inputMailPassword">Mot de passe de la messagerie</label>
       <div class="form-pass">
@@ -461,7 +478,7 @@
   </div>
 </div>
 
-<!-- Modal de confirmation réutilisable (lot 18/09/2026 — réglage confirmBeforeClose) -->
+<!-- Modal de confirmation réutilisable (lot 18/09/2026 — réglage confirmTabClose, #330) -->
 <div class="modal-overlay" id="confirmModal">
   <div class="modal modal--confirm">
     <div class="modal__title confirm-title">Confirmation</div>
@@ -546,7 +563,7 @@
       <!-- Cases à cocher -->
       <div class="settings-checkboxes">
         <label class="settings-checkbox-label">
-          <input type="checkbox" id="settingsConfirmBeforeClose"> Confirmer avant de fermer un onglet
+          <input type="checkbox" id="settingsConfirmTabClose"> Confirmer avant de fermer un onglet
         </label>
         <label class="settings-checkbox-label">
           <input type="checkbox" id="settingsShowAutomationWindows"> Afficher les fenêtres d'automatisation
@@ -574,6 +591,27 @@
         <input type="url" id="settingsWebmailUrl" class="settings-input settings-input--wide" placeholder="https://mail.dmathilde.fr" spellcheck="false">
       </div>
 
+      <!-- Premier onglet immuable (issue #338) -->
+      <div>
+        <label class="settings-checkbox-label">
+          <input type="checkbox" id="settingsOngletFixeActif"> Ouvrir un premier onglet fixe
+        </label>
+        <label class="settings-label" for="settingsOngletFixeUrl">Adresse du premier onglet</label>
+        <input type="url" id="settingsOngletFixeUrl" class="settings-input settings-input--wide" placeholder="https://github.com/Mathilde-Team" spellcheck="false">
+        <span class="settings-hint">Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter.</span>
+      </div>
+
+      <!-- Sauvegarde complète (issue #329) : zip du dossier de données,
+           secrets rechiffrés au mot de passe de la sauvegarde. -->
+      <div>
+        <label class="settings-label">Sauvegarde complète</label>
+        <div class="identifiants-form">
+          <button type="button" id="sauvegardeCreer" class="btn">Créer une sauvegarde…</button>
+          <button type="button" id="sauvegardeRestaurer" class="btn">Restaurer une sauvegarde…</button>
+        </div>
+        <span class="settings-hint">Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer.</span>
+      </div>
+
       <!-- Identifiants des connecteurs, partagés entre profils (issue #278) -->
       <div>
         <label class="settings-label" for="identifiantsListe">Identifiants des connecteurs (partagés)</label>
@@ -592,6 +630,29 @@
     <div class="modal__actions">
       <button class="btn" data-action="ui-closeSettingsModal">Annuler</button>
       <button class="btn btn--primary-accent" data-action="ui-saveSettings">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal mot de passe de la sauvegarde complète (issue #329). Le mot de
+     passe n'est jamais écrit ; il chiffre les secrets du zip (AES-256-GCM). -->
+<div class="modal-overlay" id="sauvegardeModal">
+  <div class="modal modal--help">
+    <div class="modal__title" id="sauvegardeTitre">Sauvegarde complète</div>
+    <div class="settings-body">
+      <div>
+        <label class="settings-label" for="sauvegardeMdp">Mot de passe de la sauvegarde</label>
+        <input type="password" id="sauvegardeMdp" class="settings-input settings-input--wide" autocomplete="new-password">
+      </div>
+      <div id="sauvegardeConfirmeBloc">
+        <label class="settings-label" for="sauvegardeMdp2">Confirmer le mot de passe</label>
+        <input type="password" id="sauvegardeMdp2" class="settings-input settings-input--wide" autocomplete="new-password">
+      </div>
+      <span class="settings-hint" id="sauvegardeAide"></span>
+    </div>
+    <div class="modal__actions">
+      <button type="button" id="sauvegardeAnnuler" class="btn">Annuler</button>
+      <button type="button" id="sauvegardeValider" class="btn btn--primary">Valider</button>
     </div>
   </div>
 </div>

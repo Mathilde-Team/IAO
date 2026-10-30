@@ -129,19 +129,19 @@ msgid "Glisser pour redimensionner l'éditeur"
 msgstr ""
 
 #: index.html
+msgid "Faire défiler les onglets vers la gauche"
+msgstr ""
+
+#: index.html
+msgid "Faire défiler les onglets vers la droite"
+msgstr ""
+
+#: index.html
 msgid "Aucun onglet ouvert — choisissez un service dans la liste des comptes"
 msgstr ""
 
 #: index.html
-msgid "Le profil permet d'isoler les cookies dans Electron."
-msgstr ""
-
-#: index.html
 msgid "Nom du compte"
-msgstr ""
-
-#: index.html
-msgid "Nom du Profil"
 msgstr ""
 
 #: index.html
@@ -549,6 +549,38 @@ msgid "https://mail.dmathilde.fr"
 msgstr ""
 
 #: index.html
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
+
+#: index.html
+msgid "Adresse du premier onglet"
+msgstr ""
+
+#: index.html
+msgid "https://github.com/Mathilde-Team"
+msgstr ""
+
+#: index.html
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgstr ""
+
+#: index.html
+msgid "Sauvegarde complète"
+msgstr ""
+
+#: index.html
+msgid "Créer une sauvegarde…"
+msgstr ""
+
+#: index.html
+msgid "Restaurer une sauvegarde…"
+msgstr ""
+
+#: index.html
+msgid "Un seul fichier zip : comptes, mots de passe de messagerie, statistiques et sessions. Les mots de passe sont déchiffrés du trousseau et rechiffrés avec le mot de passe de la sauvegarde : elle se restaure sur n'importe quelle machine. La restauration remplace les données actuelles puis propose de redémarrer."
+msgstr ""
+
+#: index.html
 msgid "Identifiants des connecteurs (partagés)"
 msgstr ""
 
@@ -566,6 +598,18 @@ msgstr ""
 
 #: index.html
 msgid "Chiffrés par le trousseau du système, partagés entre les profils — les cookies et le 2FA restent propres à chaque profil. Au focus d'un champ de connexion, un menu propose les identifiants du site."
+msgstr ""
+
+#: index.html
+msgid "Mot de passe de la sauvegarde"
+msgstr ""
+
+#: index.html
+msgid "Confirmer le mot de passe"
+msgstr ""
+
+#: index.html
+msgid "Valider"
 msgstr ""
 
 #: assets/app.js
@@ -1617,7 +1661,55 @@ msgid "Enregistrement impossible : {error}"
 msgstr ""
 
 #: assets/app.js
+msgid "Créer une sauvegarde complète"
+msgstr ""
+
+#: assets/app.js
+msgid "Restaurer une sauvegarde complète"
+msgstr ""
+
+#: assets/app.js
+msgid "Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le."
+msgstr ""
+
+#: assets/app.js
+msgid "Celui choisi à la création de cette sauvegarde."
+msgstr ""
+
+#: assets/app.js
+msgid "Choisissez un mot de passe de sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Les deux mots de passe ne correspondent pas"
+msgstr ""
+
+#: assets/app.js
+msgid "Échec de la création de la sauvegarde"
+msgstr ""
+
+#: assets/app.js
+msgid "Sauvegarde créée : {count} fichiers"
+msgstr ""
+
+#: assets/app.js
+msgid "Mot de passe de la sauvegarde incorrect"
+msgstr ""
+
+#: assets/app.js
+msgid "Échec de la restauration"
+msgstr ""
+
+#: assets/app.js
+msgid "Sauvegarde restaurée — IAO va redémarrer"
+msgstr ""
+
+#: assets/app.js
 msgid "Impossible de charger les réglages"
+msgstr ""
+
+#: assets/app.js
+msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
 
 #: assets/app.js

@@ -76,6 +76,13 @@ test('main.js déclare bien preload.js et garde nodeIntegration:false / contextI
   assert.match(main, /contextIsolation:\s*true/);
 });
 
+test('#331 : preferencesLire / preferencesEcrire passent par deux canaux synchrones fixes', () => {
+  const { exposed, invoked } = runPreloadSandboxed('file:///home/u/IAO/index.html');
+  assert.deepEqual(exposed.iaoAPI.preferencesLire(), { status: 'ok' });
+  assert.deepEqual(exposed.iaoAPI.preferencesEcrire({ ide_w: '1px' }), { status: 'ok' });
+  assert.deepEqual(invoked, [['sync', 'preferences:lire'], ['sync', 'preferences:ecrire', { ide_w: '1px' }]]);
+});
+
 test('#311 : profilsLire / profilsEcrire passent par deux canaux synchrones fixes', () => {
   const { exposed, invoked } = runPreloadSandboxed('file:///home/u/IAO/index.html');
   assert.deepEqual(exposed.iaoAPI.profilsLire(), { status: 'ok' });

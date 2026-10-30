@@ -91,6 +91,14 @@
     }
     const ipcRenderer = { invoke: window.iaoAPI.ipcInvoke };
 
+    // Issue #331 : préférences de l'interface dans <userData>/preferences.json
+    // (lib/magasin-preferences.js), même interface que localStorage. Les
+    // onglets ouverts restent dans le localStorage.
+    const prefStore = window.creerMagasinPreferences({
+      lire: () => window.iaoAPI.preferencesLire(),
+      ecrire: (prefs) => window.iaoAPI.preferencesEcrire(prefs)
+    }, localStorage, console);
+
     // Issue #162 : mode debug (--iao-debug ou IAO_DEBUG=1, décidé par main.js).
     // dbg() écrit en console.debug : main.js ne recopie ce niveau dans
     // iao.log qu'en mode debug, et dbg() se tait hors de ce mode.
@@ -221,7 +229,7 @@
 
     function getActiveServices() {
       try {
-        const raw = localStorage.getItem(ACTIVE_SERVICES_KEY);
+        const raw = prefStore.getItem(ACTIVE_SERVICES_KEY);
         if (!raw) return DEFAULT_ACTIVE_SERVICES.slice();
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return DEFAULT_ACTIVE_SERVICES.slice();
@@ -233,7 +241,7 @@
     }
 
     function saveActiveServices(ids) {
-      try { localStorage.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids)); }
+      try { prefStore.setItem(ACTIVE_SERVICES_KEY, JSON.stringify(ids)); }
       catch (e) { /* non bloquant */ }
     }
 
@@ -364,12 +372,12 @@
     let starredTabs = new Set();
     function loadStarredTabs() {
       try {
-        var raw = localStorage.getItem(STARRED_KEY);
+        var raw = prefStore.getItem(STARRED_KEY);
         starredTabs = deserializeStarredTabs(raw);
       } catch (e) { /* non bloquant */ }
     }
     function saveStarredTabs() {
-      try { localStorage.setItem(STARRED_KEY, serializeStarredTabs(starredTabs)); } catch (e) { /* non bloquant */ }
+      try { prefStore.setItem(STARRED_KEY, serializeStarredTabs(starredTabs)); } catch (e) { /* non bloquant */ }
     }
     function isTabStarredById(accId, svcId) { return isTabStarred(starredTabs, accId, svcId); }
     function toggleTabStarById(accId, svcId) {
@@ -520,7 +528,7 @@
     const COLLAPSED_KEY = 'collapsed_accounts';
     let collapsedAccounts = new Set();
     try {
-      const saved = JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]');
+      const saved = JSON.parse(prefStore.getItem(COLLAPSED_KEY) || '[]');
       if (Array.isArray(saved)) collapsedAccounts = new Set(saved.filter(x => typeof x === 'string'));
     } catch (e) { console.warn('[storage] états de repli ignorés :', e); }
 
@@ -528,7 +536,7 @@
     // (la clé ne grossit pas indéfiniment au fil des suppressions).
     function saveCollapsed() {
       collapsedAccounts = new Set([...collapsedAccounts].filter(id => accounts.some(a => a.id === id)));
-      try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...collapsedAccounts])); } catch (e) {}
+      try { prefStore.setItem(COLLAPSED_KEY, JSON.stringify([...collapsedAccounts])); } catch (e) {}
     }
 
     window.toggleCardCollapse = function(accId) {
@@ -594,6 +602,11 @@
         // des cooldowns par service. lastUsedAt = dernière ouverture manuelle ;
         // lastAutomationAt = dernier job d'ordonnanceur exécuté sur ce profil
         // (sert à choisir le profil "le plus ancien" avant d'en relancer un).
+        // Issue #333 : compte importé sans profil -> profil tiré de son nom.
+        if (!acc.profile || typeof acc.profile !== 'string') {
+          acc.profile = window.iaoProfilCompte.profilDepuisNom(acc.name, accounts.map(a => a.profile).filter(Boolean));
+          needsUpdate = true;
+        }
         if (!acc.automation || typeof acc.automation !== 'object') {
           acc.automation = { enabled: true, lastUsedAt: 0, lastAutomationAt: 0 };
           needsUpdate = true;
@@ -682,7 +695,7 @@
     // Les comptes sans ordre explicite sont triés alphabétiquement (fallback).
     function getAccountOrder() {
       try {
-        const raw = localStorage.getItem(ORDER_KEY);
+        const raw = prefStore.getItem(ORDER_KEY);
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return null;
@@ -691,7 +704,7 @@
     }
 
     function saveAccountOrder(orderList) {
-      try { localStorage.setItem(ORDER_KEY, JSON.stringify(orderList)); }
+      try { prefStore.setItem(ORDER_KEY, JSON.stringify(orderList)); }
       catch (e) { /* non bloquant */ }
     }
 
@@ -787,7 +800,7 @@
               <div class="account-avatar" data-avatar-color="${color}">${initials}</div>
               <div class="account-info">
                 <div class="account-name">${escapeHtml(acc.name)} ${isActive ? '<span class="active-dot"></span>' : ''}</div>
-                <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span> • ` : ''}${escapeHtml(acc.profile)}</div>
+                <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span>` : ''}</div>
               </div>
               <div class="account-actions">
                 ${currentSettings && currentSettings.webmailUrl ? `<button class="btn btn--icon" data-action="open-webmail" data-acc="${id}" title="${escapeHtml(_('Ouvrir le webmail (adresse copiée)'))}"><span class="ic" data-icon="envelope"></span></button>` : ''}
@@ -955,7 +968,7 @@
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
-        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.profile }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
+        <button type="button" class="tab-toolbar__btn tab-toolbar__btn--danger" data-action="tab-disconnect" data-tab="${tabId}" title="${escapeHtml(_('Se déconnecter du profil « {profile} »', { profile: acc.name }))}"><span class="ic" data-icon="right-from-bracket"></span></button>
       `;
       pane.appendChild(toolbar);
       hydrateIcons(toolbar);
@@ -1032,15 +1045,103 @@
       }, M.INTERVALLE_LECTURE_MS);
     }
 
+    // Issue #338 : premier onglet immuable, hors de tabs[] (ni fermeture, ni
+    // déplacement, ni étoile, ni statistiques de compte). Session propre
+    // (persist:onglet-fixe) ; main.js bloque toute sortie du site.
+    const OF = window.iaoOngletFixe;
+    let ongletFixe = null; // { url, paneEl, webview }
+
+    function htmlOngletFixe() {
+      if (!ongletFixe) return '';
+      const cls = 'tab tab--fixe' + (activeTabId === OF.ID_ONGLET ? ' active' : '');
+      return `
+          <div class="${cls}" draggable="false" data-action="activate-tab" data-tab="${OF.ID_ONGLET}" title="${escapeHtml(ongletFixe.url)}">
+            <span class="ic" data-icon="house"></span>
+            <span class="tab__text">
+              <span class="tab__label">${escapeHtml(OF.libelle(ongletFixe.url))}</span>
+            </span>
+          </div>
+        `;
+    }
+
+    function chargerOngletFixe(url) {
+      try {
+        ongletFixe.webview.loadURL(url).catch((e) => dbg('onglets', 'onglet fixe : chargement refusé', e && e.message));
+      } catch (e) {
+        // webview pas encore prête (avant dom-ready) : l'attribut suffit.
+        dbg('onglets', 'onglet fixe : chargement par attribut', e && e.message);
+        ongletFixe.webview.setAttribute('src', url);
+      }
+    }
+
+    // Crée, met à jour ou retire l'onglet selon les réglages.
+    function appliquerOngletFixe(reglages) {
+      const conf = OF.configuration(reglages);
+      if (!conf.actif) {
+        if (!ongletFixe) return;
+        ongletFixe.paneEl.remove();
+        ongletFixe = null;
+        dbg('onglets', 'onglet fixe retiré');
+        if (activeTabId === OF.ID_ONGLET) activateTab(tabs.length ? tabs[0].id : null);
+        else renderTabsBar();
+        return;
+      }
+      if (ongletFixe) {
+        if (ongletFixe.url !== conf.url) {
+          ongletFixe.url = conf.url;
+          chargerOngletFixe(conf.url);
+          dbg('onglets', 'onglet fixe : nouvelle adresse', OF.libelle(conf.url));
+        }
+        renderTabsBar();
+        return;
+      }
+      const pane = document.createElement('div');
+      pane.className = 'tab-pane';
+      pane.id = OF.ID_ONGLET;
+      const webview = document.createElement('webview');
+      webview.setAttribute('partition', OF.PARTITION);
+      webview.setAttribute('src', conf.url);
+      webview.setAttribute('allowpopups', ''); // popups jugées par main.js (même site -> dans l'onglet)
+      webview.style.width = '100%';
+      webview.style.height = '100%';
+      webview.addEventListener('did-fail-load', (ev) => {
+        if (ev.isMainFrame) dbg('onglets', 'onglet fixe : échec de chargement', ev.errorCode, ev.errorDescription);
+      });
+      pane.appendChild(webview);
+      document.getElementById('tabsContent').appendChild(pane);
+      ongletFixe = { url: conf.url, paneEl: pane, webview };
+      dbg('onglets', 'onglet fixe ouvert', OF.libelle(conf.url));
+      if (!activeTabId) activateTab(OF.ID_ONGLET);
+      else renderTabsBar();
+    }
+
+    // Clic sur l'onglet : l'affiche et revient à l'adresse définie.
+    function revenirOngletFixe() {
+      activateTab(OF.ID_ONGLET);
+      let actuelle = '';
+      try {
+        actuelle = ongletFixe.webview.getURL();
+      } catch (e) {
+        dbg('onglets', 'onglet fixe : adresse courante illisible', e && e.message);
+      }
+      if (actuelle !== ongletFixe.url) chargerOngletFixe(ongletFixe.url);
+    }
+
     // Réaffiche la barre d'onglets à partir de tabs[] (source de vérité unique).
     // Délégation d'événements (chantier A) : aucun onclick avec donnée interpolée.
     // Issue #324 : logo du service + nom du compte (service en infobulle) ;
     // reflet visuel « inactif
     // depuis 5 min » via isTabIdle(t.lastFocusAt) (lib/activity-status.js).
     function renderTabsBar() {
-      const bar = document.getElementById('tabsBar');
+      // Issue #339 : l'onglet fixe est épinglé dans #tabsBarFixe (hors de la
+      // zone défilante : il ne bouge jamais au défilement), les onglets de
+      // comptes vivent dans la zone défilante #tabsScrollZone.
+      const conteneurFixe = document.getElementById('tabsBarFixe');
+      const zone = document.getElementById('tabsScrollZone');
       const now = Date.now();
-      bar.innerHTML = tabs.map(t => {
+      conteneurFixe.innerHTML = htmlOngletFixe();
+      conteneurFixe.hidden = !ongletFixe;
+      zone.innerHTML = tabs.map(t => {
         const acc = accounts.find(a => a.id === t.accId);
         const svc = SERVICES.find(s => s.id === t.svcId);
         if (!acc || !svc) return '';
@@ -1060,7 +1161,31 @@
           </div>
         `;
       }).join('');
-      hydrateIcons(bar);
+      hydrateIcons(conteneurFixe);
+      hydrateIcons(zone);
+      majDefilementOnglets();
+    }
+
+    // Issue #339 : affiche ou masque les flèches de défilement selon le
+    // débordement de la zone. Helpers purs dans lib/defilement-onglets.js ;
+    // appelée après chaque rendu, au défilement (écouteur passif ci-dessous)
+    // et au redimensionnement de la fenêtre.
+    const DO = window.iaoDefilementOnglets;
+    function majDefilementOnglets() {
+      const zone = document.getElementById('tabsScrollZone');
+      const flecheGauche = document.getElementById('tabsArrowLeft');
+      const flecheDroite = document.getElementById('tabsArrowRight');
+      if (!zone || !flecheGauche || !flecheDroite) return;
+      const rtl = getComputedStyle(zone).direction === 'rtl';
+      const etat = DO.etatDefilement(zone.scrollLeft, zone.scrollWidth, zone.clientWidth, rtl);
+      // La paire de flèches est affichée ensemble dès que la zone déborde
+      // (layout stable : la zone garde la même largeur) ; chaque flèche est
+      // désactivée à son extrême. En RTL le contenu commence à droite : la
+      // flèche gauche mène vers la fin (apres), la droite vers le début.
+      flecheGauche.hidden = !etat.debordant;
+      flecheDroite.hidden = !etat.debordant;
+      flecheGauche.disabled = !(rtl ? etat.apres : etat.avant);
+      flecheDroite.disabled = !(rtl ? etat.avant : etat.apres);
     }
 
     // Affiche l'onglet demandé (et masque les autres) ; les webviews inactives
@@ -1078,6 +1203,11 @@
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
       document.getElementById('tabsEmpty').style.display = tabId ? 'none' : 'flex';
       renderTabsBar();
+      // Issue #339 : barre pleine — l'onglet activé (clic, ouverture de
+      // compte, fermeture du voisin) est amené dans la partie visible de la
+      // zone défilante. L'onglet fixe, épinglé hors de la zone, n'y passe pas.
+      const actif = document.querySelector('#tabsScrollZone .tab.active');
+      if (actif) actif.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
     }
 
     // Ferme un onglet : détruit sa <webview> (le process invité Chromium est
@@ -1088,7 +1218,7 @@
       if (idx === -1) return;
 
       // Confirmation avant fermeture si le réglage est activé (lot 18/09/2026)
-      if (currentSettings && currentSettings.confirmBeforeClose) {
+      if (currentSettings && currentSettings.confirmTabClose) {
         const tab = tabs[idx];
         const acc = accounts.find(a => a.id === tab.accId);
         const svc = SERVICES.find(s => s.id === tab.svcId);
@@ -1114,7 +1244,7 @@
 
       if (activeTabId === tabId) {
         const next = tabs[idx] || tabs[idx - 1] || null;
-        activateTab(next ? next.id : null);
+        activateTab(next ? next.id : (ongletFixe ? OF.ID_ONGLET : null)); // #338
       } else {
         renderTabsBar();
       }
@@ -1128,10 +1258,39 @@
     document.getElementById('tabsBar').addEventListener('click', (e) => {
       const el = e.target.closest('[data-action]');
       if (!el) return;
+      // Issue #339 : flèche de défilement de la zone d'onglets. data-dir
+      // vaut -1 (gauche) ou 1 (droite) — jamais une donnée utilisateur.
+      if (el.getAttribute('data-action') === 'tabs-scroll') {
+        defilerZoneOnglets(Number(el.getAttribute('data-dir')) || 1);
+        return;
+      }
       const tabId = el.getAttribute('data-tab');
       if (el.getAttribute('data-action') === 'close-tab') closeTab(tabId);
+      else if (ongletFixe && tabId === OF.ID_ONGLET) revenirOngletFixe(); // #338
       else activateTab(tabId);
     });
+
+    // Issue #339 : défilement d'un clic sur une flèche (lissé ; l'état des
+    // flèches est rafraîchi par l'événement scroll ci-dessous) et écouteurs
+    // qui rafraîchissent les flèches pendant le défilement et au
+    // redimensionnement de la fenêtre.
+    function defilerZoneOnglets(direction) {
+      const zone = document.getElementById('tabsScrollZone');
+      if (!zone) return;
+      // Direction physique (-1 vers la gauche, +1 vers la droite), identique
+      // en LTR et RTL : Chromium y rend scrollLeft négatif vers la fin du
+      // contenu, scrollBy(-pas) décale la zone vers la gauche dans les deux cas.
+      zone.scrollBy({ left: direction * DO.pasDefilement(zone.clientWidth), behavior: 'smooth' });
+    }
+    document.getElementById('tabsScrollZone').addEventListener('scroll', () => majDefilementOnglets(), { passive: true });
+    // La largeur de la zone change aussi par les séparateurs de l'explorateur
+    // et de l'éditeur (et par la fenêtre) : ResizeObserver couvre tous les cas,
+    // le repli sur « resize » reste pour un Chromium sans ResizeObserver.
+    if (typeof ResizeObserver === 'function') {
+      new ResizeObserver(() => majDefilementOnglets()).observe(document.getElementById('tabsScrollZone'));
+    } else {
+      window.addEventListener('resize', () => majDefilementOnglets());
+    }
 
     // Issue #154 : Menu contextuel (clic droit) sur les onglets.
     // Permet d'étoiler / désétoiler un onglet pour le mettre en valeur.
@@ -1364,7 +1523,7 @@
         const webview = t.paneEl.querySelector('webview');
         if (webview) webview.reload();
       });
-      showToast(_('Profil « {profile} » déconnecté — session effacée', { profile: acc.profile }));
+      showToast(_('Profil « {profile} » déconnecté — session effacée', { profile: acc.name }));
     }
     document.getElementById('tabsContent').addEventListener('click', (e) => {
       const el = e.target.closest('[data-action]');
@@ -1454,6 +1613,7 @@
       if (e.key === 'Escape') {
         document.getElementById('paletteOverlay').classList.remove('open');
         document.getElementById('accountModal').classList.remove('open');
+        document.getElementById('sauvegardeModal').classList.remove('open');
         document.getElementById('deleteModal').classList.remove('open');
         document.getElementById('helpModal').classList.remove('open');
         closeImportConfirm(); // ferme + vide pendingImportContent (pas un simple classList.remove)
@@ -1540,12 +1700,8 @@
         document.getElementById('editId').value = '';
         document.getElementById('inputName').value = '';
         document.getElementById('inputEmail').value = '';
-        // Suggère un profil NON collisionnant (`length+1` pouvait re-proposer un
-        // profil déjà pris après une suppression -> sessions partagées).
-        const used = new Set(accounts.map(a => a.profile));
-        let n = accounts.length + 1;
-        while (used.has('profil_' + n)) n++;
-        document.getElementById('inputProfile').value = 'profil_' + n;
+        // Issue #333 : le profil est tiré du nom à l'enregistrement (saveAccount).
+        document.getElementById('inputProfile').value = '';
       }
       // Issue #201 : mot de passe de messagerie, masqué ; relu depuis le coffre chiffré.
       const pass = document.getElementById('inputMailPassword');
@@ -1763,8 +1919,12 @@
       const id = document.getElementById('editId').value;
       const name = document.getElementById('inputName').value.trim();
       const email = document.getElementById('inputEmail').value.trim();
-      const profile = document.getElementById('inputProfile').value.trim();
-      if (!name || !email || !profile) return showToast(_('Remplissez tous les champs'), 'error');
+      if (!name || !email) return showToast(_('Remplissez tous les champs'), 'error');
+      // Issue #333 : un compte existant garde son profil (ses sessions y sont) ;
+      // un nouveau compte prend un profil tiré de son nom, unique.
+      const profile = id
+        ? document.getElementById('inputProfile').value.trim()
+        : window.iaoProfilCompte.profilDepuisNom(name, accounts.map(a => a.profile));
 
       // Unicité du profil (chantier audit 3.1) : deux comptes partageant le même
       // `profile` utiliseraient la MÊME partition Electron (persist:<profile>) →
@@ -2025,9 +2185,9 @@
       // Lecture défensive (chantier C) : une valeur absente/illisible ne doit
       // jamais empêcher l'app de démarrer — on retombe simplement sur le défaut.
       try {
-        const savedIde = localStorage.getItem('ide_w');
+        const savedIde = prefStore.getItem('ide_w');
         if (savedIde) idePanel.style.flex = '0 0 ' + savedIde;
-        const savedExp = localStorage.getItem('explorer_w');
+        const savedExp = prefStore.getItem('explorer_w');
         if (savedExp) fileExplorer.style.flex = '0 0 ' + savedExp;
       } catch (e) { console.warn('[storage] largeurs de colonnes ignorées :', e); }
 
@@ -2070,7 +2230,7 @@
         min: 260,
         max: () => document.querySelector('.workspace-body').getBoundingClientRect().width - 320,
         apply: (w) => { idePanel.style.flex = '0 0 ' + w + 'px'; },
-        onEnd: () => { try { localStorage.setItem('ide_w', Math.round(idePanel.getBoundingClientRect().width) + 'px'); } catch (e) {} }
+        onEnd: () => { try { prefStore.setItem('ide_w', Math.round(idePanel.getBoundingClientRect().width) + 'px'); } catch (e) {} }
       });
 
       // Explorateur de fichiers ↔ éditeur
@@ -2080,7 +2240,7 @@
         min: 120,
         max: () => idePanel.getBoundingClientRect().width - 160,
         apply: (w) => { fileExplorer.style.flex = '0 0 ' + w + 'px'; },
-        onEnd: () => { try { localStorage.setItem('explorer_w', Math.round(fileExplorer.getBoundingClientRect().width) + 'px'); } catch (e) {} }
+        onEnd: () => { try { prefStore.setItem('explorer_w', Math.round(fileExplorer.getBoundingClientRect().width) + 'px'); } catch (e) {} }
       });
     }
     setupResizers();
@@ -2448,7 +2608,7 @@
       }
       conteneur.innerHTML = evenements.map(function(ev) {
         var ligne = '[' + escapeHtml(formatterDateTache(ev.date)) + '] ' +
-          escapeHtml(ev.nom || '') + (ev.profil ? ' · ' + escapeHtml(ev.profil) : '') +
+          escapeHtml(ev.nom || '') + (ev.profil ? ' · ' + escapeHtml(window.iaoProfilCompte.libelleProfil(ev.profil, accounts)) : '') +
           ' — ' + escapeHtml(texteResultatTache(ev));
         if (ev.detail) ligne += ' (' + escapeHtml(String(ev.detail)) + ')';
         return '<div>' + ligne + '</div>';
@@ -2514,7 +2674,7 @@
       }
       var lignes = avecClaude.map(function(a) {
         var coche = selectionnes.has(a.profile);
-        return '<label class="tache-form__compte"><input type="checkbox" data-profile="' + escapeHtml(a.profile) + '"' + (coche ? ' checked' : '') + '> ' + escapeHtml(a.profile) + '</label>';
+        return '<label class="tache-form__compte"><input type="checkbox" data-profile="' + escapeHtml(a.profile) + '"' + (coche ? ' checked' : '') + '> ' + escapeHtml(window.iaoProfilCompte.libelleCompte(a)) + '</label>';
       });
       for (var i = 0; i < indisponibles.length; i++) {
         var p = indisponibles[i];
@@ -2523,7 +2683,7 @@
           : _('compte supprimé');
         lignes.push('<label class="tache-form__compte tache-form__compte--indisponible">' +
           '<input type="checkbox" data-profile="' + escapeHtml(p) + '" checked disabled> ' +
-          escapeHtml(p) + ' <span class="tache-form__note">(' + escapeHtml(note) + ')</span></label>');
+          escapeHtml(window.iaoProfilCompte.libelleProfil(p, accounts)) + ' <span class="tache-form__note">(' + escapeHtml(note) + ')</span></label>');
       }
       conteneur.innerHTML = lignes.join('');
     }
@@ -3148,6 +3308,70 @@
       }
     });
 
+    // --- Sauvegarde complète (issue #329) -----------------------------------
+    // Modal de mot de passe partagé création/restauration. Le mot de passe ne
+    // transite que par l'IPC : jamais dans iao.log, jamais en clair sur disque ;
+    // il chiffre les secrets du zip (AES-256-GCM, voir main.js).
+    let sauvegardeMode = 'creer';
+    function ouvrirSauvegardeModal(mode) {
+      sauvegardeMode = mode;
+      const creation = mode === 'creer';
+      document.getElementById('sauvegardeTitre').textContent = creation
+        ? _('Créer une sauvegarde complète')
+        : _('Restaurer une sauvegarde complète');
+      document.getElementById('sauvegardeConfirmeBloc').style.display = creation ? '' : 'none';
+      document.getElementById('sauvegardeAide').textContent = creation
+        ? _('Ce mot de passe protège les mots de passe de messagerie du zip : sans lui, ils sont perdus. Notez-le.')
+        : _('Celui choisi à la création de cette sauvegarde.');
+      document.getElementById('sauvegardeMdp').value = '';
+      document.getElementById('sauvegardeMdp2').value = '';
+      document.getElementById('sauvegardeModal').classList.add('open');
+      setTimeout(() => document.getElementById('sauvegardeMdp').focus(), 50);
+    }
+    function fermerSauvegardeModal() {
+      document.getElementById('sauvegardeModal').classList.remove('open');
+    }
+
+    async function validerSauvegarde() {
+      const mdp = document.getElementById('sauvegardeMdp').value;
+      if (!mdp) { showToast(_('Choisissez un mot de passe de sauvegarde'), 'error'); return; }
+      if (sauvegardeMode === 'creer' && mdp !== document.getElementById('sauvegardeMdp2').value) {
+        showToast(_('Les deux mots de passe ne correspondent pas'), 'error');
+        return;
+      }
+      fermerSauvegardeModal();
+      if (sauvegardeMode === 'creer') {
+        const res = await ipcRenderer.invoke('sauvegarde-complete:creer', mdp);
+        if (res.canceled) return;
+        if (res.error) {
+          showToast(_('Échec de la création de la sauvegarde'), 'error');
+          return;
+        }
+        showToast(_('Sauvegarde créée : {count} fichiers', { count: res.entrees }), 'success');
+        dbg('sauvegarde', 'créée : ' + res.filePath);
+      } else {
+        const res = await ipcRenderer.invoke('sauvegarde-complete:restaurer', mdp);
+        if (res.canceled) return;
+        if (res.error === 'mot_de_passe_faux') {
+          showToast(_('Mot de passe de la sauvegarde incorrect'), 'error');
+          return;
+        }
+        if (res.error) {
+          showToast(_('Échec de la restauration'), 'error');
+          return;
+        }
+        // Les données (dont les sessions Chromium) sont remplacées : seul un
+        // redémarrage les rouvre proprement.
+        showToast(_('Sauvegarde restaurée — IAO va redémarrer'), 'success');
+        setTimeout(() => window.iaoAPI.ipcInvoke('app:relaunch'), 900);
+      }
+    }
+
+    document.getElementById('sauvegardeCreer').addEventListener('click', function() { ouvrirSauvegardeModal('creer'); });
+    document.getElementById('sauvegardeRestaurer').addEventListener('click', function() { ouvrirSauvegardeModal('restaurer'); });
+    document.getElementById('sauvegardeAnnuler').addEventListener('click', fermerSauvegardeModal);
+    document.getElementById('sauvegardeValider').addEventListener('click', function() { validerSauvegarde(); });
+
     let loadedLanguage = 'auto';
     async function loadSettings() {
       try {
@@ -3158,7 +3382,7 @@
         document.getElementById('settingsEditorFontSize').value = settings.editorFontSize;
         document.getElementById('settingsTheme').value = settings.theme;
         document.getElementById('settingsEditorWordWrap').value = settings.editorWordWrap;
-        document.getElementById('settingsConfirmBeforeClose').checked = settings.confirmBeforeClose;
+        document.getElementById('settingsConfirmTabClose').checked = settings.confirmTabClose;
         document.getElementById('settingsShowAutomationWindows').checked = settings.showAutomationWindows;
         document.getElementById('settingsStartWithLastSession').checked = settings.startWithLastSession;
         // Issue #305 : capture HAR des 15 premières minutes d'une connexion.
@@ -3166,6 +3390,9 @@
         document.getElementById('settingsMailPrefix').value = settings.mailPrefix || '';
         document.getElementById('settingsMailDomain').value = settings.mailDomain || '';
         document.getElementById('settingsWebmailUrl').value = settings.webmailUrl || '';
+        document.getElementById('settingsOngletFixeActif').checked = settings.ongletFixeActif === true;
+        document.getElementById('settingsOngletFixeUrl').value = settings.ongletFixeUrl || '';
+        appliquerOngletFixe(settings); // issue #338
         loadedLanguage = settings.language || 'auto';
         const langSelect = document.getElementById('settingsLanguage');
         if (langSelect && langSelect.querySelector('option[value="' + loadedLanguage + '"]')) langSelect.value = loadedLanguage;
@@ -3181,20 +3408,28 @@
         editorFontSize: parseInt(document.getElementById('settingsEditorFontSize').value, 10),
         editorWordWrap: document.getElementById('settingsEditorWordWrap').value,
         theme: document.getElementById('settingsTheme').value,
-        confirmBeforeClose: document.getElementById('settingsConfirmBeforeClose').checked,
+        confirmTabClose: document.getElementById('settingsConfirmTabClose').checked,
         showAutomationWindows: document.getElementById('settingsShowAutomationWindows').checked,
         startWithLastSession: document.getElementById('settingsStartWithLastSession').checked,
         harCapture: document.getElementById('settingsHarCapture').checked,
         language: (document.getElementById('settingsLanguage') || { value: loadedLanguage }).value,
         mailPrefix: document.getElementById('settingsMailPrefix').value,
         mailDomain: document.getElementById('settingsMailDomain').value,
-        webmailUrl: document.getElementById('settingsWebmailUrl').value
+        webmailUrl: document.getElementById('settingsWebmailUrl').value,
+        ongletFixeActif: document.getElementById('settingsOngletFixeActif').checked,
+        ongletFixeUrl: document.getElementById('settingsOngletFixeUrl').value
       };
+      // Issue #338 : onglet fixe coché sans adresse https valide -> rien n'est enregistré.
+      if (raw.ongletFixeActif && !window.normalizeOngletFixeUrl(raw.ongletFixeUrl)) {
+        showToast(_('Adresse du premier onglet invalide : une adresse https:// est attendue'), 'error');
+        return;
+      }
       try {
         var result = await ipcRenderer.invoke('settings:save', raw);
         if (result && result.ok) {
           applySettings(result.settings);
           renderAccounts(); // bouton webmail selon le réglage (issue #201)
+          appliquerOngletFixe(result.settings); // issue #338
           const languageChanged = result.settings.language !== loadedLanguage;
           loadedLanguage = result.settings.language;
           showToast(languageChanged
@@ -3293,7 +3528,7 @@
             <div class="sched-job">
               <div class="sched-job__dot" data-dot-color="${color}"></div>
               <div class="sched-job__body">
-                <div class="sched-job__title">${escapeHtml(j.id)} — ${escapeHtml(j.service || _('service inconnu'))} · ${escapeHtml(j.profile || '—')}</div>
+                <div class="sched-job__title">${escapeHtml(j.id)} — ${escapeHtml(j.service || _('service inconnu'))} · ${escapeHtml(j.profile ? window.iaoProfilCompte.libelleProfil(j.profile, accounts) : '—')}</div>
                 <div class="sched-job__meta">${escapeHtml(label)} · ${escapeHtml(_('tentative {n}', { n: j.attempts || 1 }))}${fileName ? ' · ' + escapeHtml(fileName) : ''}</div>
                 ${actions.length ? `<div class="sched-job__actions">${actions.join('')}</div>` : ''}
               </div>
@@ -3547,7 +3782,7 @@
           showToast(_('Aucun compte vert disponible pour ce projet.'), 'warning');
           return;
         }
-        var names = res.map(function(a) { return a.name + ' (' + a.profile + ')'; });
+        var names = res.map(function(a) { return window.iaoProfilCompte.libelleProfil(a.profile, accounts); });
         var choice = prompt(_('Comptes verts disponibles :') + '\n' + names.map(function(n, i) { return (i+1) + '. ' + n; }).join('\n') + '\n\n' + _('Numéro du compte :'), '1');
         if (!choice) return;
         var idx = parseInt(choice, 10) - 1;

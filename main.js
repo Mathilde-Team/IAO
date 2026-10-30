@@ -4,6 +4,7 @@ const fs = require('fs');
 const fsPromises = fs.promises;
 
 const { decidePopup } = require('./lib/popup-guard');
+const ongletFixe = require('./lib/onglet-fixe');
 const { Scheduler, registerSchedulerIPC } = require('./scheduler');
 const { TachesService, registerTachesIPC } = require('./scheduler/taches-service');
 const schedulerCore = require('./scheduler/core');
@@ -32,6 +33,11 @@ const diag = require('./lib/startup-diagnostics');
 const DEBUG = diag.isDebugEnabled(process.argv, process.env);
 const debugTrace = require('./lib/debug-trace');
 const { CoffreSecrets, registerComptesIPC } = require('./lib/coffre-secrets');
+// Sauvegarde complète (issue #329) : fonctions pures testées (node --test).
+const sauvegarde = require('./lib/sauvegarde-complete');
+const { ecrireZip, nomSure } = require('./lib/ecriture-zip');
+const lectureZip = require('./lib/lecture-zip');
+const crypto = require('node:crypto');
 const { creerOuvreurWebmail } = require('./lib/webmail-connexion');
 const { creerFileConnexions } = require('./lib/webmail-codes');
 const { IdentifiantsPartages, registerIdentifiantsIPC } = require('./lib/identifiants');
@@ -294,6 +300,11 @@ function createWindow() {
         log('webview ' + hostOf(guestContents.getURL()), ev.level, ev.message, ev.sourceId, ev.lineNumber);
       }
     });
+    // Issue #338 : le premier onglet immuable reste sur son site.
+    if (estOngletFixe(guestContents)) {
+      verrouillerOngletFixe(guestContents);
+      return;
+    }
     guestContents.setWindowOpenHandler(({ url }) => {
       if (decidePopup(url) === 'allow') return { action: 'allow' };
       // Schéma non web (http:, data:, javascript:, URL illisible) : refus pur.
@@ -531,6 +542,141 @@ ipc.handle('accounts:import', async () => {
   }
 });
 
+// --- IPC pour la sauvegarde complète (issue #329) ---
+// Le renderer ne peut ni parcourir le dossier de données, ni chiffrer avec le
+// trousseau : main.js le fait, avec les fonctions pures de
+// lib/sauvegarde-complete.js (chemins retenus, secrets transportables) et
+// lib/ecriture-zip.js / lib/lecture-zip.js (zip sans dépendance npm).
+// Le mot de passe ne transite que par l'IPC (jamais dans iao.log) et chiffre
+// les secrets du zip en AES-256-GCM : sans lui, la sauvegarde ne livre que
+// des données de comptes sans mots de passe.
+
+// Liste récursive des fichiers du dossier de données, en chemins relatifs.
+function listerFichiersDonnees(dossier, sousDossier = '') {
+  const resultat = [];
+  let entrees;
+  try {
+    entrees = fs.readdirSync(path.join(dossier, sousDossier), { withFileTypes: true });
+  } catch (_) {
+    return resultat; // dossier absent ou illisible : rien à sauvegarder dedans
+  }
+  for (const entree of entrees) {
+    const relatif = sousDossier ? sousDossier + '/' + entree.name : entree.name;
+    if (entree.isDirectory()) {
+      resultat.push(...listerFichiersDonnees(dossier, relatif));
+    } else if (entree.isFile()) {
+      resultat.push(relatif);
+    }
+  }
+  return resultat;
+}
+
+ipc.handle('sauvegarde-complete:creer', async (event, motDePasse) => {
+  if (typeof motDePasse !== 'string' || motDePasse.length === 0) {
+    return { canceled: false, error: 'mot_de_passe_vide' };
+  }
+  const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 16);
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: 'Créer une sauvegarde complète',
+    defaultPath: `iao-sauvegarde-${stamp}.zip`,
+    filters: [{ name: 'ZIP', extensions: ['zip'] }]
+  });
+  if (result.canceled || !result.filePath) return { canceled: true };
+  try {
+    const dossier = app.getPath('userData');
+    const retenus = sauvegarde.cheminsASauvegarder(listerFichiersDonnees(dossier));
+    const entrees = [];
+    for (const relatif of retenus) {
+      entrees.push({ nom: relatif, contenu: await fsPromises.readFile(path.join(dossier, relatif)) });
+    }
+    // secrets.json -> forme transportable : déchiffré du trousseau, rechiffré
+    // au mot de passe de la sauvegarde (illisible ici = omis, sans bloquer).
+    let portables = null;
+    try {
+      const brut = JSON.parse(fs.readFileSync(path.join(dossier, sauvegarde.FICHIER_SECRETS), 'utf-8'));
+      portables = sauvegarde.secretsPortables(brut, motDePasse, (b64) => {
+        try {
+          return safeStorage.decryptString(Buffer.from(b64, 'base64'));
+        } catch (_) {
+          return null;
+        }
+      }, crypto);
+    } catch (_) { /* secrets.json absent : sauvegarde sans mots de passe */ }
+    if (portables && Object.keys(portables.entrees).length > 0) {
+      entrees.push({
+        nom: sauvegarde.FICHIER_SECRETS_PORTABLES,
+        contenu: JSON.stringify(portables, null, 2)
+      });
+    }
+    const zip = ecrireZip(entrees);
+    await fsPromises.writeFile(result.filePath, zip);
+    log('sauvegarde', 'info',
+      `sauvegarde complète créée : ${entrees.length} entrée(s), ${zip.length} octets` +
+      (portables ? `, ${Object.keys(portables.entrees).length} mot(s) de passe transportable(s)` : ', sans mots de passe'));
+    return { canceled: false, filePath: result.filePath, entrees: entrees.length, taille: zip.length };
+  } catch (error) {
+    log('sauvegarde', 'error', 'échec de création : ' + (error.message || error));
+    return { canceled: false, error: 'ecriture' };
+  }
+});
+
+ipc.handle('sauvegarde-complete:restaurer', async (event, motDePasse) => {
+  if (typeof motDePasse !== 'string' || motDePasse.length === 0) {
+    return { canceled: false, error: 'mot_de_passe_vide' };
+  }
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Restaurer une sauvegarde complète',
+    properties: ['openFile'],
+    filters: [{ name: 'ZIP', extensions: ['zip'] }]
+  });
+  if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+  try {
+    const dossier = app.getPath('userData');
+    const brut = await fsPromises.readFile(result.filePaths[0]);
+    const lecteur = lectureZip.lecteurDeBuffer(brut);
+    const entreesZip = lectureZip.lireEntrees(lecteur);
+    // Le mot de passe est vérifié AVANT d'écraser quoi que ce soit : la
+    // moindre erreur GCM invalide toute la restauration.
+    let secretsClairs = null;
+    const portablesEntree = entreesZip.find((e) => e.nom === sauvegarde.FICHIER_SECRETS_PORTABLES && !e.dossier);
+    if (portablesEntree) {
+      const contenu = lectureZip.extraire(lecteur, portablesEntree, { tailleMax: 16 * 1024 * 1024 });
+      secretsClairs = sauvegarde.secretsEnClair(JSON.parse(contenu.toString('utf-8')), motDePasse, crypto);
+      if (secretsClairs === null) return { canceled: false, error: 'mot_de_passe_faux' };
+    }
+    const restaurables = entreesZip.filter((e) =>
+      !e.dossier && !sauvegarde.cheminExclu(e.nom) && e.nom !== sauvegarde.FICHIER_SECRETS_PORTABLES);
+    for (const entree of restaurables) {
+      // Nom sûr (relatif, sans « .. ») : une entrée de zip est une donnée,
+      // jamais un chemin où écrire sans contrôle (invariant 1).
+      if (!nomSure(entree.nom)) {
+        return { canceled: false, error: 'entree_non_sure', detail: entree.nom };
+      }
+    }
+    for (const entree of restaurables) {
+      const contenu = lectureZip.extraire(lecteur, entree, { tailleMax: 512 * 1024 * 1024 });
+      const cible = path.join(dossier, entree.nom);
+      await fsPromises.mkdir(path.dirname(cible), { recursive: true });
+      await fsPromises.writeFile(cible, contenu);
+    }
+    if (secretsClairs) {
+      // Rechiffrement local : trousseau de CETTE machine.
+      const coffre = {};
+      for (const [profil, clair] of Object.entries(secretsClairs)) {
+        coffre[profil] = safeStorage.encryptString(clair).toString('base64');
+      }
+      await fsPromises.writeFile(path.join(dossier, sauvegarde.FICHIER_SECRETS),
+        JSON.stringify(coffre, null, 2), 'utf-8');
+    }
+    log('sauvegarde', 'info', `sauvegarde complète restaurée : ${restaurables.length} entrée(s)` +
+      (secretsClairs ? `, ${Object.keys(secretsClairs).length} mot(s) de passe rechiffré(s)` : ''));
+    return { canceled: false, entrees: restaurables.length, redemarrer: true };
+  } catch (error) {
+    log('sauvegarde', 'error', 'échec de restauration : ' + (error.message || error));
+    return { canceled: false, error: 'lecture' };
+  }
+});
+
 // --- IPC pour la déconnexion d'un profil (lot « Actions sur un onglet
 // ouvert », 17/09/2026) ---
 // Purge cookies + stockage web de la partition Electron du compte (destructif,
@@ -548,6 +694,26 @@ ipc.handle('accounts:disconnect-profile', async (event, profile) => {
     console.error('Erreur déconnexion profil:', error);
     return { ok: false, error: 'clear_failed' };
   }
+});
+
+// --- Issue #331 : préférences de l'interface dans <userData>/preferences.json ---
+// Canaux SYNCHRONES (ipcRenderer.sendSync, preload.js). Seules les clés de
+// lib/preferences.js CLES sont gardées ; jamais de valeur dans le journal.
+const preferences = require('./lib/preferences');
+
+ipc.on('preferences:lire', (event) => {
+  const r = preferences.lireAvecCles(app.getPath('userData'), { fs, path });
+  if (r.status === 'ok') debug('preferences', preferences.NOM_FICHIER + ' lu : ' + Object.keys(r.preferences).length + ' clé(s).');
+  else if (r.status === 'absent') debug('preferences', preferences.NOM_FICHIER + ' absent (premier démarrage ou migration).');
+  else log('preferences', 'error', preferences.NOM_FICHIER + ' illisible (' + r.status + ') : ' + r.erreur);
+  event.returnValue = r;
+});
+
+ipc.on('preferences:ecrire', (event, prefs) => {
+  const r = preferences.ecrirePreferences(app.getPath('userData'), prefs, { fs, path });
+  if (r.ok) debug('preferences', preferences.NOM_FICHIER + ' écrit : ' + r.cles + ' clé(s).');
+  else log('preferences', 'error', 'échec de l\'écriture de ' + preferences.NOM_FICHIER + ' : ' + r.erreur);
+  event.returnValue = r;
 });
 
 // --- Issue #311 : comptes dans <userData>/profils.json ---
@@ -580,6 +746,44 @@ ipc.on('profils:ecrire', (event, comptes) => {
 const { normalizeSettings, DEFAULT_SETTINGS } = require('./lib/settings');
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
+// Issue #338 : adresse du premier onglet immuable, gardée en mémoire pour
+// juger chaque navigation de cet onglet (relue à chaque enregistrement).
+let urlOngletFixe = (() => {
+  try {
+    return ongletFixe.configuration(normalizeSettings(JSON.parse(fs.readFileSync(settingsPath, 'utf-8')))).url;
+  } catch (e) {
+    debug('onglet-fixe', 'réglages illisibles, onglet non configuré : ' + (e && e.message));
+    return '';
+  }
+})();
+
+function estOngletFixe(contenu) {
+  try {
+    return contenu.session === session.fromPartition(ongletFixe.PARTITION);
+  } catch (e) {
+    debug('onglet-fixe', 'session non identifiable : ' + (e && e.message));
+    return false;
+  }
+}
+
+// Navigation et popups de l'onglet immuable : même site que l'adresse des
+// réglages, sinon bloqué. Une popup du même site s'ouvre dans l'onglet.
+function verrouillerOngletFixe(contenu) {
+  contenu.on('will-navigate', (event, url) => {
+    if (ongletFixe.memeSite(url, urlOngletFixe)) return;
+    event.preventDefault();
+    log('onglet-fixe', 'info', 'sortie du site bloquée : ' + hostOf(url));
+  });
+  contenu.setWindowOpenHandler(({ url }) => {
+    if (ongletFixe.memeSite(url, urlOngletFixe)) {
+      contenu.loadURL(url).catch((e) => debug('onglet-fixe', 'chargement refusé : ' + (e && e.message)));
+    } else {
+      log('onglet-fixe', 'info', 'popup hors du site bloquée : ' + hostOf(url));
+    }
+    return { action: 'deny' };
+  });
+}
+
 ipc.handle('settings:load', async () => {
   try {
     const raw = await fsPromises.readFile(settingsPath, 'utf-8');
@@ -594,6 +798,7 @@ ipc.handle('settings:save', async (event, rawSettings) => {
   try {
     const normalized = normalizeSettings(rawSettings);
     await fsPromises.writeFile(settingsPath, JSON.stringify(normalized, null, 2), 'utf-8');
+    urlOngletFixe = ongletFixe.configuration(normalized).url;
     return { ok: true, settings: normalized };
   } catch (error) {
     console.error('Erreur sauvegarde réglages:', error);
