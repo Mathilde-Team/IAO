@@ -352,6 +352,18 @@ test('error : cible = window -> traité comme une erreur JS', () => {
   assert.equal(env.items()[0].children[1].textContent, 'globale');
 });
 
+test('error : boucle ResizeObserver -> pas de bandeau, ligne info, vraie erreur conservée (#349)', () => {
+  const env = load();
+  env.fire('error', { message: 'ResizeObserver loop completed with undelivered notifications.' });
+  assert.equal(env.banner(), null);
+  assert.equal(env.errors.length, 0);
+  assert.equal(env.infos.length, 1);
+  assert.match(env.infos[0], /boucle ResizeObserver sans gravité/);
+  // Une vraie erreur JS dans la même session garde son bandeau.
+  env.fire('error', { error: new TypeError('x is not a function') });
+  assert.notEqual(env.banner(), null);
+});
+
 // --- unhandledrejection ----------------------------------------------------
 
 test('unhandledrejection : la raison est affichée avec le titre « asynchrone »', () => {
@@ -379,6 +391,19 @@ test('unhandledrejection ERR_ABORTED sans preventDefault : ignoré sans exceptio
   env.fire('unhandledrejection', { reason: 'ERR_ABORTED (-3) loading x' });
   assert.equal(env.banner(), null);
   assert.equal(env.infos.length, 1);
+});
+
+test('unhandledrejection : boucle ResizeObserver -> pas de bandeau, ligne info (#349)', () => {
+  const env = load();
+  let prevented = false;
+  env.fire('unhandledrejection', {
+    reason: new Error('ResizeObserver loop completed with undelivered notifications.'),
+    preventDefault() { prevented = true; }
+  });
+  assert.equal(env.banner(), null);
+  assert.equal(prevented, true);
+  assert.equal(env.infos.length, 1);
+  assert.match(env.infos[0], /boucle ResizeObserver sans gravité/);
 });
 
 test('unhandledrejection ERR_ABORTED avec des diagnostics sans isNavigationAbort : bandeau comme avant', () => {
