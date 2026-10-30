@@ -132,8 +132,16 @@
       if (ev.target.tagName === 'SCRIPT') report('error', 'script introuvable : ' + (ev.target.getAttribute('src') || '?'));
       return;
     }
+    var msg = (ev && (ev.error || ev.message)) || 'erreur inconnue';
+    // Issue #349 : boucle ResizeObserver = avertissement Chromium sans
+    // gravité (la frame suivante reprend l'observation) : journalisé en
+    // info, jamais en bandeau — sinon le harnais C12.1 échoue au hasard.
+    if (diag && typeof diag.isBenignLayoutWarning === 'function' && diag.isBenignLayoutWarning(msg)) {
+      console.info('[demarrage] boucle ResizeObserver sans gravité : ' + diag.errorText(msg));
+      return;
+    }
     var src = ev && ev.filename ? (diag ? diag.shortSource(ev.filename) : ev.filename) + (ev.lineno ? ':' + ev.lineno : '') : '';
-    report('error', (ev && (ev.error || ev.message)) || 'erreur inconnue', src);
+    report('error', msg, src);
   }, true);
 
   window.addEventListener('unhandledrejection', function (ev) {
@@ -144,6 +152,11 @@
     if (diag && typeof diag.isNavigationAbort === 'function' && diag.isNavigationAbort(reason)) {
       if (typeof ev.preventDefault === 'function') ev.preventDefault();
       console.info('[demarrage] navigation remplacée (ERR_ABORTED -3), sans gravité : ' + diag.errorText(reason));
+      return;
+    }
+    if (diag && typeof diag.isBenignLayoutWarning === 'function' && diag.isBenignLayoutWarning(reason)) {
+      if (typeof ev.preventDefault === 'function') ev.preventDefault();
+      console.info('[demarrage] boucle ResizeObserver sans gravité : ' + diag.errorText(reason));
       return;
     }
     report('rejection', reason);
