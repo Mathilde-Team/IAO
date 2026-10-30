@@ -109,6 +109,11 @@ test('ouvrir : fenêtre sans privilèges dans la partition du compte, une tentat
   assert.equal(win.charge, 'https://mail.dmathilde.fr/');
   assert.deepEqual(win.webContents.popup({ url: 'https://mail.dmathilde.fr/piece' }), { action: 'allow' });
   assert.deepEqual(win.webContents.popup({ url: 'javascript:alert(1)' }), { action: 'deny' });
+  // Issue #354 : une fenêtre que la page veut ouvrir EN ARRIÈRE-PLAN
+  // (disposition « background-tab ») est refusée, même sur une URL sinon
+  // autorisée ; au premier plan, elle reste autorisée.
+  assert.deepEqual(win.webContents.popup({ url: 'https://mail.dmathilde.fr/piece', disposition: 'background-tab' }), { action: 'deny' });
+  assert.deepEqual(win.webContents.popup({ url: 'https://mail.dmathilde.fr/piece', disposition: 'foreground-tab' }), { action: 'allow' });
   // Page d'un autre hôte (SSO, redirection) : rien n'est rempli.
   win.url = 'https://ailleurs.example/login';
   win.webContents.emit('did-finish-load');
