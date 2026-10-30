@@ -1,5 +1,5 @@
-# Dépendances
-node_modules/
+# Dépendances (le motif sans / couvre aussi un éventuel symlink)
+node_modules
 
 # Sorties de build (générées par `npm run dist`) — ne jamais versionner
 dist/
