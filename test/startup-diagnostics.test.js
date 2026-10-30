@@ -75,6 +75,16 @@ test('isNavigationAbort (#185) : ERR_ABORTED -3 n\'est pas une panne, les vraies
   assert.equal(d.isNavigationAbort(undefined), false);
 });
 
+test('isBenignLayoutWarning (#349) : la boucle ResizeObserver n\'est pas une panne, les vraies erreurs restent signalées', () => {
+  const msg = 'ResizeObserver loop completed with undelivered notifications.';
+  assert.equal(d.isBenignLayoutWarning(msg), true);
+  assert.equal(d.isBenignLayoutWarning(new Error(msg)), true);
+  assert.equal(d.isBenignLayoutWarning(new Error('TypeError: Cannot read properties of null')), false);
+  assert.equal(d.isBenignLayoutWarning(new Error('ResizeObserver loop limit exceeded')), false);
+  assert.equal(d.isBenignLayoutWarning(null), false);
+  assert.equal(d.isBenignLayoutWarning(undefined), false);
+});
+
 test('consoleLevelName accepte les niveaux Electron (chaîne) et historiques (entier)', () => {
   assert.equal(d.consoleLevelName('error'), 'error');
   assert.equal(d.consoleLevelName('warn'), 'warning');

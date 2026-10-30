@@ -1,3 +1,18 @@
+## Issue #349 — harnais : bandeau d'erreur aléatoire après fermeture d'onglet (30/10/2026)
+
+### Corrigé
+- C12.1 échouait au hasard (surtout sous charge sur le runner maison) : à la
+  fermeture d'un onglet, la mise à jour des flèches de défilement (#339) par le
+  ResizeObserver de la barre pouvait écrire le DOM dans la boucle de
+  notification, ce que Chromium signale par l'avertissement « ResizeObserver
+  loop completed with undelivered notifications » — remonté en bandeau rouge par
+  le garde de démarrage, d'où le constat « bandeau d'erreur affiché après
+  fermeture ». Deux correctifs complémentaires : la mise à jour passe par
+  `requestAnimationFrame` (hors de la frame d'observation, plus de boucle), et
+  le garde de démarrage journalise cet avertissement en info sans bandeau
+  (même traitement que ERR_ABORTED, #185) — les vraies erreurs JS et réseau
+  gardent leur bandeau.
+
 ## Issue #339 — flèches de défilement de la barre d'onglets (29/10/2026)
 
 ### Ajouté

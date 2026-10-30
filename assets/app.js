@@ -1286,8 +1286,18 @@
     // La largeur de la zone change aussi par les séparateurs de l'explorateur
     // et de l'éditeur (et par la fenêtre) : ResizeObserver couvre tous les cas,
     // le repli sur « resize » reste pour un Chromium sans ResizeObserver.
+    // Issue #349 : la mise à jour passe par requestAnimationFrame — écrire le
+    // DOM (affichage des flèches) dans la boucle de notification de
+    // l'observer déclenche l'avertissement Chromium « ResizeObserver loop
+    // completed with undelivered notifications », remonté en bandeau par le
+    // garde de démarrage. Hors de la frame d'observation, plus de boucle.
     if (typeof ResizeObserver === 'function') {
-      new ResizeObserver(() => majDefilementOnglets()).observe(document.getElementById('tabsScrollZone'));
+      let majEnAttente = false;
+      new ResizeObserver(() => {
+        if (majEnAttente) return;
+        majEnAttente = true;
+        requestAnimationFrame(() => { majEnAttente = false; majDefilementOnglets(); });
+      }).observe(document.getElementById('tabsScrollZone'));
     } else {
       window.addEventListener('resize', () => majDefilementOnglets());
     }
