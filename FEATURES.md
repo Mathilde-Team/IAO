@@ -88,6 +88,17 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
 
 ## Fait
 
+- **Création de comptes de messagerie via mail-accounts-api (issue #357, 31/10/2026)**
+  `lib/mail-api.js` (client pur : POST `/accounts`, POST `/accounts/batch`, PATCH
+  `/accounts/{email}`, Bearer) ; clé d'API dans le coffre chiffré (`mail_api`), réglages
+  `mailApiUrl` seulement. Canaux IPC `mail-api:creer` / `mail-api:creer-lot` : à
+  l'enregistrement d'un compte ou d'une série, si le domaine correspond à celui des
+  réglages, création via l'API (retombée par compte si le lot renvoie 409), 409 avec mot de
+  passe fourni → changement de mot de passe (PATCH), mot de passe généré enregistré dans le
+  coffre, retour en toast. Tentative de connexion au webmail en arrière-plan (fenêtre cachée,
+  garde #354). Tests : `test/mail-api.test.js` (24), extensions webmail-connexion /
+  settings / main-harness.
+
 - **Logos officiels des IA, boutons de couleur standard (issue #324, 27/10/2026)**
   Nouveau `lib/service-icons.js` : logo SVG inline (hors ligne, sans dépendance) devant le nom
   du service dans les cartes de comptes, l'aide, le choix des IA et les onglets ; boutons
@@ -156,8 +167,8 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
   `lib/comptes-serie.js` (numéros suivants, adresses, mot de passe aléatoire sans biais),
   `lib/coffre-secrets.js` (coffre chiffré `safeStorage`, `secrets.json` en 0600, refus sans
   trousseau, canaux `secrets:*` et `app:open-webmail` limité à l'URL des réglages), réglages
-  `mailPrefix`/`mailDomain`/`webmailUrl` (`lib/settings.js`). Reste : création des boîtes sur
-  le serveur de messagerie (API à créer, autre dépôt).
+  `mailPrefix`/`mailDomain`/`webmailUrl` (`lib/settings.js`). Création des boîtes sur le
+  serveur de messagerie : faite (issue #357, `lib/mail-api.js`).
 
 - **Clic sur l'e-mail d'un compte : copie dans le presse-papiers (issue #138, 30/09/2026)**
   `lib/copy-text.js` (clipboard API, repli `execCommand('copy')`), action `copy-email`

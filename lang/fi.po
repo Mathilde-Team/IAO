@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "Posti-API (perus-URL)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "Postitilien luonti mail-accounts-api:n kautta, kun osoitteen verkkotunnus vastaa asetusten verkkotunnusta"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "Posti-API:n avain"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "Tallennettu salattuna holviin; jätä tyhjäksi säilyttääksesi nykyinen avain"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1040,6 +1060,46 @@ msgid "Compte ajouté"
 msgstr "Tili lisätty"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "Postitili luotu: {email} — luotu salasana tallennettu holviin"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "Postitili luotu: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "Postitili {email} on jo olemassa"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "Postin salasana päivitetty: {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "Posti-API:n avain puuttuu asetuksista"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "Posti-API:n avain hylätty"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "Osoite hylätty posti-API:n toimesta"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "Posti-API:n tallennus ei ole käytettävissä"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "Postitili puuttuu palvelimelta"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "Posti-API ei tavoitettavissa"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "Anna ensin sähköpostiosoitteiden verkkotunnus asetuksissa"
 
@@ -1066,6 +1126,16 @@ msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} salasana tallennettu"
 msgstr[1] "{m} salasanaa tallennettu"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} tili luotu"
+msgstr[1] "{n} tiliä luotu"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "Luotiin {crees}, oli jo {existants}, epäonnistui {echecs}"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1742,6 +1812,10 @@ msgstr "Asetusten lataaminen ei onnistu"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "API-avainta ei tallennettu: järjestelmän avainnippu ei ole käytettävissä"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"
