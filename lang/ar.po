@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "واجهة البريد (العنوان الأساسي)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "إنشاء حسابات البريد عبر mail-accounts-api عندما يطابق نطاق العنوان نطاق الإعدادات"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "مفتاح واجهة البريد"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "محفوظ مشفراً في الخزنة؛ اتركه فارغاً للاحتفاظ بالمفتاح الحالي"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1052,6 +1072,46 @@ msgid "Compte ajouté"
 msgstr "تمت إضافة الحساب"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "تم إنشاء حساب البريد: {email} — كلمة المرور المولدة محفوظة في الخزنة"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "تم إنشاء حساب البريد: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "حساب البريد {email} موجود مسبقاً"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "تم تحديث كلمة مرور البريد لـ {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "مفتاح واجهة البريد غير معبأ في الإعدادات"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "تم رفض مفتاح واجهة البريد"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "تم رفض العنوان من واجهة البريد"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "تخزين واجهة البريد غير متوفر"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "حساب البريد غير موجود على الخادم"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "واجهة البريد غير قابلة للوصول"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "أدخل أولًا نطاق عناوين البريد في الإعدادات"
 
@@ -1086,6 +1146,20 @@ msgstr[2] "كلمات المرور المحفوظة: {m}"
 msgstr[3] "كلمات المرور المحفوظة: {m}"
 msgstr[4] "كلمات المرور المحفوظة: {m}"
 msgstr[5] "كلمات المرور المحفوظة: {m}"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "الحسابات المُنشأة: {n}"
+msgstr[1] "الحسابات المُنشأة: {n}"
+msgstr[2] "الحسابات المُنشأة: {n}"
+msgstr[3] "الحسابات المُنشأة: {n}"
+msgstr[4] "الحسابات المُنشأة: {n}"
+msgstr[5] "الحسابات المُنشأة: {n}"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "تم إنشاء {crees}، كان موجوداً {existants}، فشل {echecs}"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1798,6 +1872,10 @@ msgstr "تعذّر تحميل الإعدادات"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "لم يُحفظ مفتاح الواجهة: سلسلة مفاتيح النظام غير متوفرة"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

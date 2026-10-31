@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "API อีเมล (URL พื้นฐาน)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "สร้างบัญชีอีเมลผ่าน mail-accounts-api เมื่อโดเมนของที่อยู่ตรงกับโดเมนในการตั้งค่า"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "คีย์ API อีเมล"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "เก็บแบบเข้ารหัสในตู้เซฟ; เว้นว่างไว้เพื่อใช้คีย์ปัจจุบัน"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1037,6 +1057,46 @@ msgid "Compte ajouté"
 msgstr "เพิ่มบัญชีแล้ว"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "สร้างบัญชีอีเมลแล้ว: {email} — รหัสผ่านที่สร้างถูกเก็บในตู้เซฟ"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "สร้างบัญชีอีเมลแล้ว: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "บัญชีอีเมล {email} มีอยู่แล้ว"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "อัปเดตรหัสผ่านอีเมลสำหรับ {email} แล้ว"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "ไม่ได้กรอกคีย์ API อีเมลในการตั้งค่า"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "คีย์ API อีเมลถูกปฏิเสธ"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "ที่อยู่ถูกปฏิเสธโดย API อีเมล"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "ที่เก็บข้อมูลของ API อีเมลใช้ไม่ได้"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "ไม่มีบัญชีอีเมลนี้บนเซิร์ฟเวอร์"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "เข้าถึง API อีเมลไม่ได้"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "กรอกโดเมนของที่อยู่อีเมลในการตั้งค่าก่อน"
 
@@ -1061,6 +1121,15 @@ msgstr[0] "สร้างบัญชีแล้ว {n} บัญชี"
 msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "บันทึกรหัสผ่านแล้ว {m} รายการ"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "สร้างบัญชีแล้ว {n} บัญชี"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "สร้างใหม่ {crees} มีอยู่แล้ว {existants} ล้มเหลว {echecs}"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1728,6 +1797,10 @@ msgstr "โหลดการตั้งค่าไม่ได้"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "ไม่ได้บันทึกคีย์ API: พวงกุญแจของระบบใช้ไม่ได้"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

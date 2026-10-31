@@ -12,7 +12,7 @@ var settings = require('../lib/settings');
 
 test('DEFAULT_SETTINGS contient toutes les cles attendues', function() {
   var keys = Object.keys(settings.DEFAULT_SETTINGS);
-  var expected = ['editorFontSize', 'editorWordWrap', 'theme', 'confirmTabClose', 'showAutomationWindows', 'startWithLastSession', 'harCapture', 'language', 'mailPrefix', 'mailDomain', 'webmailUrl', 'ongletFixeActif', 'ongletFixeUrl'];
+  var expected = ['editorFontSize', 'editorWordWrap', 'theme', 'confirmTabClose', 'showAutomationWindows', 'startWithLastSession', 'harCapture', 'language', 'mailPrefix', 'mailDomain', 'webmailUrl', 'mailApiUrl', 'ongletFixeActif', 'ongletFixeUrl'];
   assert.deepStrictEqual(keys.sort(), expected.sort());
 });
 
@@ -204,6 +204,23 @@ test('#201 normalizeMailPrefix / normalizeMailDomain / normalizeWebmailUrl', fun
   assert.strictEqual(settings.normalizeWebmailUrl('pas une url'), '');
   var n = settings.normalizeSettings({ mailPrefix: 'docker', mailDomain: 'dmathilde.fr', webmailUrl: 'https://m.fr' });
   assert.deepStrictEqual([n.mailPrefix, n.mailDomain, n.webmailUrl], ['docker', 'dmathilde.fr', 'https://m.fr/']);
+});
+
+// --- Issue #357 : API de messagerie (mail-accounts-api) -----------------------
+
+test('#357 normalizeSettings : réglage mailApiUrl (http local accepté, slashs finaux retirés)', function() {
+  assert.strictEqual(settings.DEFAULT_SETTINGS.mailApiUrl, '');
+  assert.strictEqual(settings.normalizeSettings({}).mailApiUrl, '');
+  assert.strictEqual(settings.normalizeMailApiUrl(' http://127.0.0.1:9941/ '), 'http://127.0.0.1:9941');
+  assert.strictEqual(settings.normalizeMailApiUrl('http://127.0.0.1:9941///'), 'http://127.0.0.1:9941');
+  assert.strictEqual(settings.normalizeMailApiUrl('https://api.dmathilde.fr/v1/'), 'https://api.dmathilde.fr/v1');
+  // Schémas refusés : ftp, javascript, texte libre.
+  assert.strictEqual(settings.normalizeMailApiUrl('ftp://127.0.0.1'), '');
+  assert.strictEqual(settings.normalizeMailApiUrl('javascript:alert(1)'), '');
+  assert.strictEqual(settings.normalizeMailApiUrl('pas une url'), '');
+  assert.strictEqual(settings.normalizeMailApiUrl(null), '');
+  // Une clé absente des réglages existants garde le défaut (migration douce).
+  assert.strictEqual(settings.normalizeSettings({ webmailUrl: 'https://m.fr' }).mailApiUrl, '');
 });
 
 // --- Issue #305 : capture HAR ------------------------------------------------

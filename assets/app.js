@@ -1921,7 +1921,7 @@
       showToast(_('Compte supprimé'));
     }
 
-    window.saveAccount = function() {
+    window.saveAccount = async function() {
       const id = document.getElementById('editId').value;
       const name = document.getElementById('inputName').value.trim();
       const email = document.getElementById('inputEmail').value.trim();
@@ -1958,8 +1958,46 @@
       saveAccounts(accounts); // écrit + backup de la génération précédente (chantier C)
       renderAccounts();
       const motDePasse = document.getElementById('inputMailPassword').value;
-      if (motDePasse) enregistrerMotDePasse(profile, motDePasse);
+      // Le mot de passe doit être au coffre avant l'appel à l'API (le
+      // process principal y lit le mot de passe du compte) : on attend.
+      if (motDePasse) await enregistrerMotDePasse(profile, motDePasse);
       closeModal();
+      // Issue #357 : si le domaine de l'adresse correspond à celui des
+      // réglages, le compte de messagerie est créé via l'API (ou son mot de
+      // passe changé quand un mot de passe est ajouté). Retour en
+      // notification ; la connexion au webmail est tentée en arrière-plan.
+      if (apiMessageriePrete(email) && (!id || motDePasse)) tenterCreationMessagerie(email, profile);
+    }
+
+    // Issue #357 : conditions pour parler à l'API de messagerie — réglages
+    // chargés, URL renseignée, domaine de l'adresse == domaine des réglages.
+    function apiMessageriePrete(email) {
+      return !!(currentSettings && currentSettings.mailApiUrl && window.iaoMailApi &&
+        window.iaoMailApi.domaineCorrespond(email, currentSettings.mailDomain || ''));
+    }
+    // Traduit le retour de « mail-api:creer » en notification (haut à droite).
+    function toastResultatMessagerie(r, email) {
+      if (!r || typeof r !== 'object' || r.ok === undefined) return;
+      if (r.ok && r.statut === 'cree') {
+        showToast(r.enregistre
+          ? _('Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre', { email })
+          : _('Compte de messagerie créé : {email}', { email }), 'success');
+        return;
+      }
+      if (r.ok && r.statut === 'existant') { showToast(_('Le compte de messagerie {email} existe déjà', { email }), 'warning'); return; }
+      if (r.ok && r.statut === 'modifie') { showToast(_('Mot de passe de messagerie mis à jour pour {email}', { email }), 'success'); return; }
+      if (!r.ok && r.statut === 'non-config') { showToast(_("Clé de l'API de messagerie non renseignée dans les réglages"), 'warning'); return; }
+      if (!r.ok && r.statut === 'cle') { showToast(_("Clé de l'API de messagerie refusée"), 'warning'); return; }
+      if (!r.ok && r.statut === 'invalide') { showToast(_('Adresse refusée par l\'API de messagerie'), 'error'); return; }
+      if (!r.ok && r.statut === 'stockage') { showToast(_('Stockage de l\'API de messagerie indisponible'), 'error'); return; }
+      if (!r.ok && r.statut === 'absent') { showToast(_('Compte de messagerie absent sur le serveur'), 'error'); return; }
+      if (!r.ok) showToast(_('API de messagerie injoignable'), 'error');
+    }
+    async function tenterCreationMessagerie(email, profile) {
+      try {
+        const r = await ipcRenderer.invoke('mail-api:creer', { email, profil: profile });
+        toastResultatMessagerie(r, email);
+      } catch (_) { /* IPC muet : pas de notification parasite */ }
     }
 
     // Issue #201 : création de comptes en série (<préfixe><numéro>@<domaine>).
@@ -2007,7 +2045,36 @@
         comptes: _n('{n} compte créé', '{n} comptes créés', r.comptes.length, { n: r.comptes.length }),
         motsDePasse: _n('{m} mot de passe enregistré', '{m} mots de passe enregistrés', chiffres, { m: chiffres })
       }));
+      // Issue #357 : création du lot sur le serveur de messagerie quand le
+      // domaine des réglages correspond et que l'API est configurée. Retour
+      // en notification ; les connexions au webmail sont tentées en
+      // arrière-plan (espacées) par le process principal.
+      if (r.comptes.length && apiMessageriePrete(r.comptes[0].email)) {
+        try {
+          const res = await ipcRenderer.invoke('mail-api:creer-lot',
+            r.comptes.map(c => ({ email: c.email, profil: c.profile })));
+          toastResultatLotMessagerie(res);
+        } catch (_) { /* IPC muet : pas de notification parasite */ }
+      }
     };
+
+    // Traduit le retour de « mail-api:creer-lot » en notification.
+    function toastResultatLotMessagerie(r) {
+      if (!r || typeof r !== 'object' || r.ok === undefined) return;
+      if (r.ok && r.statut === 'cree') {
+        showToast(_n('{n} compte de messagerie créé', '{n} comptes de messagerie créés',
+          r.nombre || 0, { n: r.nombre || 0 }), 'success');
+        return;
+      }
+      if (r.ok && r.statut === 'melange') {
+        showToast(_('{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec', {
+          crees: r.crees || 0, existants: r.existants || 0, echecs: r.echecs || 0
+        }), 'warning');
+        return;
+      }
+      // Erreurs : mêmes libellés que la création unitaire.
+      toastResultatMessagerie(r, '');
+    }
 
     // Issue #201 : webmail (URL des réglages, ouverte par le process principal) ;
     // l'adresse du compte est copiée. Issue #310 : le process principal ouvre le
@@ -3396,6 +3463,10 @@
         document.getElementById('settingsMailPrefix').value = settings.mailPrefix || '';
         document.getElementById('settingsMailDomain').value = settings.mailDomain || '';
         document.getElementById('settingsWebmailUrl').value = settings.webmailUrl || '';
+        // Issue #357 : URL de l'API de messagerie ; la clé n'est jamais
+        // affichée (champ vidé, la saisie remplace la clé du coffre).
+        document.getElementById('settingsMailApiUrl').value = settings.mailApiUrl || '';
+        document.getElementById('settingsMailApiKey').value = '';
         document.getElementById('settingsOngletFixeActif').checked = settings.ongletFixeActif === true;
         document.getElementById('settingsOngletFixeUrl').value = settings.ongletFixeUrl || '';
         appliquerOngletFixe(settings); // issue #338
@@ -3422,6 +3493,7 @@
         mailPrefix: document.getElementById('settingsMailPrefix').value,
         mailDomain: document.getElementById('settingsMailDomain').value,
         webmailUrl: document.getElementById('settingsWebmailUrl').value,
+        mailApiUrl: document.getElementById('settingsMailApiUrl').value,
         ongletFixeActif: document.getElementById('settingsOngletFixeActif').checked,
         ongletFixeUrl: document.getElementById('settingsOngletFixeUrl').value
       };
@@ -3436,6 +3508,13 @@
           applySettings(result.settings);
           renderAccounts(); // bouton webmail selon le réglage (issue #201)
           appliquerOngletFixe(result.settings); // issue #338
+          // Issue #357 : la clé de l'API saisie part au coffre chiffré (jamais
+          // dans settings.json) ; vide = clé actuelle conservée.
+          const cleApi = document.getElementById('settingsMailApiKey').value;
+          if (cleApi) {
+            const r = await ipcRenderer.invoke('secrets:set', 'mail_api', cleApi).catch(e => ({ ok: false, erreur: e && e.message }));
+            if (!r || !r.ok) showToast(_('Clé de l\'API non enregistrée : le trousseau du système est indisponible'), 'warning');
+          }
           const languageChanged = result.settings.language !== loadedLanguage;
           loadedLanguage = result.settings.language;
           showToast(languageChanged

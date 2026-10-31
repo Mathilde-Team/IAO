@@ -102,7 +102,7 @@ function loadMain() {
 
 const MAIN_CHANNELS = [
   'accounts:disconnect-profile', 'accounts:export', 'accounts:import', 'app:is-debug', 'app:log-path', 'app:open-webmail', 'app:relaunch', 'app:relaunch-debug', 'app:toggle-devtools',
-  'i18n:catalog', 'iao-identifiants:focus', 'identifiants:enregistrer', 'identifiants:lister', 'identifiants:obtenir', 'identifiants:supprimer', 'preferences:ecrire', 'preferences:lire', 'profils:ecrire', 'profils:lire', 'read-directory', 'read-directory-recursive', 'read-file', 'sauvegarde-complete:creer', 'sauvegarde-complete:restaurer', 'save-file',
+  'i18n:catalog', 'iao-identifiants:focus', 'identifiants:enregistrer', 'identifiants:lister', 'identifiants:obtenir', 'identifiants:supprimer', 'mail-api:creer', 'mail-api:creer-lot', 'preferences:ecrire', 'preferences:lire', 'profils:ecrire', 'profils:lire', 'read-directory', 'read-directory-recursive', 'read-file', 'sauvegarde-complete:creer', 'sauvegarde-complete:restaurer', 'save-file',
   'secrets:available', 'secrets:delete', 'secrets:get', 'secrets:set',
   'select-folder', 'settings:load', 'settings:save', 'stats:export',
   'stats:load', 'stats:noter-quota', 'stats:noter-reponse', 'stats:quotas', 'stats:reponses', 'stats:reset', 'stats:sync',
@@ -123,6 +123,23 @@ test('main.js se charge avec un module electron simulé et liste ses canaux IPC'
     assert.equal(scheduler.length + MAIN_CHANNELS.length, channels.length);
     assert.ok(channels.every((c) => typeof h.electron.ipcHandlers.get(c) === 'function'));
   } finally { h.cleanup(); }
+});
+
+test('main.js sans fetch global (Node ancien) : chargement normal, fetchFn null', (t) => {
+  // Issue #357 : la ligne `fetchFn: (typeof fetch === 'function') ? fetch : null`
+  // couvre le cas d'un runtime sans fetch — les canaux « mail-api:* » répondent
+  // alors « reseau » (l'appel avorté est intercepté dans lib/mail-api.js).
+  const avant = globalThis.fetch;
+  delete globalThis.fetch;
+  let h;
+  try {
+    h = loadMain();
+    assert.ok(h.electron.ipcHandlers.has('mail-api:creer'));
+    assert.ok(h.electron.ipcHandlers.has('mail-api:creer-lot'));
+  } finally {
+    if (h) h.cleanup();
+    globalThis.fetch = avant;
+  }
 });
 
 test('main.js : userData fixé sur ai-manager, nom applicatif IAO, instance unique demandée', () => {

@@ -464,6 +464,28 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 
 ## 13. Dernières évolutions
 
+### Création de comptes de messagerie via mail-accounts-api (issue #357, 31/10/2026)
+
+- `lib/mail-api.js` (lib pure, testée `node --test`) : client du dépôt
+  [mail-accounts-api](https://github.com/Mathilde-Team/mail-accounts-api) — `creerCompte`
+  (POST `/accounts`, 201 créé / 409 existant / 401 clé refusée / 422 invalide / 503 stockage /
+  404 absent), `creerLot` (POST `/accounts/batch`, atomique, retombée par compte si 409).
+  Authentification Bearer ; `encodeURIComponent` (l'arobase devient `%40` dans le chemin
+  PATCH). Le mot de passe généré par l'API n'est renvoyé qu'à la création.
+- Clé d'API **dans le coffre chiffré** (`mail_api`, `CLE_RE`), jamais en clair dans
+  `settings.json` (qui ne reçoit que `mailApiUrl`) ; saisie dans la modale des réglages
+  (champ mot de passe), lue par le main pour l'IPC. Le renderer ne fait aucun appel réseau
+  (CSP `default-src 'none'`).
+- Canaux IPC `mail-api:creer` `{ profil, email }` et `mail-api:creer-lot`
+  `[{ profil, email }…]` (dans `registerComptesIPC`) : création à l'enregistrement d'un
+  compte ou d'une série quand le domaine de l'adresse correspond à celui des réglages ;
+  409 avec mot de passe fourni → PATCH (changement de mot de passe) ; mot de passe généré
+  par l'API enregistré dans le coffre ; retour en toast (créé / existant / modifié /
+  lot `{crees}/{existants}/{echecs}` / clé non renseignée / clé refusée).
+- `lib/webmail-connexion.js` : mode `arrierePlan` — fenêtre cachée (`show:false`) qui se
+  ferme d'elle-même après la tentative (1,5 s) ou 20 s maximum (garde de l'issue #354),
+  décalée de 2 s par compte pour les séries ; délais injectables pour les tests.
+
 ### Premier onglet fixe (issue #338, 27/10/2026)
 
 - Réglages : case « Ouvrir un premier onglet fixe » et adresse https (`ongletFixeActif`, `ongletFixeUrl`, normalisés par `lib/settings.js` ; http refusé avant enregistrement).

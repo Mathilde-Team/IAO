@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "API de e-mail (URL de bază)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "Crearea conturilor de e-mail prin mail-accounts-api când domeniul adresei corespunde domeniului din setări"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "Cheia API-ului de e-mail"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "Salvată cifrat în seif; lăsați gol pentru a păstra cheia curentă"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1043,6 +1063,46 @@ msgid "Compte ajouté"
 msgstr "Cont adăugat"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "Cont de e-mail creat: {email} — parolă generată salvată în seif"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "Cont de e-mail creat: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "Contul de e-mail {email} există deja"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "Parola de e-mail actualizată pentru {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "Cheia API-ului de e-mail nu este completată în setări"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "Cheia API-ului de e-mail respinsă"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "Adresă respinsă de API-ul de e-mail"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "Stocarea API-ului de e-mail indisponibilă"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "Cont de e-mail inexistent pe server"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "API de e-mail inaccesibil"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "Completați mai întâi domeniul adreselor de e-mail în setări"
 
@@ -1071,6 +1131,17 @@ msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} parolă salvată"
 msgstr[1] "{m} parole salvate"
 msgstr[2] "{m} de parole salvate"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} cont creat"
+msgstr[1] "{n} conturi create"
+msgstr[2] "{n} de conturi create"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "{crees} conturi create, {existants} existau deja, {echecs} au eșuat"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1756,6 +1827,10 @@ msgstr "Setările nu pot fi încărcate"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "Cheia API nu a fost salvată: inelul de chei al sistemului este indisponibil"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "API αλληλογραφίας (βασικό URL)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "Δημιουργία λογαριασμών αλληλογραφίας μέσω mail-accounts-api όταν ο τομέας της διεύθυνσης αντιστοιχεί στον τομέα των ρυθμίσεων"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "Κλειδί του API αλληλογραφίας"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "Αποθηκεύεται κρυπτογραφημένα στο θησαυροφυλάκιο· αφήστε κενό για να διατηρήσετε το τρέχον κλειδί"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1040,6 +1060,46 @@ msgid "Compte ajouté"
 msgstr "Ο λογαριασμός προστέθηκε"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "Δημιουργήθηκε λογαριασμός αλληλογραφίας: {email} — το δημιουργημένο συνθηματικό αποθηκεύτηκε στο θησαυροφυλάκιο"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "Δημιουργήθηκε λογαριασμός αλληλογραφίας: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "Ο λογαριασμός αλληλογραφίας {email} υπάρχει ήδη"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "Το συνθηματικό αλληλογραφίας ενημερώθηκε για {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "Το κλειδί του API αλληλογραφίας δεν έχει συμπληρωθεί στις ρυθμίσεις"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "Το κλειδί του API αλληλογραφίας απορρίφθηκε"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "Η διεύθυνση απορρίφθηκε από το API αλληλογραφίας"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "Η αποθήκη του API αλληλογραφίας δεν είναι διαθέσιμη"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "Ο λογαριασμός αλληλογραφίας δεν υπάρχει στον διακομιστή"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "Το API αλληλογραφίας είναι απροσπέλαστο"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "Συμπληρώστε πρώτα τον τομέα των διευθύνσεων email στις ρυθμίσεις"
 
@@ -1066,6 +1126,16 @@ msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} κωδικός πρόσβασης αποθηκεύτηκε"
 msgstr[1] "{m} κωδικοί πρόσβασης αποθηκεύτηκαν"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} λογαριασμός δημιουργήθηκε"
+msgstr[1] "{n} λογαριασμοί δημιουργήθηκαν"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "Δημιουργήθηκαν {crees} λογαριασμοί, {existants} υπήρχαν ήδη, {echecs} απέτυχαν"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1742,6 +1812,10 @@ msgstr "Αδυναμία φόρτωσης των ρυθμίσεων"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "Το κλειδί API δεν αποθηκεύτηκε: η κλειδοθήκη του συστήματος δεν είναι διαθέσιμη"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

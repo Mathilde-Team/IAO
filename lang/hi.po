@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "मेल API (बेस URL)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "जब पते का डोमेन सेटिंग्स के डोमेन से मेल खाता है तो mail-accounts-api से मेल खाते बनाना"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "मेल API की कुंजी"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "वॉल्ट में एन्क्रिप्टेड सहेजी जाती है; वर्तमान कुंजी रखने के लिए खाली छोड़ें"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1040,6 +1060,46 @@ msgid "Compte ajouté"
 msgstr "खाता जोड़ा गया"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "मेल खाता बनाया गया: {email} — बनाया गया पासवर्ड वॉल्ट में सहेजा गया"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "मेल खाता बनाया गया: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "मेल खाता {email} पहले से मौजूद है"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "{email} के लिए मेल पासवर्ड अपडेट किया गया"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "मेल API की कुंजी सेटिंग्स में नहीं भरी गई"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "मेल API की कुंजी अस्वीकृत"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "पता मेल API द्वारा अस्वीकृत"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "मेल API का स्टोरेज अनुपलब्ध"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "मेल खाता सर्वर पर नहीं है"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "मेल API अप्राप्य"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "पहले सेटिंग्स में ईमेल पते का डोमेन भरें"
 
@@ -1066,6 +1126,16 @@ msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} पासवर्ड सहेजा गया"
 msgstr[1] "{m} पासवर्ड सहेजे गए"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} खाता बनाया गया"
+msgstr[1] "{n} खाते बनाए गए"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "{crees} खाते बनाए गए, {existants} पहले से थे, {echecs} विफल"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1742,6 +1812,10 @@ msgstr "सेटिंग्स लोड नहीं हो सकीं"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "API कुंजी सहेजी नहीं गई: सिस्टम की-रिंग अनुपलब्ध है"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"
