@@ -1921,7 +1921,7 @@
       showToast(_('Compte supprimé'));
     }
 
-    window.saveAccount = function() {
+    window.saveAccount = async function() {
       const id = document.getElementById('editId').value;
       const name = document.getElementById('inputName').value.trim();
       const email = document.getElementById('inputEmail').value.trim();
