@@ -11,6 +11,12 @@
   fenêtres d'authentification (#278) et les pièces jointes du webmail restent
   autorisées comme avant.
 
+### Tests
+- `test/webmail-connexion.test.js` : le gestionnaire de la fenêtre webmail
+  refuse `background-tab` et laisse passer `foreground-tab`.
+- `test/main-window-security.test.js` : le gestionnaire des webviews d'onglet
+  refuse une ouverture en arrière-plan, même sur une URL https autorisée.
+
 ## Issue #353 — suppression du rond avec le nom de compte (31/10/2026)
 
 ### Retiré
