@@ -554,6 +554,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "API de correo (URL base)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "Creación de cuentas de correo mediante mail-accounts-api cuando el dominio de la dirección coincide con el dominio de los ajustes"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "Clave de la API de correo"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "Guardada cifrada en la caja fuerte; dejar vacío para conservar la clave actual"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr "Abrir una primera pestaña fija"
 
@@ -1034,6 +1054,46 @@ msgid "Compte ajouté"
 msgstr "Cuenta añadida"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "Cuenta de correo creada: {email} — contraseña generada guardada en la caja fuerte"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "Cuenta de correo creada: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "La cuenta de correo {email} ya existe"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "Contraseña de correo actualizada para {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "Clave de la API de correo no indicada en los ajustes"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "Clave de la API de correo rechazada"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "Dirección rechazada por la API de correo"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "Almacenamiento de la API de correo no disponible"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "Cuenta de correo inexistente en el servidor"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "API de correo inaccesible"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "Indique primero el dominio de las direcciones de correo en los ajustes"
 
@@ -1060,6 +1120,16 @@ msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} contraseña guardada"
 msgstr[1] "{m} contraseñas guardadas"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} cuenta creada"
+msgstr[1] "{n} cuentas creadas"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "{crees} cuentas de correo creadas, {existants} ya existentes, {echecs} con error"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1736,6 +1806,10 @@ msgstr "No se pudieron cargar los ajustes"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr "Dirección de la primera pestaña no válida: se espera una dirección https://"
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "Clave de API no guardada: el llavero del sistema no está disponible"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

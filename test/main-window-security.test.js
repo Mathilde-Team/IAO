@@ -258,6 +258,22 @@ test('did-attach-webview : popup non web (data:, javascript:, http:) => deny pur
   } finally { h.cleanup(); }
 });
 
+test('did-attach-webview : popup en arrière-plan (background-tab, #354) => deny', () => {
+  const h = boot();
+  try {
+    const guest = h.attachGuest();
+    // Issue #354 : une page d'IA peut vouloir ouvrir sa messagerie en
+    // arrière-plan (disposition « background-tab ») — refusé, même sur une
+    // URL https qui aurait sinon été autorisée.
+    let result;
+    const out = capture(() => { result = guest.openHandler({ url: 'https://claude.ai/messagerie', disposition: 'background-tab' }); });
+    assert.deepEqual(result, { action: 'deny' });
+    assert.equal(out.warn.length, 1);
+    assert.match(out.warn[0], /popup refusée \(ouverture en arrière-plan/);
+    assert.deepEqual(h.electron.calls.openExternal, []);
+  } finally { h.cleanup(); }
+});
+
 test('did-attach-webview : about:blank (flux OAuth) => allow', () => {
   const h = boot();
   try {

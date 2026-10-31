@@ -1,3 +1,53 @@
+## Issue #357 — création de comptes de messagerie via mail-accounts-api (31/10/2026)
+
+### Ajouté
+- À l'enregistrement d'un compte ou d'une série, si le domaine de l'adresse correspond à
+  celui des réglages, IAO essaie de créer la boîte via
+  [mail-accounts-api](https://github.com/Mathilde-Team/mail-accounts-api) (nouveau
+  `lib/mail-api.js`, client pur : POST `/accounts`, POST `/accounts/batch` atomique avec
+  retombée par compte, PATCH `/accounts/{email}`) et tente la connexion au webmail en
+  arrière-plan (fenêtre cachée, garde de l'issue #354, 2 s d'écart entre comptes en série).
+- Réglages : URL de l'API (`mailApiUrl`) et clé d'API. La clé vit dans le coffre chiffré
+  (`mail_api`), jamais en clair dans `settings.json` ; le renderer ne fait aucun appel
+  réseau (CSP `default-src 'none'`), tout passe par IPC (`mail-api:creer`,
+  `mail-api:creer-lot`).
+- 409 avec mot de passe fourni → changement de mot de passe (PATCH) ; le mot de passe
+  généré par l'API est enregistré dans le coffre. Retours en toast : créé, existant,
+  modifié, lot `{crees}/{existants}/{echecs}`, clé non renseignée, clé refusée, etc.
+- i18n : 19 nouvelles chaînes, traduites à la main dans les 30 langues.
+
+### Tests
+- `test/mail-api.test.js` (24 tests) ; extensions `test/webmail-connexion.test.js`
+  (arrière-plan), `test/settings.test.js` (`mailApiUrl`), `test/main-harness.test.js`
+  (canaux IPC).
+## Issue #354 — la page de messagerie s'ouvre en arrière-plan au clic sur une IA (31/10/2026)
+
+### Corrigé
+- Une page d'IA chargée dans un onglet pouvait ouvrir une fenêtre EN ARRIÈRE-PLAN
+  (disposition « background-tab » de `window.open`, typiquement la messagerie
+  embarquée du site) : elle apparaissait derrière la fenêtre principale et se
+  refermait d'elle-même quelques minutes plus tard, sauf si ouverte
+  intentionnellement. Les trois points d'ouverture de fenêtres (webviews des
+  onglets, fenêtres filles, fenêtre webmail) refusent désormais cette
+  disposition : seule une fenêtre demandée au premier plan s'ouvre. Les
+  fenêtres d'authentification (#278) et les pièces jointes du webmail restent
+  autorisées comme avant.
+
+### Tests
+- `test/webmail-connexion.test.js` : le gestionnaire de la fenêtre webmail
+  refuse `background-tab` et laisse passer `foreground-tab`.
+- `test/main-window-security.test.js` : le gestionnaire des webviews d'onglet
+  refuse une ouverture en arrière-plan, même sur une URL https autorisée.
+
+## Issue #353 — suppression du rond avec le nom de compte (31/10/2026)
+
+### Retiré
+- Pastille ronde d'avatar avec les initiales du compte dans les cartes de la
+  liste des comptes et dans les résultats de recherche : le nom du compte est
+  affiché juste à côté, la pastille n'apportait rien. Les règles CSS
+  associées (`.account-avatar`, halo du compte actif) sont retirées avec elle.
+  `acc.color` n'est plus utilisé par l'interface (donnée conservée sans effet).
+
 ## Issue #349 — harnais : bandeau d'erreur aléatoire après fermeture d'onglet (30/10/2026)
 
 ### Corrigé

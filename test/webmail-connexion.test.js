@@ -78,6 +78,8 @@ function doublure({ resultat = Promise.resolve('soumis') } = {}) {
       this.detruite = false;
       this.focus = () => { this.focalisee = (this.focalisee || 0) + 1; };
       this.isDestroyed = () => this.detruite;
+      // Issue #357 : fermeture (mode arrière-plan) — marque détruite et notifie.
+      this.close = () => { this.detruite = true; this.ferme = (this.ferme || 0) + 1; this.emit('closed'); };
       this.loadURL = (u) => { this.charge = u; this.url = u; };
       this.webContents = new EventEmitter();
       this.webContents.setWindowOpenHandler = (fn) => { this.webContents.popup = fn; };
@@ -109,6 +111,11 @@ test('ouvrir : fenêtre sans privilèges dans la partition du compte, une tentat
   assert.equal(win.charge, 'https://mail.dmathilde.fr/');
   assert.deepEqual(win.webContents.popup({ url: 'https://mail.dmathilde.fr/piece' }), { action: 'allow' });
   assert.deepEqual(win.webContents.popup({ url: 'javascript:alert(1)' }), { action: 'deny' });
+  // Issue #354 : une fenêtre que la page veut ouvrir EN ARRIÈRE-PLAN
+  // (disposition « background-tab ») est refusée, même sur une URL sinon
+  // autorisée ; au premier plan, elle reste autorisée.
+  assert.deepEqual(win.webContents.popup({ url: 'https://mail.dmathilde.fr/piece', disposition: 'background-tab' }), { action: 'deny' });
+  assert.deepEqual(win.webContents.popup({ url: 'https://mail.dmathilde.fr/piece', disposition: 'foreground-tab' }), { action: 'allow' });
   // Page d'un autre hôte (SSO, redirection) : rien n'est rempli.
   win.url = 'https://ailleurs.example/login';
   win.webContents.emit('did-finish-load');
@@ -195,4 +202,69 @@ test('#310 ouvrir : le relevé par défaut est celui de lib/webmail-codes', () =
   const ouvrir = creerOuvreurWebmail({ BrowserWindow: d.BrowserWindow, signaler: () => {} });
   const win = ouvrir({ url: 'https://mail.dmathilde.fr/', profil: 'p3' });
   win.emit('closed'); // arrête la minuterie réelle
+});
+
+// --- Issue #357 : ouverture en arrière-plan ---------------------------------
+
+test('#357 ouvrir : arrière-plan — fenêtre cachée, refermée après la tentative', async () => {
+  const d = doublure();
+  const traces = [];
+  const ouvrir = creerOuvreurWebmail({
+    BrowserWindow: d.BrowserWindow, debug: (m) => traces.push(m),
+    arrierePlanDelais: { max: 500, apresTentative: 20 }
+  });
+  const win = ouvrir({ url: 'https://mail.dmathilde.fr/', profil: 'bg1', email: 'a@b.fr', motDePasse: 's', arrierePlan: true });
+  assert.equal(win.options.show, false); // cachée
+  assert.match(traces[0], /arrière-plan/);
+  // Page de l'hôte chargée : la tentative de connexion a lieu.
+  win.url = 'https://mail.dmathilde.fr/?_task=login';
+  win.webContents.emit('did-finish-load');
+  await attendre();
+  assert.equal(win.webContents.scripts.length, 1);
+  // La fermeture est programmée après la tentative, pas immédiate...
+  assert.equal(win.ferme, undefined);
+  // ... puis elle survient (cookie de session laissé à la partition).
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(win.ferme, 1);
+});
+
+test('#357 ouvrir : arrière-plan — garde-fou, refermée même sans tentative', async () => {
+  const d = doublure();
+  const ouvrir = creerOuvreurWebmail({
+    BrowserWindow: d.BrowserWindow, arrierePlanDelais: { max: 40, apresTentative: 20 }
+  });
+  const win = ouvrir({ url: 'https://mail.dmathilde.fr/', profil: 'bg2', email: 'a@b.fr', motDePasse: 's', arrierePlan: true });
+  // Aucun did-finish-load : la fenêtre cachée ne traîne pas (issue #354).
+  await new Promise((r) => setTimeout(r, 80));
+  assert.equal(win.ferme, 1);
+  // La fermeture nettoie aussi la minuterie (pas de close() sur fenêtre détruite).
+  assert.equal(d.fenetres.length, 1);
+});
+
+test('#357 ouvrir : arrière-plan — une fenêtre visible reste visible', async () => {
+  const d = doublure();
+  const ouvrir = creerOuvreurWebmail({ BrowserWindow: d.BrowserWindow });
+  const win = ouvrir({ url: 'https://mail.dmathilde.fr/', profil: 'p9', email: 'a@b.fr', motDePasse: 's' });
+  assert.equal(win.options.show !== false, true); // comportement inchangé par défaut
+  win.url = 'https://mail.dmathilde.fr/?_task=login';
+  win.webContents.emit('did-finish-load');
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(win.ferme, undefined); // jamais fermée automatiquement
+  win.close();
+  assert.equal(win.ferme, 1);
+});
+
+test('#357 ouvrir : arrière-plan — échec du remplissage referme aussi la fenêtre', async () => {
+  const d = doublure({ resultat: () => Promise.reject(new Error('page bloquée')) });
+  const journal = [];
+  const ouvrir = creerOuvreurWebmail({
+    BrowserWindow: d.BrowserWindow, journal: (n, m) => journal.push(n + ' ' + m),
+    arrierePlanDelais: { max: 500, apresTentative: 20 }
+  });
+  const win = ouvrir({ url: 'https://mail.dmathilde.fr/', profil: 'bg3', email: 'a@b.fr', motDePasse: 's', arrierePlan: true });
+  win.url = 'https://mail.dmathilde.fr/?_task=login';
+  win.webContents.emit('did-finish-load');
+  await new Promise((r) => setTimeout(r, 60));
+  assert.match(journal[0], /remplissage impossible/);
+  assert.equal(win.ferme, 1);
 });

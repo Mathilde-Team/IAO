@@ -199,7 +199,7 @@ Les boutons de service d'une carte sont posés dans `.services-grid`, une **gril
 
 ## 7. Fonctionnalités & fonctions clés (dans `index.html`)
 
-- `renderAccounts()` — rend les cartes de comptes (avatar, boutons de service, cooldowns). **Toutes les données de compte sont échappées** (`escapeHtml`) et les cartes n'ont **plus d'`onclick` inline** : les actions passent par des `data-*` lus par la délégation d'événements (voir plus bas). Quand la liste est **vide**, affiche un bouton d'appel à l'action « Créer mon premier compte ».
+- `renderAccounts()` — rend les cartes de comptes (nom, boutons de service, cooldowns ; l'avatar rond à initiales a été retiré, #353). **Toutes les données de compte sont échappées** (`escapeHtml`) et les cartes n'ont **plus d'`onclick` inline** : les actions passent par des `data-*` lus par la délégation d'événements (voir plus bas). Quand la liste est **vide**, affiche un bouton d'appel à l'action « Créer mon premier compte ».
 - **Vue compacte (repli/dépli des cartes)** : cliquer sur le **header** d'une carte (`data-action="toggle-collapse"` sur `.account-header` — les boutons éditer/supprimer imbriqués gardent la priorité via `closest()`) replie/déplie sa grille de services ; repliée, la carte affiche un badge **« N/9 »** (services hors cooldown / total, ambré si un cooldown est actif, resynchronisé par le tick des cooldowns) + un chevron pivoté. Un bouton global « Tout replier / Tout déplier » (`#btnToggleAllCards`, dans l'en-tête de la liste) bascule toutes les cartes. Fonctions : `toggleCardCollapse(accId)`, `toggleAllCards()`, `saveCollapsed()` ; état persisté dans `preferences.json`, clé `collapsed_accounts` (voir §5) ; défaut = tout déplié ; `openService` **déplie automatiquement** la carte du compte utilisé (utile depuis la palette Ctrl+K). Animation CSS pure (`grid-template-rows: 1fr → 0fr` sur `.services-wrap`, enfant `overflow:hidden`).
 - `openService(accId, svcId)` — **réutilise l'onglet existant** pour ce couple (compte, service) s'il y en a un (simple `activateTab`, aucun rechargement) ; sinon crée un onglet et sa `<webview partition="persist:<profil>" src="<url>">`. Déplie la carte du compte si elle était repliée.
 - **Bouton « Ajouter un compte »** : un `+` en tête de la liste (à côté du titre « Comptes enregistrés ») + le bouton « Créer mon premier compte » de l'état vide. Les deux portent `data-action="add"` → `openModal()` en mode ajout. *(Avant ce lot, aucun bouton d'ajout n'existait dans l'UI.)*
@@ -463,6 +463,28 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Notifications quand un cooldown se termine.
 
 ## 13. Dernières évolutions
+
+### Création de comptes de messagerie via mail-accounts-api (issue #357, 31/10/2026)
+
+- `lib/mail-api.js` (lib pure, testée `node --test`) : client du dépôt
+  [mail-accounts-api](https://github.com/Mathilde-Team/mail-accounts-api) — `creerCompte`
+  (POST `/accounts`, 201 créé / 409 existant / 401 clé refusée / 422 invalide / 503 stockage /
+  404 absent), `creerLot` (POST `/accounts/batch`, atomique, retombée par compte si 409).
+  Authentification Bearer ; `encodeURIComponent` (l'arobase devient `%40` dans le chemin
+  PATCH). Le mot de passe généré par l'API n'est renvoyé qu'à la création.
+- Clé d'API **dans le coffre chiffré** (`mail_api`, `CLE_RE`), jamais en clair dans
+  `settings.json` (qui ne reçoit que `mailApiUrl`) ; saisie dans la modale des réglages
+  (champ mot de passe), lue par le main pour l'IPC. Le renderer ne fait aucun appel réseau
+  (CSP `default-src 'none'`).
+- Canaux IPC `mail-api:creer` `{ profil, email }` et `mail-api:creer-lot`
+  `[{ profil, email }…]` (dans `registerComptesIPC`) : création à l'enregistrement d'un
+  compte ou d'une série quand le domaine de l'adresse correspond à celui des réglages ;
+  409 avec mot de passe fourni → PATCH (changement de mot de passe) ; mot de passe généré
+  par l'API enregistré dans le coffre ; retour en toast (créé / existant / modifié /
+  lot `{crees}/{existants}/{echecs}` / clé non renseignée / clé refusée).
+- `lib/webmail-connexion.js` : mode `arrierePlan` — fenêtre cachée (`show:false`) qui se
+  ferme d'elle-même après la tentative (1,5 s) ou 20 s maximum (garde de l'issue #354),
+  décalée de 2 s par compte pour les séries ; délais injectables pour les tests.
 
 ### Premier onglet fixe (issue #338, 27/10/2026)
 
