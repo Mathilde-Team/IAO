@@ -760,8 +760,6 @@
       container.innerHTML = sortedAccounts.map((acc, idx) => {
         // Toute donnée issue du compte (nom, email, profil, couleur) est saisie
         // par l'utilisateur -> échappée avant injection (chantier A).
-        const initials = escapeHtml(String(acc.name).slice(0, 2).toUpperCase());
-        const color = escapeHtml(acc.color || COLORS[idx % COLORS.length]);
         const id = escapeHtml(acc.id);
         const isActive = acc.id === activeAccountId;
         const isCollapsed = collapsedAccounts.has(acc.id);
@@ -797,7 +795,6 @@
         return `
           <div class="account-card ${isActive ? 'active' : ''} ${isCollapsed ? 'collapsed' : ''}" draggable="true" data-acc="${id}">
             <div class="account-header" data-action="toggle-collapse" data-acc="${id}">
-              <div class="account-avatar" data-avatar-color="${color}">${initials}</div>
               <div class="account-info">
                 <div class="account-name">${escapeHtml(acc.name)} ${isActive ? '<span class="active-dot"></span>' : ''}</div>
                 <div class="account-email">${acc.email ? `<span class="account-email-copy" data-action="copy-email" data-acc="${id}" title="${escapeHtml(_('Cliquer pour copier l\'e-mail'))}">${escapeHtml(acc.email)}</span>` : ''}</div>
@@ -1670,7 +1667,6 @@
       });
       results.innerHTML = items.map((item, idx) => `
         <div class="palette-item ${idx === 0 ? 'selected' : ''}" data-acc="${escapeHtml(item.acc.id)}" data-svc="${escapeHtml(item.svc.id)}">
-          <div class="account-avatar account-avatar--sm" data-avatar-color="${escapeHtml(item.acc.color)}">${escapeHtml(String(item.acc.name).slice(0,2))}</div>
           <span>${escapeHtml(item.acc.name)} - ${escapeHtml(item.svc.name)}</span>
         </div>
       `).join('');

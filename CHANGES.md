@@ -1,3 +1,12 @@
+## Issue #353 — suppression du rond avec le nom de compte (31/10/2026)
+
+### Retiré
+- Pastille ronde d'avatar avec les initiales du compte dans les cartes de la
+  liste des comptes et dans les résultats de recherche : le nom du compte est
+  affiché juste à côté, la pastille n'apportait rien. Les règles CSS
+  associées (`.account-avatar`, halo du compte actif) sont retirées avec elle.
+  `acc.color` n'est plus utilisé par l'interface (donnée conservée sans effet).
+
 ## Issue #349 — harnais : bandeau d'erreur aléatoire après fermeture d'onglet (30/10/2026)
 
 ### Corrigé

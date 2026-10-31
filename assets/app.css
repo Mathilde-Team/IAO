@@ -242,12 +242,10 @@
   .account-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); backdrop-filter: blur(8px); position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
   .account-card:hover { border-color: var(--border-active); transform: translateY(-4px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
   .account-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 25px 50px -12px rgba(139, 92, 246, 0.30); background: rgba(139, 92, 246, 0.05); }
-  .account-card.active .account-avatar { box-shadow: 0 0 14px var(--accent-glow); } /* halo sur l'avatar du compte actif */
   .account-card.dragging { opacity: 0.4; transform: scale(0.98); cursor: grabbing; }
   .account-card.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 8px 16px rgba(139, 92, 246, 0.2); }
   .account-card[draggable="true"] { cursor: grab; }
   .account-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; cursor: pointer; transition: margin-bottom 0.25s ease; }
-  .account-avatar { position: relative; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--bg); flex-shrink: 0; }
   /* Badge de statut d'activité (lot 16/09/2026) : petit point sur l'avatar,
      même esprit que .active-dot mais à 3 couleurs fixes plutôt qu'une seule.
      Purement informatif — voir lib/activity-status.js pour ce qu'il reflète
@@ -700,7 +698,6 @@
   .service-select-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
   .sched-job__dot--accent { background: var(--accent); }
   .sched-subtitle--inline { font-weight: 400; font-size: 11px; }
-  .account-avatar--sm { width: 24px; height: 24px; font-size: 10px; }
   .sched-job__dot--mt3 { margin-top: 3px; }
   .sched-job__dot--mt5 { margin-top: 5px; }
   .sched-subtitle--inline { color: var(--fg-muted); font-weight: 400; font-size: 11px; }
