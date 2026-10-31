@@ -125,6 +125,23 @@ test('main.js se charge avec un module electron simulé et liste ses canaux IPC'
   } finally { h.cleanup(); }
 });
 
+test('main.js sans fetch global (Node ancien) : chargement normal, fetchFn null', (t) => {
+  // Issue #357 : la ligne `fetchFn: (typeof fetch === 'function') ? fetch : null`
+  // couvre le cas d'un runtime sans fetch — les canaux « mail-api:* » répondent
+  // alors « reseau » (l'appel avorté est intercepté dans lib/mail-api.js).
+  const avant = globalThis.fetch;
+  delete globalThis.fetch;
+  let h;
+  try {
+    h = loadMain();
+    assert.ok(h.electron.ipcHandlers.has('mail-api:creer'));
+    assert.ok(h.electron.ipcHandlers.has('mail-api:creer-lot'));
+  } finally {
+    if (h) h.cleanup();
+    globalThis.fetch = avant;
+  }
+});
+
 test('main.js : userData fixé sur ai-manager, nom applicatif IAO, instance unique demandée', () => {
   const h = loadMain();
   try {
