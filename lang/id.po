@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "API surat (URL dasar)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "Pembuatan akun surat melalui mail-accounts-api ketika domain alamat cocok dengan domain pada pengaturan"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "Kunci API surat"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "Disimpan terenkripsi di brankas; biarkan kosong untuk mempertahankan kunci saat ini"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1037,6 +1057,46 @@ msgid "Compte ajouté"
 msgstr "Akun ditambahkan"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "Akun surat dibuat: {email} — kata sandi yang dihasilkan disimpan di brankas"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "Akun surat dibuat: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "Akun surat {email} sudah ada"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "Kata sandi surat diperbarui untuk {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "Kunci API surat belum diisi di pengaturan"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "Kunci API surat ditolak"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "Alamat ditolak oleh API surat"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "Penyimpanan API surat tidak tersedia"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "Akun surat tidak ada di server"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "API surat tidak dapat dijangkau"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "Isi dulu domain alamat email di pengaturan"
 
@@ -1061,6 +1121,15 @@ msgstr[0] "{n} akun dibuat"
 msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} kata sandi disimpan"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} akun dibuat"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "{crees} akun dibuat, {existants} sudah ada, {echecs} gagal"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1728,6 +1797,10 @@ msgstr "Tidak dapat memuat pengaturan"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "Kunci API tidak disimpan: gantungan kunci sistem tidak tersedia"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

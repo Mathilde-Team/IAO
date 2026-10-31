@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "Poštovní API (základní URL)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "Vytváření poštovních účtů přes mail-accounts-api, když se doména adresy shoduje s doménou z nastavení"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "Klíč poštovního API"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "Uložen šifrovaně v trezoru; nechte prázdné, chcete-li zachovat aktuální klíč"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1043,6 +1063,46 @@ msgid "Compte ajouté"
 msgstr "Účet přidán"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "Poštovní účet vytvořen: {email} — vygenerované heslo uloženo do trezoru"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "Poštovní účet vytvořen: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "Poštovní účet {email} již existuje"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "Poštovní heslo aktualizováno pro {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "Klíč poštovního API není v nastavení vyplněn"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "Klíč poštovního API odmítnut"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "Adresa odmítnuta poštovním API"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "Úložiště poštovního API nedostupné"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "Poštovní účet na serveru neexistuje"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "Poštovní API nedostupné"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "Nejprve zadejte v nastavení doménu e-mailových adres"
 
@@ -1071,6 +1131,17 @@ msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} heslo uloženo"
 msgstr[1] "{m} hesla uložena"
 msgstr[2] "{m} hesel uloženo"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} účet vytvořen"
+msgstr[1] "{n} účty vytvořeny"
+msgstr[2] "{n} účtů vytvořeno"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "Vytvořeno {crees} účtů, {existants} již existovalo, {echecs} selhalo"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1756,6 +1827,10 @@ msgstr "Nastavení nelze načíst"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "Klíč API neuložen: systémová klíčenka není dostupná"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

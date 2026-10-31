@@ -56,6 +56,7 @@
 <!-- Issue #331 : préférences de l'interface dans preferences.json. -->
 <script src="lib/magasin-preferences.js"></script>
 <script src="lib/comptes-serie.js"></script>
+<script src="lib/mail-api.js"></script>
 <!-- Issue #333 : profil tiré du nom du compte, libellé « nom - adresse mail ». -->
 <script src="lib/profil-compte.js"></script>
 <script src="lib/service-icons.js"></script>
@@ -589,6 +590,16 @@
       <div>
         <label class="settings-label" for="settingsWebmailUrl">Adresse du webmail (Roundcube)</label>
         <input type="url" id="settingsWebmailUrl" class="settings-input settings-input--wide" placeholder="https://mail.dmathilde.fr" spellcheck="false">
+      </div>
+      <div>
+        <label class="settings-label" for="settingsMailApiUrl">API de messagerie (URL de base)</label>
+        <input type="url" id="settingsMailApiUrl" class="settings-input settings-input--wide" placeholder="http://127.0.0.1:9941" spellcheck="false">
+        <span class="settings-hint">Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages</span>
+      </div>
+      <div>
+        <label class="settings-label" for="settingsMailApiKey">Clé de l'API de messagerie</label>
+        <input type="password" id="settingsMailApiKey" class="settings-input settings-input--wide" placeholder="" spellcheck="false" autocomplete="off">
+        <span class="settings-hint">Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle</span>
       </div>
 
       <!-- Premier onglet immuable (issue #338) -->

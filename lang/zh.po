@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "邮件 API（基础 URL）"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "当地址域名与设置中的域名匹配时，通过 mail-accounts-api 创建邮件账户"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "邮件 API 密钥"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "加密存储于保管库中；留空以保留当前密钥"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1037,6 +1057,46 @@ msgid "Compte ajouté"
 msgstr "账户已添加"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "邮件账户已创建：{email} — 生成的密码已存入保管库"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "邮件账户已创建：{email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "邮件账户 {email} 已存在"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "{email} 的邮件密码已更新"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "邮件 API 密钥未在设置中填写"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "邮件 API 密钥被拒绝"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "地址被邮件 API 拒绝"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "邮件 API 存储不可用"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "邮件账户在服务器上不存在"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "邮件 API 无法访问"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "请先在设置中填写邮箱地址的域名"
 
@@ -1061,6 +1121,15 @@ msgstr[0] "已创建 {n} 个账户"
 msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "已保存 {m} 个密码"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "已创建 {n} 个账户"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "创建 {crees} 个，已存在 {existants} 个，失败 {echecs} 个"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1728,6 +1797,10 @@ msgstr "无法加载设置"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "API 密钥未保存：系统密钥环不可用"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

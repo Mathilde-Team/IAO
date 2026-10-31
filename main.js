@@ -827,6 +827,8 @@ registerComptesIPC(ipc, {
   normaliser: normalizeSettings,
   fsPromises,
   ouvrirExterne: shell.openExternal.bind(shell),
+  // Issue #357 : client HTTP de l'API de messagerie (fetch global de Node).
+  fetchFn: (typeof fetch === 'function') ? fetch : null,
   // Issue #310 : webmail connecté au compte, dans une fenêtre sans privilèges.
   ouvrirWebmail: creerOuvreurWebmail({
     BrowserWindow, journal: log.bind(null, 'webmail'), debug: debug.bind(null, 'webmail'),

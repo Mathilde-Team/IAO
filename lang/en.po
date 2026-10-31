@@ -552,6 +552,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "Mail API (base URL)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "Mail account creation via mail-accounts-api when the address domain matches the settings domain"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "Mail API key"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "Stored encrypted in the vault; leave empty to keep the current key"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr "Open a fixed first tab"
 
@@ -1032,6 +1052,46 @@ msgid "Compte ajouté"
 msgstr "Account added"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "Mail account created: {email} — generated password saved to the vault"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "Mail account created: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "The mail account {email} already exists"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "Mail password updated for {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "Mail API key not filled in the settings"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "Mail API key rejected"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "Address rejected by the mail API"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "Mail API storage unavailable"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "Mail account not found on the server"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "Mail API unreachable"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "First set the e-mail address domain in the settings"
 
@@ -1058,6 +1118,16 @@ msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} password saved"
 msgstr[1] "{m} passwords saved"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} account created"
+msgstr[1] "{n} accounts created"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "{crees} mail accounts created, {existants} already existing, {echecs} failed"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1734,6 +1804,10 @@ msgstr "Could not load the settings"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr "Invalid first tab address: an https:// address is expected"
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "API key not saved: the system keyring is unavailable"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"

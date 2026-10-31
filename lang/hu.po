@@ -558,6 +558,26 @@ msgid "https://mail.dmathilde.fr"
 msgstr "https://mail.dmathilde.fr"
 
 #: index.html
+msgid "API de messagerie (URL de base)"
+msgstr "Levelező-API (alap URL)"
+
+#: index.html
+msgid "http://127.0.0.1:9941"
+msgstr "http://127.0.0.1:9941"
+
+#: index.html
+msgid "Création des comptes de messagerie via mail-accounts-api quand le domaine de l'adresse correspond au domaine des réglages"
+msgstr "Levelezőfiókok létrehozása a mail-accounts-api-n keresztül, ha a cím domainje egyezik a beállításokban megadott doménnel"
+
+#: index.html
+msgid "Clé de l'API de messagerie"
+msgstr "A levelező-API kulcsa"
+
+#: index.html
+msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
+msgstr "Titkosítva tárolva a széfben; hagyja üresen az aktuális kulcs megtartásához"
+
+#: index.html
 msgid "Ouvrir un premier onglet fixe"
 msgstr ""
 
@@ -1040,6 +1060,46 @@ msgid "Compte ajouté"
 msgstr "Fiók hozzáadva"
 
 #: assets/app.js
+msgid "Compte de messagerie créé : {email} — mot de passe généré, enregistré dans le coffre"
+msgstr "Levelezőfiók létrehozva: {email} — a generált jelszó a széfbe került"
+
+#: assets/app.js
+msgid "Compte de messagerie créé : {email}"
+msgstr "Levelezőfiók létrehozva: {email}"
+
+#: assets/app.js
+msgid "Le compte de messagerie {email} existe déjà"
+msgstr "A(z) {email} levelezőfiók már létezik"
+
+#: assets/app.js
+msgid "Mot de passe de messagerie mis à jour pour {email}"
+msgstr "Levelező jelszó frissítve: {email}"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie non renseignée dans les réglages"
+msgstr "A levelező-API kulcsa nincs megadva a beállításokban"
+
+#: assets/app.js
+msgid "Clé de l'API de messagerie refusée"
+msgstr "A levelező-API kulcsa elutasítva"
+
+#: assets/app.js
+msgid "Adresse refusée par l'API de messagerie"
+msgstr "A címet a levelező-API elutasította"
+
+#: assets/app.js
+msgid "Stockage de l'API de messagerie indisponible"
+msgstr "A levelező-API tárolója nem érhető el"
+
+#: assets/app.js
+msgid "Compte de messagerie absent sur le serveur"
+msgstr "A levelezőfiók nem létezik a kiszolgálón"
+
+#: assets/app.js
+msgid "API de messagerie injoignable"
+msgstr "A levelező-API elérhetetlen"
+
+#: assets/app.js
 msgid "Renseignez d'abord le domaine des adresses e-mail dans les réglages"
 msgstr "Előbb adja meg az e-mail-címek tartományát a beállításokban"
 
@@ -1066,6 +1126,16 @@ msgid "{m} mot de passe enregistré"
 msgid_plural "{m} mots de passe enregistrés"
 msgstr[0] "{m} jelszó mentve"
 msgstr[1] "{m} jelszó mentve"
+
+#: assets/app.js
+msgid "{n} compte de messagerie créé"
+msgid_plural "{n} comptes de messagerie créés"
+msgstr[0] "{n} fiók létrehozva"
+msgstr[1] "{n} fiók létrehozva"
+
+#: assets/app.js
+msgid "{crees} comptes de messagerie créés, {existants} existants, {echecs} en échec"
+msgstr "{crees} fiók létrehozva, {existants} már létezett, {echecs} sikertelen"
 
 #: assets/app.js
 msgid "Adresse du webmail non configurée dans les réglages"
@@ -1742,6 +1812,10 @@ msgstr "A beállítások nem tölthetők be"
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
 msgstr ""
+
+#: assets/app.js
+msgid "Clé de l'API non enregistrée : le trousseau du système est indisponible"
+msgstr "API-kulcs nem mentve: a rendszer kulcstartója nem érhető el"
 
 #: assets/app.js
 msgid "Réglages enregistrés — la langue sera appliquée au prochain démarrage"
