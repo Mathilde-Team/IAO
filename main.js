@@ -305,7 +305,14 @@ function createWindow() {
       verrouillerOngletFixe(guestContents);
       return;
     }
-    guestContents.setWindowOpenHandler(({ url }) => {
+    guestContents.setWindowOpenHandler(({ url, disposition }) => {
+      // Issue #354 : une page d'IA peut vouloir ouvrir une fenêtre EN ARRIÈRE-PLAN
+      // (disposition « background-tab », typiquement sa messagerie embarquée) :
+      // refusée — seule une fenêtre demandée au premier plan (clic, lien) s'ouvre.
+      if (disposition === 'background-tab') {
+        console.warn('[security] popup refusée (ouverture en arrière-plan, #354) :', hostOf(url));
+        return { action: 'deny' };
+      }
       if (decidePopup(url) === 'allow') return { action: 'allow' };
       // Schéma non web (http:, data:, javascript:, URL illisible) : refus pur.
       // Jamais de repli vers le navigateur système : la popup d'authentification
@@ -317,8 +324,10 @@ function createWindow() {
     // même politique (webPreferences de l'invité, jamais celles de l'hôte).
     guestContents.on('did-create-window', (child) => {
       try {
-        child.webContents.setWindowOpenHandler(({ url }) =>
-          decidePopup(url) === 'allow' ? { action: 'allow' } : { action: 'deny' });
+        child.webContents.setWindowOpenHandler(({ url, disposition }) =>
+          // #354 : même règle pour les fenêtres filles — pas d'arrière-plan.
+          disposition !== 'background-tab' && decidePopup(url) === 'allow'
+            ? { action: 'allow' } : { action: 'deny' });
         // Issue #278, lot 2 : suivi des fenêtres filles (popups d'authentification)
         // pour pouvoir y ancrer le menu des identifiants.
         const idEnfant = child.webContents.id;
