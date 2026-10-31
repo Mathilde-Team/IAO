@@ -1,22 +1,3 @@
-## Issue #354 — la page de messagerie s'ouvre en arrière-plan au clic sur une IA (31/10/2026)
-
-### Corrigé
-- Une page d'IA chargée dans un onglet pouvait ouvrir une fenêtre EN ARRIÈRE-PLAN
-  (disposition « background-tab » de `window.open`, typiquement la messagerie
-  embarquée du site) : elle apparaissait derrière la fenêtre principale et se
-  refermait d'elle-même quelques minutes plus tard, sauf si ouverte
-  intentionnellement. Les trois points d'ouverture de fenêtres (webviews des
-  onglets, fenêtres filles, fenêtre webmail) refusent désormais cette
-  disposition : seule une fenêtre demandée au premier plan s'ouvre. Les
-  fenêtres d'authentification (#278) et les pièces jointes du webmail restent
-  autorisées comme avant.
-
-### Tests
-- `test/webmail-connexion.test.js` : le gestionnaire de la fenêtre webmail
-  refuse `background-tab` et laisse passer `foreground-tab`.
-- `test/main-window-security.test.js` : le gestionnaire des webviews d'onglet
-  refuse une ouverture en arrière-plan, même sur une URL https autorisée.
-
 ## Issue #353 — suppression du rond avec le nom de compte (31/10/2026)
 
 ### Retiré
