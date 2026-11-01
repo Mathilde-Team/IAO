@@ -43,7 +43,7 @@ test('hoteDepuisUrl : https uniquement, en minuscules', () => {
 test('doitProposer : hôte https + identifiants présents + cooldown écoulé', () => {
   const lister = () => ({ 'context7.com': [{ login: 'a@x.fr' }] });
   assert.deepEqual(focus.doitProposer({ url: 'https://context7.com/', lister, maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
-    { proposer: true, hote: 'context7.com', logins: [{ login: 'a@x.fr' }] });
+    { proposer: true, hote: 'context7.com', hotePage: 'context7.com', logins: [{ login: 'a@x.fr' }] });
   // Pas d'identifiant pour l'hôte.
   assert.deepEqual(focus.doitProposer({ url: 'https://autre.com/', lister, maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
     { proposer: false, hote: 'autre.com' });
@@ -53,6 +53,87 @@ test('doitProposer : hôte https + identifiants présents + cooldown écoulé', 
   // Hors https : rien, même pas l'hôte.
   assert.deepEqual(focus.doitProposer({ url: 'http://context7.com/', lister, maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
     { proposer: false, hote: null });
+});
+
+// Issue #363 : repli sur l'hôte du site choisi (onglet immuable dont la page
+// de connexion est servie depuis un sous-domaine).
+
+test('doitProposer : repli vers l\'hôte de secours quand la page n\'a pas d\'identifiants', () => {
+  const lister = () => ({ 'context7.com': [{ login: 'a@x.fr' }] });
+  // La page est sur le sous-domaine, les identifiants sont sur le site choisi.
+  assert.deepEqual(focus.doitProposer({
+    url: 'https://login.context7.com/connexion', lister,
+    hoteSecours: 'context7.com', maintenant: 5000, derniereProposition: 0, cooldownMs: 1200
+  }), { proposer: true, hote: 'context7.com', hotePage: 'login.context7.com', logins: [{ login: 'a@x.fr' }] });
+  // Sans hôte de secours : comportement inchangé (rien à proposer).
+  assert.deepEqual(focus.doitProposer({ url: 'https://login.context7.com/connexion', lister, maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
+    { proposer: false, hote: 'login.context7.com' });
+  // L'hôte de secours sans identifiants ne change rien.
+  assert.deepEqual(focus.doitProposer({
+    url: 'https://login.context7.com/connexion', lister,
+    hoteSecours: 'ailleurs.com', maintenant: 5000, derniereProposition: 0, cooldownMs: 1200
+  }), { proposer: false, hote: 'login.context7.com' });
+  // L'hôte de secours confondu avec l'hôte de la page (sans identifiants) :
+  // pas de repli, le résultat est le même que sans hôte de secours.
+  assert.deepEqual(focus.doitProposer({
+    url: 'https://ailleurs.com/connexion', lister,
+    hoteSecours: 'ailleurs.com', maintenant: 5000, derniereProposition: 0, cooldownMs: 1200
+  }), { proposer: false, hote: 'ailleurs.com' });
+  // Les identifiants de la page priment sur le repli.
+  assert.deepEqual(focus.doitProposer({
+    url: 'https://context7.com/connexion', lister,
+    hoteSecours: 'autre.com', maintenant: 5000, derniereProposition: 0, cooldownMs: 1200
+  }), { proposer: true, hote: 'context7.com', hotePage: 'context7.com', logins: [{ login: 'a@x.fr' }] });
+  // Cooldown : le repli est soumis au même délai anti-boucle.
+  assert.deepEqual(focus.doitProposer({
+    url: 'https://login.context7.com/connexion', lister,
+    hoteSecours: 'context7.com', maintenant: 5000, derniereProposition: 4500, cooldownMs: 1200
+  }), { proposer: false, hote: 'login.context7.com' });
+});
+
+test('creer().surFocus : repli #363 — identifiants du site choisi proposés sur le sous-domaine', (t) => {
+  const construits = [];
+  const popups = [];
+  const envoyes = [];
+  const Menu = {
+    buildFromTemplate(items) { construits.push(items); return { popup(o) { popups.push(o); return true; } }; }
+  };
+  const gestion = focus.creer({
+    identifiants: coffreFactice(),
+    Menu,
+    journal: () => {},
+    fenetrePour: () => 'FENETRE',
+    hoteDeSecours: (wc) => (wc && wc.ongletFixe ? 'context7.com' : null),
+    maintenant: () => 5000
+  });
+  const sender = { ongletFixe: true, getURL: () => 'https://login.context7.com/connexion', send: (c, d) => envoyes.push({ c, d }) };
+  // Au focus d'un champ du sous-domaine : menu proposé avec les identifiants
+  // du site choisi (en-tête = hôte des identifiants).
+  assert.equal(gestion.surFocus({ sender }), true);
+  assert.deepEqual(construits[0][0], { label: 'context7.com', enabled: false });
+  assert.equal(construits[0][1].label, 'a@x.fr');
+  // Le remplissage reste possible depuis le sous-domaine affiché.
+  assert.equal(construits[0][1].click(), true);
+  assert.deepEqual(envoyes, [{ c: 'iao-identifiants:remplir', d: { login: 'a@x.fr', motDePasse: 'S3cret!' } }]);
+  // Hors onglet immuable : pas de repli, rien à proposer sur ce sous-domaine.
+  const autre = { ongletFixe: false, getURL: () => 'https://login.context7.com/connexion', send: () => {} };
+  assert.equal(gestion.surFocus({ sender: autre }), false);
+});
+
+test('creer().remplir : origine acceptée = hôte proposé OU hôte de la page (repli #363)', () => {
+  const gestion = focus.creer({
+    identifiants: coffreFactice(),
+    Menu: { buildFromTemplate: () => ({ popup: () => true }) },
+    journal: () => {},
+    fenetrePour: () => 'FENETRE'
+  });
+  const surSousDomaine = { getURL: () => 'https://login.context7.com/connexion', send: () => {} };
+  // Sans liste d'origines : comportement inchangé (hôte proposé uniquement).
+  assert.equal(gestion.remplir(surSousDomaine, 'context7.com', 'a@x.fr'), false);
+  // Avec le repli : la page affichée reste acceptée.
+  assert.equal(gestion.remplir(surSousDomaine, 'context7.com', 'a@x.fr', ['context7.com', 'login.context7.com']), true);
+  // Un hôte tiers, même dans la liste, n'est pas un identifiant connu : refusé.
+  assert.equal(gestion.remplir(surSousDomaine, 'ailleurs.com', 'a@x.fr', ['ailleurs.com']), false);
 });
 
 test('creer().surFocus : menu proposé, remplissage envoyé à l\'émetteur uniquement', (t) => {
@@ -268,6 +349,109 @@ test('main.js : focus d\'un champ -> menu des identifiants de l\'hôte, rempliss
     handler({ sender: { getURL: () => 'https://autre.com/', send: () => {} } });
     assert.equal(h.electron.appels.menusConstruits.length, 1);
   } finally { h.cleanup(); }
+});
+
+test('main.js : repli #363 — onglet immuable, identifiants du site choisi proposés sur un sous-domaine', (t) => {
+  // Réglages : onglet immuable sur context7.com (le site choisi). Les
+  // identifiants enregistrés le sont pour context7.com ; la page affichée
+  // est sur le sous-domaine login.context7.com.
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-identifiants-fixe-'));
+  fs.mkdirSync(path.join(appDataDir, 'ai-manager'), { recursive: true });
+  fs.writeFileSync(path.join(appDataDir, 'ai-manager', 'identifiants.json'), JSON.stringify({
+    'context7.com': [{ login: 'moi@exemple.fr', secret: Buffer.from('S3cret!', 'utf-8').toString('base64'), ajoute: 1 }]
+  }), 'utf-8');
+  fs.writeFileSync(path.join(appDataDir, 'ai-manager', 'settings.json'), JSON.stringify({
+    ongletFixeActif: true,
+    ongletFixeUrl: 'https://context7.com/connexion'
+  }), 'utf-8');
+  const electron = creerElectronMock(appDataDir);
+  const originalLoad = Module._load;
+  Module._load = function patchedLoad(request) {
+    if (request === 'electron') return electron;
+    return originalLoad.apply(this, arguments);
+  };
+  const sauve = { log: console.log, warn: console.warn, error: console.error };
+  console.log = console.warn = console.error = () => {};
+  try {
+    delete require.cache[MAIN_PATH];
+    require(MAIN_PATH);
+  } finally {
+    Module._load = originalLoad;
+    Object.assign(console, sauve);
+  }
+  try {
+    const handler = electron.ipcHandlers.get('iao-identifiants:focus');
+    assert.ok(typeof handler === 'function');
+    // Émetteur : webview de l'onglet immuable (session persist:onglet-fixe),
+    // page servie depuis le sous-domaine du site choisi.
+    const envoyes = [];
+    const sender = {
+      getURL: () => 'https://login.context7.com/connexion',
+      send: (canal, donnee) => envoyes.push({ canal, donnee }),
+      id: 5150,
+      session: electron.session.fromPartition('persist:onglet-fixe')
+    };
+    assert.equal(handler({ sender }), true, 'menu proposé malgré l\'hôte sans identifiants');
+    const items = electron.appels.menusConstruits[0];
+    assert.deepEqual(items[0], { label: 'context7.com', enabled: false }, 'en-tête = site choisi');
+    assert.equal(items[1].label, 'moi@exemple.fr');
+    // Le remplissage reste possible depuis le sous-domaine affiché.
+    items[1].click();
+    assert.deepEqual(envoyes, [{ canal: 'iao-identifiants:remplir', donnee: { login: 'moi@exemple.fr', motDePasse: 'S3cret!' } }]);
+    // Hors onglet immuable : pas de repli — l'hôte affiché seul compte.
+    const horloge = Date.now();
+    const autre = { getURL: () => 'https://login.context7.com/connexion', send: () => {}, id: 5151, session: electron.session.fromPartition('persist:profil_1') };
+    const { mock } = require('node:test');
+    mock.timers.enable({ apis: ['Date'] });
+    try {
+      mock.timers.setTime(horloge + 5000);
+      assert.equal(handler({ sender: autre }), false, 'pas de repli hors onglet immuable');
+    } finally {
+      mock.timers.reset();
+    }
+  } finally {
+    try { fs.rmSync(appDataDir, { recursive: true, force: true }); } catch (_) {}
+  }
+});
+
+test('main.js : repli #363 — sans site choisi dans les réglages, pas de repli (hôte de secours nul)', (t) => {
+  // Aucun réglage d'onglet immuable : urlOngletFixe vide. Un émetteur sur la
+  // partition de l'onglet immuable (session restante d'un réglage précédent)
+  // ne déclenche AUCUN repli — rien à proposer sans identifiants locaux.
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-identifiants-fixe2-'));
+  fs.mkdirSync(path.join(appDataDir, 'ai-manager'), { recursive: true });
+  fs.writeFileSync(path.join(appDataDir, 'ai-manager', 'identifiants.json'), JSON.stringify({
+    'context7.com': [{ login: 'moi@exemple.fr', secret: Buffer.from('S3cret!', 'utf-8').toString('base64'), ajoute: 1 }]
+  }), 'utf-8');
+  const electron = creerElectronMock(appDataDir);
+  const originalLoad = Module._load;
+  Module._load = function patchedLoad(request) {
+    if (request === 'electron') return electron;
+    return originalLoad.apply(this, arguments);
+  };
+  const sauve = { log: console.log, warn: console.warn, error: console.error };
+  console.log = console.warn = console.error = () => {};
+  try {
+    delete require.cache[MAIN_PATH];
+    require(MAIN_PATH);
+  } finally {
+    Module._load = originalLoad;
+    Object.assign(console, sauve);
+  }
+  try {
+    const handler = electron.ipcHandlers.get('iao-identifiants:focus');
+    assert.ok(typeof handler === 'function');
+    const sender = {
+      getURL: () => 'https://login.context7.com/connexion',
+      send: () => {},
+      id: 6161,
+      session: electron.session.fromPartition('persist:onglet-fixe')
+    };
+    assert.equal(handler({ sender }), false, 'aucun repli sans site choisi');
+    assert.equal(electron.appels.menusConstruits.length, 0);
+  } finally {
+    try { fs.rmSync(appDataDir, { recursive: true, force: true }); } catch (_) {}
+  }
 });
 
 test('main.js : écran/cursor indisponible -> menu quand même proposé, sans position', (t) => {

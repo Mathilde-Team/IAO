@@ -588,6 +588,20 @@ msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un 
 msgstr "This tab cannot be closed or moved; browsing stays on this site, and clicking the tab brings you back to this address. The shared credentials below are used to sign in."
 
 #: index.html
+msgid "Navigateur des liens externes"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système"
+msgstr "Navigateur du système"
+
+#: index.html
+msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
+msgstr ""
+
+#: index.html
 #, fuzzy
 #| msgid "Supprimer le compte"
 msgid "Sauvegarde complète"
@@ -880,6 +894,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} already open"
 
 #: assets/app.js
+msgid "Page précédente"
+msgstr "Page précédente"
+
+#: assets/app.js
+msgid "Page suivante"
+msgstr "Page suivante"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "Reload tab"
 
@@ -898,6 +920,56 @@ msgstr "Sign out of profile \"{profile}\""
 #: assets/app.js
 msgid "{service} ouvert avec {account}"
 msgstr "{service} opened with {account}"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Code copié"
+msgid "Adresse copiée"
+msgstr "Adresse copiée"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Action impossible : {erreur}"
+msgid "Copie impossible : {erreur}"
+msgstr "Copie impossible : {erreur}"
+
+#: assets/app.js
+msgid "Impossible d'ouvrir un nouvel onglet depuis cet onglet"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien ouvert dans un nouvel onglet"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien ouvert dans une nouvelle fenêtre"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Suppression impossible : {erreur}"
+msgid "Ouverture impossible : {erreur}"
+msgstr "Ouverture impossible : {erreur}"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Enregistrement impossible : {erreur}"
+msgid "Ouverture externe impossible : {erreur}"
+msgstr "Ouverture externe impossible : {erreur}"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système ({nom})"
+msgstr "Navigateur du système ({nom})"
+
+#: assets/app.js
+msgid "{nom} — défaut du système"
+msgstr ""
+
+#: assets/app.js
+msgid "Aucun navigateur externe détecté"
+msgstr ""
 
 #: assets/app.js
 msgid "Fermer l'onglet"
@@ -2162,3 +2234,33 @@ msgstr "Accounts restored from the backup"
 #: assets/app.js
 msgid "Compris"
 msgstr "Got it"
+
+#: lib/liens-contexte.js
+msgid "Copier l'adresse du lien"
+msgstr ""
+
+#: lib/liens-contexte.js
+#, fuzzy
+#| msgid "Ouvrir un premier onglet fixe"
+msgid "Ouvrir dans un autre onglet"
+msgstr "Ouvrir dans un autre onglet"
+
+#: lib/liens-contexte.js
+msgid "Ouvrir dans une autre fenêtre"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir avec {navigateur}"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir avec un navigateur externe"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir avec {navigateur} en navigation privée"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir avec un navigateur externe en navigation privée"
+msgstr ""

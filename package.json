@@ -1,6 +1,6 @@
 {
   "name": "iao",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "IAO - gestionnaire multi-comptes IA (Electron, Windows/Linux)",
   "main": "main.js",
   "author": "X'o-noth",
@@ -17,6 +17,7 @@
     "test:electron": "xvfb-run -a electron --no-sandbox test-electron/popups-continue.js",
     "test:electron:ui": "xvfb-run -a electron --no-sandbox test-electron/ui-flows.js",
     "test:electron:identifiants": "xvfb-run -a electron --no-sandbox test-electron/identifiants-continue.js",
+    "test:electron:onglet-fixe": "xvfb-run -a electron --no-sandbox test-electron/onglet-fixe-identifiants.js",
     "test:electron:smoke": "xvfb-run -a node test-electron/smoke-packaged.js",
     "dist:win": "electron-packager . \"IAO\" --platform=win32 --arch=x64 --out=dist --overwrite --prune=true --asar.unpack=**/monaco-editor/** --ignore=\"monaco-editor/(dev|esm|min-maps)\" --ignore=\"monaco-editor/(CHANGELOG|README)\" --ignore=\"editor\\.main\\.nls\\.[a-z-]+\\.js\" --ignore=\"^/(README\\.md|CLAUDE\\.md|FEATURES\\.md|\\.gitignore)$\" --ignore=\"^/docs/(?!THIRD-PARTY-NOTICES\\.md$)\" --ignore=\"^/installer$\" --ignore=\"^/test$\" --ignore=\"^/test-electron$\" --ignore=\"^/install\\.(sh|bat)$\" && node scripts/prune-locales.js",
     "dist:linux": "electron-packager . \"IAO\" --platform=linux --arch=x64 --out=dist --overwrite --prune=true --asar.unpack=**/monaco-editor/** --ignore=\"monaco-editor/(dev|esm|min-maps)\" --ignore=\"monaco-editor/(CHANGELOG|README)\" --ignore=\"editor\\.main\\.nls\\.[a-z-]+\\.js\" --ignore=\"^/(README\\.md|CLAUDE\\.md|FEATURES\\.md|\\.gitignore)$\" --ignore=\"^/docs/(?!THIRD-PARTY-NOTICES\\.md$)\" --ignore=\"^/installer$\" --ignore=\"^/test$\" --ignore=\"^/test-electron$\" --ignore=\"^/install\\.(sh|bat)$\" && node scripts/prune-locales.js",

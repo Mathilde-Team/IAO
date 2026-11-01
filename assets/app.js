@@ -962,6 +962,8 @@
       const toolbar = document.createElement('div');
       toolbar.className = 'tab-toolbar';
       toolbar.innerHTML = `
+        <button type="button" class="tab-toolbar__btn" data-action="tab-back" data-tab="${tabId}" title="${escapeHtml(_('Page précédente'))}" disabled><span class="ic" data-icon="chevron-left"></span></button>
+        <button type="button" class="tab-toolbar__btn" data-action="tab-forward" data-tab="${tabId}" title="${escapeHtml(_('Page suivante'))}" disabled><span class="ic" data-icon="chevron-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
@@ -1001,6 +1003,8 @@
         if (ev.isMainFrame) dbg('onglets', 'échec de chargement', tabId, ev.errorCode, ev.errorDescription);
       });
       brancherMesureReponse(webview, tabId, acc.profile, svcId);
+      brancherMenuContextuel(webview, { accId: acc.id, svcId: svc.id }); // issue #362
+      brancherHistoriqueNavigation(webview, tabId); // issue #364 : précédent / suivant
       saveOpenTabs(); // lot 18/09/2026 : persistance pour startWithLastSession
       renderTabsBar();
       activateTab(tabId);
@@ -1009,6 +1013,188 @@
       // voyait pas encore ce nouvel onglet : on re-rend pour que le badge de
       // statut du compte passe bleu « ouvert » immédiatement (lot 16/09/2026).
       renderAccounts();
+    }
+
+    // Issue #362 : menu contextuel sur les liens des webviews (copier,
+    // ouvrir dans un autre onglet, dans une autre fenêtre, avec le navigateur
+    // externe, en navigation privée). Les libellés et le choix du navigateur
+    // sont des fonctions pures de lib/liens-contexte.js (window.IaoLiens) ;
+    // ici : la desserte du menu (DOM) et les IPC d'exécution.
+    let menuLiensOuvert = null;
+    let navigateursDetectes = null; // { detectes, defautSysteme } (main.js)
+    let settingsNavigateurExterne = ''; // réglage courant ('' = défaut du système)
+
+    function fermerMenuLiens() {
+      if (menuLiensOuvert) { menuLiensOuvert.remove(); menuLiensOuvert = null; }
+    }
+
+    // Fermeture du menu : clic hors du menu, touche Échap, fenêtre perdue
+    // (le menu ne survit pas à un changement de focus).
+    document.addEventListener('click', (e) => {
+      if (menuLiensOuvert && !menuLiensOuvert.contains(e.target)) fermerMenuLiens();
+    }, true);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') fermerMenuLiens();
+    }, true);
+    window.addEventListener('blur', fermerMenuLiens);
+
+    async function rafraichirNavigateursDetectes() {
+      try {
+        navigateursDetectes = await ipcRenderer.invoke('links:navigateurs-detectes');
+      } catch (e) {
+        navigateursDetectes = null; // détection indisponible : libellés génériques
+      }
+    }
+
+    // Nom du navigateur qui s'ouvrira (pour les libellés du menu), ou null :
+    // le menu garde alors des libellés génériques, l'action reste possible.
+    function nomNavigateurPourMenu() {
+      const L = window.IaoLiens;
+      if (!L || !navigateursDetectes) return null;
+      return L.nomNavigateurChoisi(
+        navigateursDetectes.detectes,
+        settingsNavigateurExterne,
+        navigateursDetectes.defautSysteme
+      );
+    }
+
+    // Branche le menu contextuel d'UNE webview. L'événement « context-menu »
+    // arrive sur le webContents de l'invité : il n'est écouté qu'après
+    // dom-ready (getWebContents y est fiable) et une seule fois par webview
+    // (dom-ready se redéclenche à chaque navigation). Sans webContents
+    // accessible : pas de menu, un avertissement — jamais d'erreur bloquante.
+    function brancherMenuContextuel(webview, contexte) {
+      webview.addEventListener('dom-ready', () => {
+        if (webview._menuLiens) return;
+        let contenu = null;
+        try { contenu = webview.getWebContents(); } catch (e) { contenu = null; }
+        if (!contenu || typeof contenu.on !== 'function') {
+          console.warn('[liens] menu contextuel indisponible sur cet onglet');
+          return;
+        }
+        webview._menuLiens = true;
+        contenu.on('context-menu', (evenement, params) => {
+          if (!params || !params.linkURL) return; // clic hors lien : menu du site
+          afficherMenuLiens(webview, params, contexte);
+        });
+      });
+    }
+
+    // Dessine le menu. Les coordonnées de l'événement sont relatives à la
+    // page invitée : converties en coordonnées de fenêtre (mise à l'échelle
+    // de la webview) puis bornées pour rester visible.
+    function afficherMenuLiens(webview, params, contexte) {
+      const L = window.IaoLiens;
+      if (!L) return;
+      const items = L.construireItemsMenu(params.linkURL, nomNavigateurPourMenu());
+      if (!items.length) return; // lien non web : pas de menu
+      fermerMenuLiens();
+      const menu = document.createElement('div');
+      menu.className = 'menu-liens';
+      menu.setAttribute('role', 'menu');
+      for (const item of items) {
+        const bouton = document.createElement('button');
+        bouton.type = 'button';
+        bouton.className = 'menu-liens__item';
+        bouton.setAttribute('role', 'menuitem');
+        bouton.textContent = _(item.cle, item.params);
+        bouton.addEventListener('click', () => {
+          fermerMenuLiens();
+          actionLien(item.id, params.linkURL, contexte);
+        });
+        menu.appendChild(bouton);
+      }
+      document.body.appendChild(menu);
+      const rect = webview.getBoundingClientRect();
+      const echelle = (webview.clientWidth && rect.width) ? rect.width / webview.clientWidth : 1;
+      const x = Math.max(8, Math.min(rect.left + params.x * echelle, window.innerWidth - menu.offsetWidth - 8));
+      const y = Math.max(8, Math.min(rect.top + params.y * echelle, window.innerHeight - menu.offsetHeight - 8));
+      menu.style.left = x + 'px';
+      menu.style.top = y + 'px';
+      menuLiensOuvert = menu;
+    }
+
+    // Exécute l'action choisie. « Ouvrir dans un autre onglet » réutilise
+    // l'onglet du couple (compte, service) du lien, comme l'ordonnanceur
+    // (ouvrirOngletTache) : pas de webview en plus pour le même service.
+    async function actionLien(id, url, contexte) {
+      if (id === 'copier') {
+        try {
+          const r = await ipcRenderer.invoke('links:copier', url);
+          if (r && r.ok) showToast(_('Adresse copiée'), 'success');
+          else showToast(_('Copie impossible : {erreur}', { erreur: (r && r.erreur) || '' }), 'error');
+        } catch (e) {
+          showToast(_('Copie impossible : {erreur}', { erreur: e && e.message }), 'error');
+        }
+        return;
+      }
+      if (id === 'onglet') {
+        const acc = accounts.find(a => a.id === contexte.accId);
+        const svc = SERVICES.find(s => s.id === contexte.svcId);
+        if (!acc || !svc) {
+          showToast(_('Impossible d\'ouvrir un nouvel onglet depuis cet onglet'), 'error');
+          return;
+        }
+        openService(acc.id, svc.id);
+        const onglet = tabs.find(t => t.accId === acc.id && t.svcId === svc.id);
+        const wv = onglet && onglet.paneEl ? onglet.paneEl.querySelector('webview') : null;
+        if (wv) {
+          wv.loadURL(url).catch((e) => dbg('liens', 'ouverture refusée', e && e.message));
+          showToast(_('Lien ouvert dans un nouvel onglet'), 'success');
+        }
+        return;
+      }
+      if (id === 'fenetre') {
+        try {
+          const r = await ipcRenderer.invoke('links:ouvrir-fenetre', { url, partition: contexte.partition });
+          if (r && r.ok) showToast(_('Lien ouvert dans une nouvelle fenêtre'), 'success');
+          else showToast(_('Ouverture impossible : {erreur}', { erreur: (r && r.erreur) || '' }), 'error');
+        } catch (e) {
+          showToast(_('Ouverture impossible : {erreur}', { erreur: e && e.message }), 'error');
+        }
+        return;
+      }
+      if (id === 'navigateur' || id === 'navigateur-prive') {
+        try {
+          const r = (id === 'navigateur')
+            ? await ipcRenderer.invoke('links:ouvrir-externe', url)
+            : await ipcRenderer.invoke('links:ouvrir-externe-prive', url);
+          if (!(r && r.ok)) showToast(_('Ouverture externe impossible : {erreur}', { erreur: (r && r.erreur) || '' }), 'error');
+        } catch (e) {
+          showToast(_('Ouverture externe impossible : {erreur}', { erreur: e && e.message }), 'error');
+        }
+      }
+    }
+
+    // Issue #362 : réglage « navigateur externe » — options remplies depuis
+    // la détection du main ; '' = navigateur par défaut du système.
+    function remplirSelectNavigateurExterne(valeur) {
+      const select = document.getElementById('settingsExternalBrowser');
+      if (!select) return;
+      const etat = navigateursDetectes || {};
+      const liste = Array.isArray(etat.detectes) ? etat.detectes : [];
+      const defaut = etat.defautSysteme || null;
+      select.textContent = '';
+      const optionDefaut = document.createElement('option');
+      optionDefaut.value = '';
+      const nomDefaut = (defaut && liste.find(n => n.id === defaut)) || null;
+      optionDefaut.textContent = nomDefaut
+        ? _('Navigateur du système ({nom})', { nom: nomDefaut.nom })
+        : _('Navigateur du système');
+      select.appendChild(optionDefaut);
+      for (const n of liste) {
+        const option = document.createElement('option');
+        option.value = n.id;
+        option.textContent = (n.id === defaut ? _('{nom} — défaut du système', { nom: n.nom }) : n.nom);
+        select.appendChild(option);
+      }
+      if (!liste.length) {
+        const vide = document.createElement('option');
+        vide.value = '';
+        vide.textContent = _('Aucun navigateur externe détecté');
+        select.appendChild(vide);
+      }
+      select.value = liste.some(n => n.id === valeur) ? valeur : '';
     }
 
     // Issue #206 : temps de réponse des messages envoyés à la main. Le script
@@ -1106,6 +1292,7 @@
       });
       pane.appendChild(webview);
       document.getElementById('tabsContent').appendChild(pane);
+      brancherMenuContextuel(webview, { accId: null, svcId: null }); // issue #362
       ongletFixe = { url: conf.url, paneEl: pane, webview };
       dbg('onglets', 'onglet fixe ouvert', OF.libelle(conf.url));
       if (!activeTabId) activateTab(OF.ID_ONGLET);
@@ -1481,6 +1668,53 @@
       return 'menu';
     };
 
+    // Issue #364 : boutons précédent / suivant (historique de navigation de
+    // l'onglet). L'état (peut-on reculer / avancer) suit le webview ; les
+    // boutons sont désactivés quand l'historique ne le permet pas.
+    function majBoutonsHistorique(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (!tab) return;
+      const webview = tab.paneEl.querySelector('webview');
+      let peutReculer = false;
+      let peutAvancer = false;
+      if (webview) {
+        // canGoBack / canGoForward lèvent une erreur tant que le webview
+        // n'a pas émis dom-ready : dans ce cas, rien à proposer (les
+        // boutons restent désactivés, leur état initial).
+        try {
+          peutReculer = typeof webview.canGoBack === 'function' && webview.canGoBack();
+          peutAvancer = typeof webview.canGoForward === 'function' && webview.canGoForward();
+        } catch (e) { /* webview pas encore prêt */ }
+      }
+      const btnPrecedent = tab.paneEl.querySelector(`[data-action="tab-back"][data-tab="${tabId}"]`);
+      const btnSuivant = tab.paneEl.querySelector(`[data-action="tab-forward"][data-tab="${tabId}"]`);
+      if (btnPrecedent) btnPrecedent.disabled = !peutReculer;
+      if (btnSuivant) btnSuivant.disabled = !peutAvancer;
+    }
+
+    // did-navigate : navigation principale ; did-navigate-in-page : ancres et
+    // applications monopage ; dom-ready : première charge (état initial).
+    function brancherHistoriqueNavigation(webview, tabId) {
+      majBoutonsHistorique(tabId);
+      webview.addEventListener('dom-ready', () => majBoutonsHistorique(tabId));
+      webview.addEventListener('did-navigate', () => majBoutonsHistorique(tabId));
+      webview.addEventListener('did-navigate-in-page', () => majBoutonsHistorique(tabId));
+    }
+
+    function tabGoBack(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (!tab) return;
+      const webview = tab.paneEl.querySelector('webview');
+      if (webview && webview.canGoBack && webview.canGoBack()) webview.goBack();
+    }
+
+    function tabGoForward(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (!tab) return;
+      const webview = tab.paneEl.querySelector('webview');
+      if (webview && webview.canGoForward && webview.canGoForward()) webview.goForward();
+    }
+
     function tabGoHome(tabId) {
       const tab = tabs.find(t => t.id === tabId);
       if (!tab) return;
@@ -1538,6 +1772,8 @@
       const tabId = el.getAttribute('data-tab');
       const action = el.getAttribute('data-action');
       if (action === 'tab-reload') reloadTab(tabId);
+      else if (action === 'tab-back') tabGoBack(tabId);
+      else if (action === 'tab-forward') tabGoForward(tabId);
       else if (action === 'tab-home') tabGoHome(tabId);
       else if (action === 'tab-devtools') toggleTabDevTools(tabId);
       else if (action === 'tab-disconnect') openDisconnectModal(tabId);
@@ -3469,6 +3705,10 @@
         document.getElementById('settingsMailApiKey').value = '';
         document.getElementById('settingsOngletFixeActif').checked = settings.ongletFixeActif === true;
         document.getElementById('settingsOngletFixeUrl').value = settings.ongletFixeUrl || '';
+        // Issue #362 : navigateur externe des liens — détection puis options.
+        settingsNavigateurExterne = settings.navigateurExterne || '';
+        await rafraichirNavigateursDetectes();
+        remplirSelectNavigateurExterne(settingsNavigateurExterne);
         appliquerOngletFixe(settings); // issue #338
         loadedLanguage = settings.language || 'auto';
         const langSelect = document.getElementById('settingsLanguage');
@@ -3495,7 +3735,8 @@
         webmailUrl: document.getElementById('settingsWebmailUrl').value,
         mailApiUrl: document.getElementById('settingsMailApiUrl').value,
         ongletFixeActif: document.getElementById('settingsOngletFixeActif').checked,
-        ongletFixeUrl: document.getElementById('settingsOngletFixeUrl').value
+        ongletFixeUrl: document.getElementById('settingsOngletFixeUrl').value,
+        navigateurExterne: (document.getElementById('settingsExternalBrowser') || { value: '' }).value
       };
       // Issue #338 : onglet fixe coché sans adresse https valide -> rien n'est enregistré.
       if (raw.ongletFixeActif && !window.normalizeOngletFixeUrl(raw.ongletFixeUrl)) {
