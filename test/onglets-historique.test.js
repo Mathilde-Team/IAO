@@ -30,6 +30,10 @@ test('app.js place les boutons précédent / suivi avant le bouton recharger', (
 test('app.js actualise l\'état des boutons à chaque navigation', () => {
   // La source de vérité est le webview : canGoBack / canGoForward.
   assert.match(APP, /function majBoutonsHistorique\(tabId\) \{/);
+  // Avant dom-ready, ces méthodes lèvent une erreur : l'appel est protégé
+  // (les boutons restent désactivés dans ce cas).
+  assert.match(APP, /try \{\s*\n\s*peutReculer = typeof webview\.canGoBack === 'function' && webview\.canGoBack\(\);/);
+  assert.match(APP, /catch \(e\) \{ \/\* webview pas encore prêt \*\/ \}/);
   assert.match(APP, /webview\.canGoBack\(\)/);
   assert.match(APP, /webview\.canGoForward\(\)/);
   assert.match(APP, /btnPrecedent\.disabled = !peutReculer;/);

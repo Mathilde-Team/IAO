@@ -1675,8 +1675,17 @@
       const tab = tabs.find(t => t.id === tabId);
       if (!tab) return;
       const webview = tab.paneEl.querySelector('webview');
-      const peutReculer = !!(webview && typeof webview.canGoBack === 'function' && webview.canGoBack());
-      const peutAvancer = !!(webview && typeof webview.canGoForward === 'function' && webview.canGoForward());
+      let peutReculer = false;
+      let peutAvancer = false;
+      if (webview) {
+        // canGoBack / canGoForward lèvent une erreur tant que le webview
+        // n'a pas émis dom-ready : dans ce cas, rien à proposer (les
+        // boutons restent désactivés, leur état initial).
+        try {
+          peutReculer = typeof webview.canGoBack === 'function' && webview.canGoBack();
+          peutAvancer = typeof webview.canGoForward === 'function' && webview.canGoForward();
+        } catch (e) { /* webview pas encore prêt */ }
+      }
       const btnPrecedent = tab.paneEl.querySelector(`[data-action="tab-back"][data-tab="${tabId}"]`);
       const btnSuivant = tab.paneEl.querySelector(`[data-action="tab-forward"][data-tab="${tabId}"]`);
       if (btnPrecedent) btnPrecedent.disabled = !peutReculer;
