@@ -902,6 +902,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} כבר פתוח"
 
 #: assets/app.js
+msgid "Page précédente"
+msgstr "Page précédente"
+
+#: assets/app.js
+msgid "Page suivante"
+msgstr "Page suivante"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "טעינה מחדש של הכרטיסייה"
 

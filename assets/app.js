@@ -962,6 +962,8 @@
       const toolbar = document.createElement('div');
       toolbar.className = 'tab-toolbar';
       toolbar.innerHTML = `
+        <button type="button" class="tab-toolbar__btn" data-action="tab-back" data-tab="${tabId}" title="${escapeHtml(_('Page précédente'))}" disabled><span class="ic" data-icon="chevron-left"></span></button>
+        <button type="button" class="tab-toolbar__btn" data-action="tab-forward" data-tab="${tabId}" title="${escapeHtml(_('Page suivante'))}" disabled><span class="ic" data-icon="chevron-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
@@ -1002,6 +1004,7 @@
       });
       brancherMesureReponse(webview, tabId, acc.profile, svcId);
       brancherMenuContextuel(webview, { accId: acc.id, svcId: svc.id }); // issue #362
+      brancherHistoriqueNavigation(webview, tabId); // issue #364 : précédent / suivant
       saveOpenTabs(); // lot 18/09/2026 : persistance pour startWithLastSession
       renderTabsBar();
       activateTab(tabId);
@@ -1665,6 +1668,44 @@
       return 'menu';
     };
 
+    // Issue #364 : boutons précédent / suivant (historique de navigation de
+    // l'onglet). L'état (peut-on reculer / avancer) suit le webview ; les
+    // boutons sont désactivés quand l'historique ne le permet pas.
+    function majBoutonsHistorique(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (!tab) return;
+      const webview = tab.paneEl.querySelector('webview');
+      const peutReculer = !!(webview && typeof webview.canGoBack === 'function' && webview.canGoBack());
+      const peutAvancer = !!(webview && typeof webview.canGoForward === 'function' && webview.canGoForward());
+      const btnPrecedent = tab.paneEl.querySelector(`[data-action="tab-back"][data-tab="${tabId}"]`);
+      const btnSuivant = tab.paneEl.querySelector(`[data-action="tab-forward"][data-tab="${tabId}"]`);
+      if (btnPrecedent) btnPrecedent.disabled = !peutReculer;
+      if (btnSuivant) btnSuivant.disabled = !peutAvancer;
+    }
+
+    // did-navigate : navigation principale ; did-navigate-in-page : ancres et
+    // applications monopage ; dom-ready : première charge (état initial).
+    function brancherHistoriqueNavigation(webview, tabId) {
+      majBoutonsHistorique(tabId);
+      webview.addEventListener('dom-ready', () => majBoutonsHistorique(tabId));
+      webview.addEventListener('did-navigate', () => majBoutonsHistorique(tabId));
+      webview.addEventListener('did-navigate-in-page', () => majBoutonsHistorique(tabId));
+    }
+
+    function tabGoBack(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (!tab) return;
+      const webview = tab.paneEl.querySelector('webview');
+      if (webview && webview.canGoBack && webview.canGoBack()) webview.goBack();
+    }
+
+    function tabGoForward(tabId) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (!tab) return;
+      const webview = tab.paneEl.querySelector('webview');
+      if (webview && webview.canGoForward && webview.canGoForward()) webview.goForward();
+    }
+
     function tabGoHome(tabId) {
       const tab = tabs.find(t => t.id === tabId);
       if (!tab) return;
@@ -1722,6 +1763,8 @@
       const tabId = el.getAttribute('data-tab');
       const action = el.getAttribute('data-action');
       if (action === 'tab-reload') reloadTab(tabId);
+      else if (action === 'tab-back') tabGoBack(tabId);
+      else if (action === 'tab-forward') tabGoForward(tabId);
       else if (action === 'tab-home') tabGoHome(tabId);
       else if (action === 'tab-devtools') toggleTabDevTools(tabId);
       else if (action === 'tab-disconnect') openDisconnectModal(tabId);

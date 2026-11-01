@@ -879,6 +879,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr ""
 
 #: assets/app.js
+msgid "Page précédente"
+msgstr ""
+
+#: assets/app.js
+msgid "Page suivante"
+msgstr ""
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr ""
 
