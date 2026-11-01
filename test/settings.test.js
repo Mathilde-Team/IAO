@@ -12,7 +12,7 @@ var settings = require('../lib/settings');
 
 test('DEFAULT_SETTINGS contient toutes les cles attendues', function() {
   var keys = Object.keys(settings.DEFAULT_SETTINGS);
-  var expected = ['editorFontSize', 'editorWordWrap', 'theme', 'confirmTabClose', 'showAutomationWindows', 'startWithLastSession', 'harCapture', 'language', 'mailPrefix', 'mailDomain', 'webmailUrl', 'mailApiUrl', 'ongletFixeActif', 'ongletFixeUrl'];
+  var expected = ['editorFontSize', 'editorWordWrap', 'theme', 'confirmTabClose', 'showAutomationWindows', 'startWithLastSession', 'harCapture', 'language', 'mailPrefix', 'mailDomain', 'webmailUrl', 'mailApiUrl', 'ongletFixeActif', 'ongletFixeUrl', 'navigateurExterne'];
   assert.deepStrictEqual(keys.sort(), expected.sort());
 });
 
