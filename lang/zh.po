@@ -887,6 +887,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} 已打开"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "在浏览历史中后退"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "在浏览历史中前进"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "重新加载标签页"
 

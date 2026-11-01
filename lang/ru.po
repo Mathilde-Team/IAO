@@ -889,6 +889,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} уже открыт"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "Вернуться назад в журнале посещений"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "Перейти вперёд в журнале посещений"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "Перезагрузить вкладку"
 

@@ -888,6 +888,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} पहले से खुला है"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "नेविगेशन इतिहास में पीछे जाएँ"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "नेविगेशन इतिहास में आगे बढ़ें"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "टैब पुनः लोड करें"
 

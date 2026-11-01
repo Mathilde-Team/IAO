@@ -962,6 +962,8 @@
       const toolbar = document.createElement('div');
       toolbar.className = 'tab-toolbar';
       toolbar.innerHTML = `
+        <button type="button" class="tab-toolbar__btn" data-action="tab-back" data-tab="${tabId}" title="${escapeHtml(_('Revenir en arrière dans l\'historique de navigation'))}" disabled><span class="ic" data-icon="chevron-left"></span></button>
+        <button type="button" class="tab-toolbar__btn" data-action="tab-forward" data-tab="${tabId}" title="${escapeHtml(_('Avancer dans l\'historique de navigation'))}" disabled><span class="ic" data-icon="chevron-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-reload" data-tab="${tabId}" title="${escapeHtml(_('Recharger l\'onglet'))}"><span class="ic" data-icon="arrow-rotate-right"></span></button>
         <button type="button" class="tab-toolbar__btn" data-action="tab-home" data-tab="${tabId}" title="${escapeHtml(_('Revenir à l\'accueil de {service}', { service: svc.name }))}"><span class="ic" data-icon="house"></span></button>
         <button type="button" class="tab-toolbar__btn tab-toolbar__btn--debug" data-action="tab-devtools" data-tab="${tabId}" title="${escapeHtml(_('Outils de développement de l\'onglet (mode debug)'))}"><span class="ic" data-icon="bug"></span></button>
@@ -1539,6 +1541,8 @@
       const action = el.getAttribute('data-action');
       if (action === 'tab-reload') reloadTab(tabId);
       else if (action === 'tab-home') tabGoHome(tabId);
+      else if (action === 'tab-back') tabGoBack(tabId);
+      else if (action === 'tab-forward') tabGoForward(tabId);
       else if (action === 'tab-devtools') toggleTabDevTools(tabId);
       else if (action === 'tab-disconnect') openDisconnectModal(tabId);
     });

@@ -887,6 +887,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} 이미 열려 있음"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "탐색 기록에서 뒤로 가기"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "탐색 기록에서 앞으로 가기"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "탭 새로 고침"
 

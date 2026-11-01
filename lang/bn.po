@@ -888,6 +888,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} আগেই খোলা"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "নেভিগেশন ইতিহাসে পিছনে যান"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "নেভিগেশন ইতিহাসে এগিয়ে যান"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "ট্যাব পুনরায় লোড করুন"
 

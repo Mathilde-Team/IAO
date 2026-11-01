@@ -888,6 +888,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} on jo auki"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "Siirry taaksepäin siirtymähistoriassa"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "Siirry eteenpäin siirtymähistoriassa"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "Lataa välilehti uudelleen"
 

@@ -888,6 +888,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} از قبل باز است"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "بازگشت به عقب در تاریخچه پیمایش"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "جلو رفتن در تاریخچه پیمایش"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "بارگذاری مجدد زبانه"
 

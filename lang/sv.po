@@ -888,6 +888,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} redan öppen"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "Gå bakåt i navigeringshistoriken"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "Gå framåt i navigeringshistoriken"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "Ladda om fliken"
 

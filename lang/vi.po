@@ -887,6 +887,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} đã mở"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "Quay lại trong lịch sử duyệt web"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "Tiến tới trong lịch sử duyệt web"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "Tải lại tab"
 

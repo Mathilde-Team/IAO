@@ -887,6 +887,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} เปิดอยู่แล้ว"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "ย้อนกลับในประวัติการเรียกดู"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "เดินหน้าในประวัติการเรียกดู"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "โหลดแท็บใหม่"
 

@@ -1,3 +1,26 @@
+## Issue #364 — boutons précédent / suivant dans l'historique d'un onglet (01/11/2026)
+
+### Ajouté
+- La barre d'outils de chaque onglet gagne deux boutons, à côté de « recharger » et
+  « accueil » : précédent / suivant dans l'historique de navigation de la `<webview>`
+  (`webview.goBack()` / `webview.goForward()`), sur le modèle des boutons d'un navigateur.
+- Les deux boutons sont désactivés (opacité réduite, non cliquables) quand l'historique ne
+  le permet pas : page initiale d'un onglet neuf, extrémité de l'historique. L'état est
+  recalculé à chaque navigation complète (`did-navigate`), interne aux applications
+  monopages (`did-navigate-in-page`) et au (re)chargement (`dom-ready`). Par sécurité, le
+  clic vérifie `canGoBack()` / `canGoForward()` avant d'agir.
+- L'état activé/désactivé est calculé par un helper pur (`lib/navigation-onglets.js`,
+  `window.iaoNavigationOnglets`, même pattern que `lib/defilement-onglets.js`) : le pilotage
+  réel de la `<webview>` et l'application au DOM restent dans `assets/app.js`.
+- i18n : 2 nouvelles chaînes (« Revenir en arrière dans l'historique de navigation »,
+  « Avancer dans l'historique de navigation »), traduites à la main dans les 30 langues.
+
+### Tests
+- `test/navigation-onglets.test.js` (5 tests) : états des deux boutons selon l'historique,
+  tolérance aux valeurs absentes (webview pas prête), exposition sur `window` (branche
+  navigateur). Couverture de `lib/navigation-onglets.js` : 100 % lignes / branches /
+  fonctions.
+
 ## Issue #357 — création de comptes de messagerie via mail-accounts-api (31/10/2026)
 
 ### Ajouté

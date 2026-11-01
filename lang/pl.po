@@ -889,6 +889,14 @@ msgid "{service} — {account} déjà ouvert"
 msgstr "{service} — {account} już otwarte"
 
 #: assets/app.js
+msgid "Revenir en arrière dans l'historique de navigation"
+msgstr "Wróć w historii nawigacji"
+
+#: assets/app.js
+msgid "Avancer dans l'historique de navigation"
+msgstr "Przejdź naprzód w historii nawigacji"
+
+#: assets/app.js
 msgid "Recharger l'onglet"
 msgstr "Odśwież kartę"
 
