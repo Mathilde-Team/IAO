@@ -1,3 +1,48 @@
+## Issue #364 — boutons précédent / suivant dans la barre de l'onglet (01/11/2026)
+
+### Ajouté
+- À côté des boutons accueil et recharger de chaque onglet : deux nouveaux
+  boutons « précédent » / « suivant » qui suivent l'historique de navigation du
+  webview de l'onglet. Désactivés tant qu'on ne peut pas reculer / avancer
+  (état recalculé à `dom-ready`, `did-navigate` et `did-navigate-in-page`),
+  le clic délègue à `webview.goBack()` / `goForward()`. L'onglet immuable, sans
+  barre d'onglet, n'est pas concerné.
+- Correctif au passage : `canGoBack` / `canGoForward` lèvent une erreur avant
+  `dom-ready` — l'état est désormais calculé sous protection, les boutons
+  restant désactivés dans ce cas.
+
+### Tests
+- `test/onglets-historique.test.js` (câblage vérifié par analyse textuelle) ;
+  harnais Electron (xvfb) : 71/71.
+
+## Issue #363 — l'onglet immuable propose les identifiants du site choisi (01/11/2026)
+
+### Ajouté
+- Le menu « identifiants » au focus d'un champ de connexion fonctionne
+  désormais dans l'onglet immuable, même après une redirection vers un
+  sous-domaine du site choisi (ex. login.exemple.com quand les identifiants
+  sont pour exemple.com) : repli sur l'hôte de l'onglet immuable quand la page
+  n'a pas d'identifiants pour son propre hôte. Les identifiants de l'hôte de
+  la page restent prioritaires.
+
+### Tests
+- `test/identifiants-focus.test.js` (16 tests) ; harnais
+  `test-electron/onglet-fixe-identifiants.js` (9 assertions, dont la phase
+  sous-domaine), exécuté en CI (`test:electron:onglet-fixe`).
+
+## Issue #362 — menu contextuel sur les liens des webviews (01/11/2026)
+
+### Ajouté
+- Clic droit sur un lien dans un onglet : menu « Copier l'adresse », « Ouvrir
+  dans un autre onglet », « dans une autre fenêtre », « avec le navigateur
+  externe », « en navigation privée » (fonctions pures dans
+  `lib/liens-contexte.js`). Réglage du navigateur externe dans les options.
+  Un lien non web n'affiche pas de menu.
+
+### Tests
+- `test/liens-contexte.test.js`, `test/liens-contexte-app.test.js`,
+  extensions `test/main-harness.test.js` et `test/settings.test.js`.
+
 ## Issue #357 — création de comptes de messagerie via mail-accounts-api (31/10/2026)
 
 ### Ajouté
