@@ -123,7 +123,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-builds
-          path: release-assets
+          # L'artefact contient le CONTENU de dist/IAO-win32-x64 à sa racine
+          # (upload-artifact prend le plus proche ancêtre commun comme racine) :
+          # on le décompresse DANS release-assets/IAO-win32-x64 pour que le
+          # dossier attendu par l'étape « Création du zip Windows » existe.
+          path: release-assets/IAO-win32-x64
 
       - name: Création du zip Windows
         run: |
