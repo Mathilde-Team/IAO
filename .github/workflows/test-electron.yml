@@ -74,6 +74,9 @@ jobs:
       - name: Tests d'intégration Electron (identifiants partagés, #278)
         run: npm run test:electron:identifiants
 
+      - name: Tests d'intégration Electron (onglet immuable et identifiants, #363)
+        run: npm run test:electron:onglet-fixe
+
       - name: Tests UI Electron (comptes, onglets, réglages, explorateur)
         env:
           # C7.5 (issue #51) : captures fr / ar et rapport de la vérification RTL.

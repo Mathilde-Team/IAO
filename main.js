@@ -960,7 +960,14 @@ const gestionFocusIdentifiants = focusIdentifiants.creer({
   journal: log.bind(null, 'identifiants'),
   canalRemplir: 'iao-identifiants:remplir', // = CANAL_REMPLIR de lib/identifiants-preload.js
   fenetrePour: (wc) => fenetresFilles.get(wc.id) || mainWindow,
-  pointeur: () => { try { return screen.getCursorScreenPoint(); } catch (_) { return null; } }
+  pointeur: () => { try { return screen.getCursorScreenPoint(); } catch (_) { return null; } },
+  // Issue #363 : dans l'onglet immuable, le site choisi peut servir sa page
+  // de connexion depuis un sous-domaine (le verrou l'autorise). Si l'hôte
+  // affiché n'a pas d'identifiants, on propose ceux du site choisi.
+  hoteDeSecours: (wc) => {
+    if (!estOngletFixe(wc) || !urlOngletFixe) return null;
+    return hostOf(urlOngletFixe);
+  }
 });
 ipcMain.on('iao-identifiants:focus', gestionFocusIdentifiants.surFocus);
 // Le preload est posé sur chaque session créée (l'app crée les partitions des
