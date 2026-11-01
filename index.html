@@ -57,6 +57,7 @@
 <script src="lib/magasin-preferences.js"></script>
 <script src="lib/comptes-serie.js"></script>
 <script src="lib/mail-api.js"></script>
+<script src="lib/liens-contexte.js"></script>
 <!-- Issue #333 : profil tiré du nom du compte, libellé « nom - adresse mail ». -->
 <script src="lib/profil-compte.js"></script>
 <script src="lib/service-icons.js"></script>
@@ -610,6 +611,16 @@
         <label class="settings-label" for="settingsOngletFixeUrl">Adresse du premier onglet</label>
         <input type="url" id="settingsOngletFixeUrl" class="settings-input settings-input--wide" placeholder="https://github.com/Mathilde-Team" spellcheck="false">
         <span class="settings-hint">Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter.</span>
+      </div>
+
+      <!-- Navigateur externe pour les liens (issue #362) : options ajoutées
+           par assets/app.js depuis la détection du système. -->
+      <div>
+        <label class="settings-label" for="settingsExternalBrowser">Navigateur des liens externes</label>
+        <select id="settingsExternalBrowser" class="settings-select">
+          <option value="">Navigateur du système</option>
+        </select>
+        <span class="settings-hint">Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée</span>
       </div>
 
       <!-- Sauvegarde complète (issue #329) : zip du dossier de données,

@@ -815,6 +815,108 @@ ipc.handle('settings:save', async (event, rawSettings) => {
   }
 });
 
+// --- Issue #362 : menu contextuel des liens et navigateur externe ---
+// Les décisions pures (libellés du menu, ligne de commande, choix du
+// navigateur) vivent dans lib/liens-contexte.js ; ici, l'exécution effective :
+// presse-papiers, shell.openExternal, BrowserWindow, processus externe, et
+// la détection des navigateurs du système.
+const liens = require('./lib/liens-contexte');
+const { spawn } = require('child_process');
+const { clipboard } = require('electron');
+
+// Développe les variables d'environnement des chemins candidats (%ProgramFiles%,
+// propres à Windows) : le module lib/ reste pur, sans accès à l'environnement.
+function developperChemin(chemin) {
+  return chemin.replace(/%([^%]+)%/g, (correspondance, nom) =>
+    (process.env[nom] !== undefined ? process.env[nom] : correspondance));
+}
+
+// Navigateurs détectés sur la machine + id du défaut du système (via le nom
+// applicatif que le système associe au protocole https).
+function etatNavigateurs() {
+  const candidats = liens.candidatsNavigateurs(process.platform);
+  // fs.existsSync ne lève pas (il renvoie false) et developperChemin est
+  // purement textuel : pas de try/catch ici, une erreur serait un bug à
+  // corriger, pas à masquer.
+  const detectes = liens.detecterNavigateurs(candidats, (c) =>
+    fs.existsSync(developperChemin(c)));
+  let defautSysteme = null;
+  let nomSysteme = '';
+  try {
+    nomSysteme = app.getApplicationNameForProtocol('https://example.org/');
+  } catch (_) { /* API indisponible : pas de défaut détecté */ }
+  if (typeof nomSysteme === 'string' && nomSysteme) {
+    const cible = detectes.find((n) => liens.correspondDefautSysteme(nomSysteme, n));
+    if (cible) defautSysteme = cible.id;
+  }
+  return { detectes, defautSysteme };
+}
+
+// Copie l'adresse du lien (http/https uniquement, comme le reste du menu).
+ipc.handle('links:copier', (event, url) => {
+  if (!liens.estUrlWeb(url)) return { ok: false, erreur: 'adresse non web' };
+  clipboard.writeText(url);
+  return { ok: true };
+});
+
+// Ouvre le lien dans le navigateur par défaut du système.
+ipc.handle('links:ouvrir-externe', async (event, url) => {
+  if (!liens.estUrlWeb(url)) return { ok: false, erreur: 'adresse non web' };
+  try {
+    await shell.openExternal(url);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erreur: (e && e.message) ? e.message : String(e) };
+  }
+});
+
+// Ouvre le lien dans une nouvelle fenêtre IAO, dans la session de l'onglet
+// d'origine (les liens d'un service s'y ouvrent connectés).
+ipc.handle('links:ouvrir-fenetre', (event, charge) => {
+  const url = charge && charge.url;
+  if (!liens.estUrlWeb(url)) return { ok: false, erreur: 'adresse non web' };
+  const enfant = new BrowserWindow({
+    width: 1280,
+    height: 840,
+    webPreferences: {
+      partition: (typeof charge.partition === 'string' && charge.partition) ? charge.partition : undefined,
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+  enfant.loadURL(url).catch((e) => debug('liens', 'chargement refusé : ' + (e && e.message)));
+  return { ok: true };
+});
+
+// Ouvre le lien dans le navigateur externe choisi (réglage « navigateurExterne »,
+// défaut du système sinon), en navigation privée. Le drapeau de navigation
+// privée est celui du navigateur (lib/liens-contexte.js) : jamais deviné.
+ipc.handle('links:ouvrir-externe-prive', async (event, url) => {
+  if (!liens.estUrlWeb(url)) return { ok: false, erreur: 'adresse non web' };
+  const { detectes, defautSysteme } = etatNavigateurs();
+  let preference = '';
+  try {
+    const brut = await fsPromises.readFile(settingsPath, 'utf-8');
+    preference = normalizeSettings(JSON.parse(brut)).navigateurExterne;
+  } catch (_) { /* réglages absents ou illisibles : défaut du système */ }
+  const navigateur = liens.choisirNavigateur(detectes, preference, defautSysteme);
+  if (!navigateur) return { ok: false, erreur: 'aucun navigateur externe détecté' };
+  if (liens.drapeauPrive(navigateur.id) === '') {
+    return { ok: false, erreur: 'navigation privée non prise en charge pour ' + navigateur.nom };
+  }
+  const ligne = liens.construireLigneCommande(navigateur, url, true);
+  try {
+    const processus = spawn(ligne.commande, ligne.args, { detached: true, stdio: 'ignore' });
+    processus.unref();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erreur: (e && e.message) ? e.message : String(e) };
+  }
+});
+
+// Liste des navigateurs détectés pour le réglage de l'interface.
+ipc.handle('links:navigateurs-detectes', () => etatNavigateurs());
+
 // --- Issue #201 : mots de passe de messagerie (chiffrés) et webmail ---
 const connexionsWebmail = creerFileConnexions();
 registerComptesIPC(ipc, {
