@@ -596,6 +596,20 @@ msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un 
 msgstr ""
 
 #: index.html
+msgid "Navigateur des liens externes"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système"
+msgstr "Navigateur du système"
+
+#: index.html
+msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
+msgstr ""
+
+#: index.html
 #, fuzzy
 #| msgid "Supprimer le compte"
 msgid "Sauvegarde complète"
@@ -918,6 +932,54 @@ msgstr "تسجيل الخروج من الملف الشخصي «{profile}»"
 #: assets/app.js
 msgid "{service} ouvert avec {account}"
 msgstr "فُتح {service} باستخدام {account}"
+
+#: assets/app.js
+msgid "Adresse copiée"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Action impossible : {erreur}"
+msgid "Copie impossible : {erreur}"
+msgstr "Copie impossible : {erreur}"
+
+#: assets/app.js
+msgid "Impossible d'ouvrir un nouvel onglet depuis cet onglet"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien ouvert dans un nouvel onglet"
+msgstr ""
+
+#: assets/app.js
+msgid "Lien ouvert dans une nouvelle fenêtre"
+msgstr ""
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Suppression impossible : {erreur}"
+msgid "Ouverture impossible : {erreur}"
+msgstr "Ouverture impossible : {erreur}"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Enregistrement impossible : {erreur}"
+msgid "Ouverture externe impossible : {erreur}"
+msgstr "Ouverture externe impossible : {erreur}"
+
+#: assets/app.js
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système ({nom})"
+msgstr "Navigateur du système ({nom})"
+
+#: assets/app.js
+msgid "{nom} — défaut du système"
+msgstr ""
+
+#: assets/app.js
+msgid "Aucun navigateur externe détecté"
+msgstr ""
 
 #: assets/app.js
 msgid "Fermer l'onglet"
@@ -2250,3 +2312,31 @@ msgstr "استُعيدت الحسابات من النسخة الاحتياطية
 #: assets/app.js
 msgid "Compris"
 msgstr "فهمت"
+
+#: lib/liens-contexte.js
+msgid "Copier l'adresse du lien"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir dans un autre onglet"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir dans une autre fenêtre"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir avec {navigateur}"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir avec un navigateur externe"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir avec {navigateur} en navigation privée"
+msgstr ""
+
+#: lib/liens-contexte.js
+msgid "Ouvrir avec un navigateur externe en navigation privée"
+msgstr ""
