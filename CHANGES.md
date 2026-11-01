@@ -1,3 +1,66 @@
+## Issue #363 — onglet fixe : identifiants du site choisi proposés au focus (01/11/2026)
+
+### Corrigé
+- Dans l'onglet fixe, le menu d'identifiants (focus d'un champ de connexion) ne proposait que
+  les identifiants de l'hôte exact de la page : rien n'était proposé si l'identifiant était
+  enregistré pour un autre hôte du site choisi (www vs racine, sous-domaine de connexion).
+  Désormais tous les identifiants des hôtes du site de l'onglet fixe sont proposés — la
+  navigation y est verrouillée sur ce site (`lib/onglet-fixe.js`).
+- Chaque entrée du menu porte l'hôte d'origine de l'identifiant ; le remplissage n'envoie
+  le secret que si la page ET l'hôte de l'identifiant font partie du site choisi (garde
+  étendue de `remplir`, secret jamais envoyé hors du site). Onglets de comptes :
+  comportement inchangé.
+
+### Tests
+- `test/identifiants-focus.test.js` : `loginsDuSite` (fusion, hôtes du site, refus hors
+  site), `doitProposer` avec/sans site, `remplir` onglet fixe (origine et hôte dans le
+  site), intégration `main.js` (focus depuis la session `persist:onglet-fixe`, réglages
+  avec onglet fixe configuré). 18 tests verts ; `lib/identifiants-focus.js` et `main.js` à
+  100 % lignes / branches / fonctions.
+
+## Issue #364 — boutons précédent / suivant dans l'historique d'un onglet (01/11/2026)
+
+### Ajouté
+- La barre d'outils de chaque onglet gagne deux boutons, à côté de « recharger » et
+  « accueil » : précédent / suivant dans l'historique de navigation de la `<webview>`
+  (`webview.goBack()` / `webview.goForward()`), sur le modèle des boutons d'un navigateur.
+- Les deux boutons sont désactivés (opacité réduite, non cliquables) quand l'historique ne
+  le permet pas : page initiale d'un onglet neuf, extrémité de l'historique. L'état est
+  recalculé à chaque navigation complète (`did-navigate`), interne aux applications
+  monopages (`did-navigate-in-page`) et au (re)chargement (`dom-ready`). Par sécurité, le
+  clic vérifie `canGoBack()` / `canGoForward()` avant d'agir.
+- L'état activé/désactivé est calculé par un helper pur (`lib/navigation-onglets.js`,
+  `window.iaoNavigationOnglets`, même pattern que `lib/defilement-onglets.js`) : le pilotage
+  réel de la `<webview>` et l'application au DOM restent dans `assets/app.js`.
+- i18n : 2 nouvelles chaînes (« Revenir en arrière dans l'historique de navigation »,
+  « Avancer dans l'historique de navigation »), traduites à la main dans les 30 langues.
+
+### Tests
+- `test/navigation-onglets.test.js` (5 tests) : états des deux boutons selon l'historique,
+  tolérance aux valeurs absentes (webview pas prête), exposition sur `window` (branche
+  navigateur). Couverture de `lib/navigation-onglets.js` : 100 % lignes / branches /
+  fonctions.
+
+## Issue #363 — onglet fixe : identifiants du site choisi proposés au focus (01/11/2026)
+
+### Corrigé
+- Dans l'onglet fixe, le menu d'identifiants (focus d'un champ de connexion) ne proposait que
+  les identifiants de l'hôte exact de la page : rien n'était proposé si l'identifiant était
+  enregistré pour un autre hôte du site choisi (www vs racine, sous-domaine de connexion).
+  Désormais tous les identifiants des hôtes du site de l'onglet fixe sont proposés — la
+  navigation y est verrouillée sur ce site (`lib/onglet-fixe.js`).
+- Chaque entrée du menu porte l'hôte d'origine de l'identifiant ; le remplissage n'envoie
+  le secret que si la page ET l'hôte de l'identifiant font partie du site choisi (garde
+  étendue de `remplir`, secret jamais envoyé hors du site). Onglets de comptes :
+  comportement inchangé.
+
+### Tests
+- `test/identifiants-focus.test.js` : `loginsDuSite` (fusion, hôtes du site, refus hors
+  site), `doitProposer` avec/sans site, `remplir` onglet fixe (origine et hôte dans le
+  site), intégration `main.js` (focus depuis la session `persist:onglet-fixe`, réglages
+  avec onglet fixe configuré). 18 tests verts ; `lib/identifiants-focus.js` et `main.js` à
+  100 % lignes / branches / fonctions.
+
 ## Issue #357 — création de comptes de messagerie via mail-accounts-api (31/10/2026)
 
 ### Ajouté

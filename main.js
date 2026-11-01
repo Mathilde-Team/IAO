@@ -869,7 +869,14 @@ const gestionFocusIdentifiants = focusIdentifiants.creer({
   fenetrePour: (wc) => fenetresFilles.get(wc.id) || mainWindow,
   pointeur: () => { try { return screen.getCursorScreenPoint(); } catch (_) { return null; } }
 });
-ipcMain.on('iao-identifiants:focus', gestionFocusIdentifiants.surFocus);
+// Issue #363 : dans l'onglet fixe, les identifiants du site choisi dans les
+// réglages sont proposés même si l'hôte exact de la page diffère (www,
+// sous-domaine de connexion) — la navigation y est verrouillée sur ce site.
+ipcMain.on('iao-identifiants:focus', (e, signal) =>
+  gestionFocusIdentifiants.surFocus(e, signal, {
+    site: estOngletFixe(e.sender) ? urlOngletFixe : null
+  })
+);
 // Le preload est posé sur chaque session créée (l'app crée les partitions des
 // profils à la demande ; les popups héritent de la session de leur webview).
 app.on('session-created', (ses) => {

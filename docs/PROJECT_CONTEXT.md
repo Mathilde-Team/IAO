@@ -493,6 +493,21 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - `main.js` : `estOngletFixe()` reconnaît la session `persist:onglet-fixe` dans `did-attach-webview` ; `verrouillerOngletFixe()` bloque les navigations vers un autre site (`lib/onglet-fixe.js`, même hôte ou sous-domaine, https) et charge dans l'onglet les popups du même site.
 - Limites : les redirections HTTP vers un autre site (connexion par un fournisseur tiers) ne sont pas bloquées ; Ctrl+Tab et Alt+1..9 ne parcourent que les onglets de comptes.
 
+### Onglet fixe : identifiants du site choisi proposés au focus (issue #363, 01/11/2026)
+
+- Dans l'onglet fixe, le menu d'identifiants au focus d'un champ de connexion propose les
+  identifiants enregistrés pour le site choisi dans les réglages, pas seulement ceux de
+  l'hôte exact de la page (www vs racine, sous-domaine de connexion) : la navigation y est
+  verrouillée sur ce site (`lib/onglet-fixe.js`), donc tous les hôtes du site sont retenus.
+- `lib/identifiants-focus.js` : `loginsDuSite()` (pur) fusionne les identifiants des hôtes
+  du site en annotant chaque entrée de son hôte d'origine ; `main.js` passe le site
+  (`urlOngletFixe`) au handler du canal `iao-identifiants:focus` quand l'émetteur est la
+  session `persist:onglet-fixe`.
+- Remplissage : l'origine doit toujours être l'hôte proposé, ou (onglet fixe uniquement) à
+  la fois la page ET l'hôte de l'identifiant dans le site choisi — le secret n'est jamais
+  envoyé hors du site.
+- Onglets de comptes : comportement inchangé (hôte exact uniquement).
+
 ### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
 
 - `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans

@@ -43,7 +43,7 @@ test('hoteDepuisUrl : https uniquement, en minuscules', () => {
 test('doitProposer : hôte https + identifiants présents + cooldown écoulé', () => {
   const lister = () => ({ 'context7.com': [{ login: 'a@x.fr' }] });
   assert.deepEqual(focus.doitProposer({ url: 'https://context7.com/', lister, maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
-    { proposer: true, hote: 'context7.com', logins: [{ login: 'a@x.fr' }] });
+    { proposer: true, hote: 'context7.com', logins: [{ login: 'a@x.fr', hote: 'context7.com' }] });
   // Pas d'identifiant pour l'hôte.
   assert.deepEqual(focus.doitProposer({ url: 'https://autre.com/', lister, maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
     { proposer: false, hote: 'autre.com' });
@@ -53,6 +53,74 @@ test('doitProposer : hôte https + identifiants présents + cooldown écoulé', 
   // Hors https : rien, même pas l'hôte.
   assert.deepEqual(focus.doitProposer({ url: 'http://context7.com/', lister, maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
     { proposer: false, hote: null });
+});
+
+// --- Issue #363 : identifiants du site de l'onglet fixe ----------------------
+
+test('loginsDuSite : hôtes du site de l\'onglet fixe (www, sous-domaines)', () => {
+  const liste = {
+    'exemple.fr': [{ login: 'racine@x.fr' }],
+    'www.exemple.fr': [{ login: 'www@x.fr' }],
+    'login.exemple.fr': [{ login: 'connexion@x.fr' }],
+    'autre.com': [{ login: 'ailleurs@x.fr' }]
+  };
+  // Site choisi dans les réglages : https://exemple.fr — les identifiants
+  // de l'hôte exact ET des autres hôtes du site sont proposés.
+  assert.deepEqual(
+    focus.loginsDuSite(liste, 'login.exemple.fr', 'https://exemple.fr/'),
+    [
+      { login: 'connexion@x.fr', hote: 'login.exemple.fr' },
+      { login: 'racine@x.fr', hote: 'exemple.fr' },
+      { login: 'www@x.fr', hote: 'www.exemple.fr' }
+    ]
+  );
+  // Sans site (onglets de comptes) : comportement historique, hôte exact.
+  assert.deepEqual(
+    focus.loginsDuSite(liste, 'login.exemple.fr', null),
+    [{ login: 'connexion@x.fr', hote: 'login.exemple.fr' }]
+  );
+  assert.deepEqual(focus.loginsDuSite(liste, 'inconnu.exemple.fr', null), []);
+});
+
+test('loginsDuSite : hôte hors du site jamais proposé, site non https refusé', () => {
+  const liste = { 'exemple.fr': [{ login: 'a@x.fr' }] };
+  // autre.com n'est pas du site choisi : ignoré même si l'hôte exact a des
+  // identifiants (l'onglet fixe n'y navigue jamais, ceinture et bretelles).
+  assert.deepEqual(
+    focus.loginsDuSite({ 'autre.com': [{ login: 'a@x.fr' }] }, 'autre.com', 'https://exemple.fr/'),
+    [{ login: 'a@x.fr', hote: 'autre.com' }]
+  );
+  // memeSite vérifie le protocole de l'hôte enregistré, pas celui du site
+  // de réglage : en pratique ongletFixeUrl est toujours https (normalisation
+  // des réglages), ce cas ne fait que dégrader la comparaison en nom d'hôte.
+  assert.deepEqual(
+    focus.loginsDuSite(liste, 'www.exemple.fr', 'http://exemple.fr/'),
+    [{ login: 'a@x.fr', hote: 'exemple.fr' }]
+  );
+});
+
+test('doitProposer : sans lister, aucune proposition (branche de défense)', () => {
+  assert.deepEqual(focus.doitProposer({ url: 'https://context7.com/', maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
+    { proposer: false, hote: 'context7.com' });
+});
+
+test('doitProposer : dans l\'onglet fixe, identifiants du site choisi même hors de l\'hôte exact', () => {
+  const lister = () => ({ 'exemple.fr': [{ login: 'a@x.fr' }] });
+  // Page sur www.exemple.fr, identifiant enregistré pour exemple.fr.
+  assert.deepEqual(
+    focus.doitProposer({ url: 'https://www.exemple.fr/', lister, site: 'https://exemple.fr/', maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
+    { proposer: true, hote: 'www.exemple.fr', logins: [{ login: 'a@x.fr', hote: 'exemple.fr' }] }
+  );
+  // Hors de l'onglet fixe (pas de site) : comportement inchangé, rien proposé.
+  assert.deepEqual(
+    focus.doitProposer({ url: 'https://www.exemple.fr/', lister, maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
+    { proposer: false, hote: 'www.exemple.fr' }
+  );
+  // Un site choisi qui n'a rien enregistré : rien proposé.
+  assert.deepEqual(
+    focus.doitProposer({ url: 'https://www.exemple.fr/', lister, site: 'https://vide.io/', maintenant: 5000, derniereProposition: 0, cooldownMs: 1200 }),
+    { proposer: false, hote: 'www.exemple.fr' }
+  );
 });
 
 test('creer().surFocus : menu proposé, remplissage envoyé à l\'émetteur uniquement', (t) => {
@@ -83,6 +151,35 @@ test('creer().surFocus : menu proposé, remplissage envoyé à l\'émetteur uniq
   // Login introuvable : false, rien d'envoyé.
   assert.equal(gestion.remplir(sender, 'context7.com', 'absent@x.fr'), false);
   assert.equal(envoyes.length, 1);
+  // Issue #363, onglet fixe : page toujours sur l'hôte proposé (site non
+  // fourni) — le remplissage passe par la branche historique.
+  assert.equal(gestion.remplir(sender, 'context7.com', 'a@x.fr'), true);
+  assert.equal(envoyes.length, 2);
+});
+
+test('creer().remplir : onglet fixe — origine et hôte doivent être du site choisi (issue #363)', (t) => {
+  const journal = [];
+  const envoyes = [];
+  const gestion = focus.creer({
+    identifiants: coffreFactice(),
+    Menu: { buildFromTemplate: (items) => ({ popup: () => true }) },
+    journal: (n, m) => journal.push(m),
+    canalRemplir: 'iao-identifiants:remplir',
+    fenetrePour: () => 'FENETRE',
+    pointeur: () => ({ x: 3, y: 7 }),
+    maintenant: () => 5000
+  });
+  const site = 'https://exemple.fr/';
+  // Page sur le site choisi mais identifiant enregistré hors du site :
+  // refusé — l'hôte proposé doit lui aussi être du site.
+  const surLeSite = { getURL: () => 'https://www.exemple.fr/login', send: (c, d) => envoyes.push({ c, d }) };
+  assert.equal(gestion.remplir(surLeSite, 'context7.com', 'a@x.fr', site), false);
+  assert.equal(envoyes.length, 0, 'hôte proposé hors du site : rien n\'est envoyé');
+  // Page hors du site choisi : refusé, même si l'hôte proposé est dedans.
+  const horsSite = { getURL: () => 'https://autre.com/login', send: (c, d) => envoyes.push({ c, d }) };
+  assert.equal(gestion.remplir(horsSite, 'context7.com', 'a@x.fr', site), false);
+  assert.equal(envoyes.length, 0, 'page hors du site : rien n\'est envoyé');
+  assert.ok(journal.some((m) => /remplissage ignoré/.test(m)));
 });
 
 test('creer().surFocus : cooldown anti-boucle, hôte sans identifiant, émetteur invalide', (t) => {
@@ -199,6 +296,12 @@ function boot() {
   fs.writeFileSync(path.join(appDataDir, 'ai-manager', 'identifiants.json'), JSON.stringify({
     'context7.com': [{ login: 'moi@exemple.fr', secret: Buffer.from('S3cret!', 'utf-8').toString('base64'), ajoute: 1 }]
   }), 'utf-8');
+  // Issue #363 : onglet fixe configuré sur le site context7.com (la page de
+  // test www.context7.com en est un sous-domaine, même site).
+  fs.writeFileSync(path.join(appDataDir, 'ai-manager', 'settings.json'), JSON.stringify({
+    ongletFixeActif: true,
+    ongletFixeUrl: 'https://context7.com/'
+  }), 'utf-8');
   const electron = creerElectronMock(appDataDir);
   const originalLoad = Module._load;
   Module._load = function patchedLoad(request) {
@@ -267,6 +370,31 @@ test('main.js : focus d\'un champ -> menu des identifiants de l\'hôte, rempliss
     // Hôte sans identifiant : aucun menu.
     handler({ sender: { getURL: () => 'https://autre.com/', send: () => {} } });
     assert.equal(h.electron.appels.menusConstruits.length, 1);
+  } finally { h.cleanup(); }
+});
+
+test('main.js : onglet fixe — identifiants du site choisi proposés même hors de l\'hôte exact (issue #363)', (t) => {
+  const h = boot();
+  try {
+    const handler = h.electron.ipcHandlers.get('iao-identifiants:focus');
+    assert.ok(typeof handler === 'function');
+    // Page de connexion sur www.context7.com (sous-domaine du site de
+    // l'onglet fixe), identifiant enregistré pour context7.com : proposé
+    // malgré l'hôte différent — hors de l'onglet fixe, rien ne l'aurait été.
+    const envoyes = [];
+    const sender = {
+      getURL: () => 'https://www.context7.com/login',
+      send: (canal, donnee) => envoyes.push({ canal, donnee }),
+      session: h.electron.session.fromPartition('persist:onglet-fixe'),
+      id: 4243
+    };
+    assert.equal(handler({ sender }), true);
+    assert.equal(h.electron.appels.menusConstruits.length, 1, 'menu proposé pour le site de l\'onglet fixe');
+    const items = h.electron.appels.menusConstruits[0];
+    assert.equal(items[1].label, 'moi@exemple.fr');
+    // Choix : remplissage envoyé à l'émetteur seul (parcours inchangé).
+    items[1].click();
+    assert.deepEqual(envoyes, [{ canal: 'iao-identifiants:remplir', donnee: { login: 'moi@exemple.fr', motDePasse: 'S3cret!' } }]);
   } finally { h.cleanup(); }
 });
 
