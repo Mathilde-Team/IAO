@@ -717,3 +717,31 @@
   /* Issue #187 : « Relancer en mode debug » et chemin du journal. */
   .boot-error__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
   .boot-error__log { font-size: 12px; opacity: 0.85; word-break: break-all; }
+
+  /* Issue #362 : menu contextuel des liens (dessiné par assets/app.js au
+     clic droit sur un lien d'une webview). */
+  .menu-liens {
+    position: fixed;
+    z-index: 95; /* au-dessus des onglets, sous les fenêtres modales (90+ est pris) */
+    min-width: 15rem;
+    padding: 4px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-active);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+  .menu-liens__item {
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 5px;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .menu-liens__item:hover, .menu-liens__item:focus-visible {
+    background: var(--accent-dim);
+  }

@@ -21,13 +21,16 @@ function createElectronMock(appDataDir) {
   const ipcHandlers = new Map();
   const appListeners = new Map();
   const windows = [];
-  const calls = { quit: 0, openExternal: [], readyCallbacks: [] };
+  const calls = { quit: 0, openExternal: [], readyCallbacks: [], clipboard: [] };
 
   const app = {
     getPath: (name) => (name === 'appData' ? appDataDir : path.join(appDataDir, name)),
     setPath(name, value) { this._paths = Object.assign(this._paths || {}, { [name]: value }); },
     getVersion: () => '0.0.0-test',
     isPackaged: false,
+    // Issue #362 : nom applicatif que le système associe à https (détection
+    // du navigateur par défaut). « Google Chrome » dans le harnais.
+    getApplicationNameForProtocol: () => 'Google Chrome',
     setName(name) { this._name = name; },
     requestSingleInstanceLock: () => true,
     quit() { calls.quit++; },
@@ -46,6 +49,7 @@ function createElectronMock(appDataDir) {
       windows.push(this);
     }
     loadFile(file) { this.loaded = file; }
+    loadURL(url) { this.loadedUrl = url; return Promise.resolve(); } // issue #362
     setMenuBarVisibility(v) { this.menuBarVisible = v; }
     isMinimized() { return false; }
     restore() {}
@@ -70,7 +74,10 @@ function createElectronMock(appDataDir) {
 
   const shell = { openExternal: (u) => { calls.openExternal.push(u); } };
 
-  return { app, BrowserWindow, ipcMain, dialog, shell, session, ipcHandlers, appListeners, windows, calls };
+  // Issue #362 : presse-papiers simulé (links:copier).
+  const clipboard = { writeText: (t) => { calls.clipboard.push(t); } };
+
+  return { app, BrowserWindow, ipcMain, dialog, shell, session, clipboard, ipcHandlers, appListeners, windows, calls };
 }
 
 // Charge une copie neuve de main.js avec `electron` simulé, puis restaure Module._load.
@@ -102,7 +109,7 @@ function loadMain() {
 
 const MAIN_CHANNELS = [
   'accounts:disconnect-profile', 'accounts:export', 'accounts:import', 'app:is-debug', 'app:log-path', 'app:open-webmail', 'app:relaunch', 'app:relaunch-debug', 'app:toggle-devtools',
-  'i18n:catalog', 'iao-identifiants:focus', 'identifiants:enregistrer', 'identifiants:lister', 'identifiants:obtenir', 'identifiants:supprimer', 'mail-api:creer', 'mail-api:creer-lot', 'preferences:ecrire', 'preferences:lire', 'profils:ecrire', 'profils:lire', 'read-directory', 'read-directory-recursive', 'read-file', 'sauvegarde-complete:creer', 'sauvegarde-complete:restaurer', 'save-file',
+  'i18n:catalog', 'iao-identifiants:focus', 'identifiants:enregistrer', 'identifiants:lister', 'identifiants:obtenir', 'identifiants:supprimer', 'links:copier', 'links:navigateurs-detectes', 'links:ouvrir-externe', 'links:ouvrir-externe-prive', 'links:ouvrir-fenetre', 'mail-api:creer', 'mail-api:creer-lot', 'preferences:ecrire', 'preferences:lire', 'profils:ecrire', 'profils:lire', 'read-directory', 'read-directory-recursive', 'read-file', 'sauvegarde-complete:creer', 'sauvegarde-complete:restaurer', 'save-file',
   'secrets:available', 'secrets:delete', 'secrets:get', 'secrets:set',
   'select-folder', 'settings:load', 'settings:save', 'stats:export',
   'stats:load', 'stats:noter-quota', 'stats:noter-reponse', 'stats:quotas', 'stats:reponses', 'stats:reset', 'stats:sync',
@@ -391,4 +398,264 @@ test('main.js : scheduler:pick-downloads-dir ouvre le dialogue sur la fenêtre p
     Object.assign(console, silence);
     h.cleanup();
   }
+});
+
+// Issue #362 : menu contextuel des liens et navigateur externe.
+test('links:copier écrit dans le presse-papiers, refuse le non web', async (t) => {
+  const h = loadMain();
+  try {
+    const copier = h.electron.ipcHandlers.get('links:copier');
+    assert.deepEqual(copier({}, 'https://example.org/a'), { ok: true });
+    assert.deepEqual(h.electron.calls.clipboard, ['https://example.org/a']);
+    // Refus : schéma non web (mailto:, data:) — pas d'écriture.
+    const refuse = copier({}, 'mailto:a@b.org');
+    assert.equal(refuse.ok, false);
+    assert.equal(h.electron.calls.clipboard.length, 1);
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-externe remonte l’échec de shell.openExternal', async (t) => {
+  const h = loadMain();
+  try {
+    h.electron.shell.openExternal = async () => { throw new Error('plus de navigateur'); };
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe');
+    const res = await ouvrir({}, 'https://example.org/');
+    assert.equal(res.ok, false);
+    assert.equal(res.erreur, 'plus de navigateur');
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-externe remonte l’échec brut (non-Error) de shell.openExternal', async (t) => {
+  const h = loadMain();
+  try {
+    h.electron.shell.openExternal = async () => { throw 'échec brut'; };
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe');
+    const res = await ouvrir({}, 'https://example.org/');
+    assert.equal(res.ok, false);
+    assert.equal(res.erreur, 'échec brut');
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-externe valide l’adresse avant shell.openExternal', async (t) => {
+  const h = loadMain();
+  try {
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe');
+    const ok = await ouvrir({}, 'https://example.org/');
+    assert.equal(ok.ok, true);
+    assert.deepEqual(h.electron.calls.openExternal, ['https://example.org/']);
+    const refuse = await ouvrir({}, 'file:///etc/passwd');
+    assert.equal(refuse.ok, false);
+    assert.equal(h.electron.calls.openExternal.length, 1, 'rien réouvert');
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-fenetre crée une fenêtre avec l’adresse web, refuse sinon', async (t) => {
+  const h = loadMain();
+  try {
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-fenetre');
+    const avant = h.electron.windows.length;
+    const refuse = ouvrir({}, { url: 'javascript:alert(1)', partition: 'persist:p' });
+    assert.equal(refuse.ok, false);
+    assert.equal(h.electron.windows.length, avant, 'aucune fenêtre créée');
+    const ok = await ouvrir({}, { url: 'https://example.org/partage', partition: 'persist:p' });
+    assert.equal(ok.ok, true);
+    assert.equal(h.electron.windows.length, avant + 1);
+    assert.equal(h.electron.windows[avant].loadedUrl, 'https://example.org/partage');
+    assert.equal(h.electron.windows[avant].options.webPreferences.partition, 'persist:p');
+    // Sans partition (menu d'un onglet sans compte) : session par défaut.
+    const sansPartition = await ouvrir({}, { url: 'https://example.org/x' });
+    assert.equal(sansPartition.ok, true);
+    assert.equal(h.electron.windows[avant + 1].options.webPreferences.partition, undefined);
+    // Échec de chargement (loadURL rejette) : journalisé, pas d'exception.
+    h.electron.BrowserWindow.prototype.loadURL = function (u) {
+      this.loadedUrl = u;
+      return Promise.reject(new Error('refusé'));
+    };
+    const rejete = await ouvrir({}, { url: 'https://example.org/y' });
+    assert.equal(rejete.ok, true);
+  } finally { h.cleanup(); }
+});
+
+// Charge main.js avec, en plus d'electron : un child_process simulé (spawn
+// enregistré, jamais exécuté) et un fs « chrome détecté » — pour couvrir le
+// lancement du navigateur externe sans lancer quoi que ce soit.
+function loadMainAvecNavigateur(appDataDir, { erreurLib = false, echecSpawn = false, nomSysteme = 'Google Chrome', aucun = false } = {}) {
+  const electron = createElectronMock(appDataDir);
+  const lanceurs = [];
+  const vraiExiste = fs.existsSync;
+  fs.existsSync = aucun ? () => false : (p) => (p === '/usr/bin/google-chrome' ? true : vraiExiste(p));
+  // Nom applicatif que le système associe à https (défaut système) : valeur
+  // libre, ou Error pour simuler une API indisponible.
+  electron.app.getApplicationNameForProtocol = () => {
+    if (nomSysteme instanceof Error) throw nomSysteme;
+    return nomSysteme;
+  };
+  const originalLoad = Module._load;
+  Module._load = function patchedLoad(request) {
+    if (request === 'electron') return electron;
+    if (request === 'child_process') {
+      return {
+        spawn: (commande, args, opts) => {
+          if (echecSpawn === 'brut') throw 'échec spawn brut'; // non-Error
+          if (echecSpawn) throw new Error('spawn impossible');
+          lanceurs.push({ commande, args, opts });
+          return { unref: () => {} };
+        }
+      };
+    }
+    if (request === './lib/liens-contexte' && erreurLib) {
+      const vrai = originalLoad.apply(this, arguments);
+      return Object.assign(Object.create(null), vrai, { drapeauPrive: () => '' });
+    }
+    return originalLoad.apply(this, arguments);
+  };
+  const silence = { warn: console.warn, log: console.log, error: console.error };
+  console.warn = console.log = console.error = () => {};
+  try {
+    delete require.cache[MAIN_PATH];
+    require(MAIN_PATH);
+  } finally {
+    Module._load = originalLoad;
+    Object.assign(console, silence);
+  }
+  // NB : fs.existsSync reste patché jusqu'au cleanup — la détection des
+  // navigateurs (etatNavigateurs) se fait à l'appel du gestionnaire IPC,
+  // pas au chargement de main.js.
+  return {
+    electron,
+    lanceurs,
+    cleanup() {
+      fs.existsSync = vraiExiste;
+      delete require.cache[MAIN_PATH];
+      fs.rmSync(appDataDir, { recursive: true, force: true });
+    }
+  };
+}
+
+test('links:ouvrir-externe-prive lance le navigateur choisi avec son drapeau', async (t) => {
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-liens-prive-'));
+  const h = loadMainAvecNavigateur(appDataDir);
+  try {
+    // Réglage : navigateur externe choisi (lu depuis settings.json).
+    fs.mkdirSync(path.join(appDataDir, 'userData'), { recursive: true });
+    fs.writeFileSync(path.join(appDataDir, 'userData', 'settings.json'), JSON.stringify({ navigateurExterne: 'chrome' }));
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe-prive');
+    const res = await ouvrir({}, 'https://example.org/prive');
+    assert.equal(res.ok, true);
+    assert.deepEqual(h.lanceurs.map((l) => [l.commande, l.args]), [
+      ['/usr/bin/google-chrome', ['--incognito', 'https://example.org/prive']]
+    ]);
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-externe-prive remonte l’échec du lancement', async (t) => {
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-liens-prive-'));
+  const h = loadMainAvecNavigateur(appDataDir, { echecSpawn: true });
+  try {
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe-prive');
+    const res = await ouvrir({}, 'https://example.org/prive');
+    assert.equal(res.ok, false);
+    assert.equal(res.erreur, 'spawn impossible');
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-externe-prive remonte un échec brut (non-Error) du lancement', async (t) => {
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-liens-prive-'));
+  const h = loadMainAvecNavigateur(appDataDir, { echecSpawn: 'brut' });
+  try {
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe-prive');
+    const res = await ouvrir({}, 'https://example.org/prive');
+    assert.equal(res.ok, false);
+    assert.equal(res.erreur, 'échec spawn brut');
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-externe-prive signale l’absence de navigateur détecté', async (t) => {
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-liens-prive-'));
+  const h = loadMainAvecNavigateur(appDataDir, { aucun: true });
+  try {
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe-prive');
+    const res = await ouvrir({}, 'https://example.org/prive');
+    assert.equal(res.ok, false);
+    assert.equal(res.erreur, 'aucun navigateur externe détecté');
+    assert.deepEqual(h.lanceurs, []);
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-externe-prive refuse un navigateur sans navigation privée connue', async (t) => {
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-liens-prive-'));
+  const h = loadMainAvecNavigateur(appDataDir, { erreurLib: true });
+  try {
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe-prive');
+    const res = await ouvrir({}, 'https://example.org/prive');
+    assert.equal(res.ok, false);
+    assert.match(res.erreur, /^navigation privée non prise en charge/);
+  } finally { h.cleanup(); }
+});
+
+test('links:navigateurs-detectes rapproche le défaut du système d’un navigateur détecté', async (t) => {
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-liens-navig-'));
+  const h = loadMainAvecNavigateur(appDataDir, { nomSysteme: 'Google Chrome' });
+  try {
+    const etat = await h.electron.ipcHandlers.get('links:navigateurs-detectes')({});
+    assert.ok(etat.detectes.some((n) => n.id === 'chrome'));
+    assert.equal(etat.defautSysteme, 'chrome');
+  } finally { h.cleanup(); }
+});
+
+test('links:navigateurs-detectes développe les variables d’environnement des chemins Windows', async (t) => {
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-liens-navig-'));
+  const h = loadMainAvecNavigateur(appDataDir);
+  try {
+    // Sous win32, les candidats contiennent %ProgramFiles%... : le développeur
+    // de chemin remplace la variable par sa valeur d’environnement.
+    const vraiPlateforme = process.platform;
+    const vraiProgramFiles = process.env.ProgramFiles;
+    process.env.ProgramFiles = 'C:\\Program Files';
+    Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
+    try {
+      const etat = await h.electron.ipcHandlers.get('links:navigateurs-detectes')({});
+      // Les chemins détectés, le cas échéant, sont développés (plus de %...%).
+      for (const n of etat.detectes) assert.ok(!n.commande.includes('%'));
+    } finally {
+      Object.defineProperty(process, 'platform', { value: vraiPlateforme, configurable: true });
+      if (vraiProgramFiles === undefined) delete process.env.ProgramFiles;
+      else process.env.ProgramFiles = vraiProgramFiles;
+    }
+  } finally { h.cleanup(); }
+});
+
+test('links:navigateurs-detectes survive à une API de défaut système indisponible', async (t) => {
+  const appDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iao-liens-navig-'));
+  const h = loadMainAvecNavigateur(appDataDir, { nomSysteme: new Error('API absente') });
+  try {
+    const etat = await h.electron.ipcHandlers.get('links:navigateurs-detectes')({});
+    assert.ok(Array.isArray(etat.detectes));
+    assert.equal(etat.defautSysteme, null, 'pas de défaut détecté, pas d’erreur');
+  } finally { h.cleanup(); }
+});
+
+test('links:ouvrir-externe-prive refuse le non web sans lancer de processus', async (t) => {
+  const h = loadMain();
+  try {
+    const ouvrir = h.electron.ipcHandlers.get('links:ouvrir-externe-prive');
+    const refuse = await ouvrir({}, 'ftp://example.org/');
+    assert.equal(refuse.ok, false);
+    assert.equal(refuse.erreur, 'adresse non web');
+  } finally { h.cleanup(); }
+});
+
+test('links:navigateurs-detectes renvoie la forme attendue', async (t) => {
+  const h = loadMain();
+  try {
+    const etat = await h.electron.ipcHandlers.get('links:navigateurs-detectes')({});
+    assert.ok(Array.isArray(etat.detectes));
+    for (const n of etat.detectes) {
+      assert.equal(typeof n.id, 'string'); assert.equal(typeof n.nom, 'string');
+      assert.equal(typeof n.commande, 'string');
+    }
+    // Harnais : le système « associe https à Google Chrome » (mock app) ;
+    // sans navigateur détecté sur la machine de test, pas de défaut.
+    assert.ok(etat.defautSysteme === null || typeof etat.defautSysteme === 'string');
+  } finally { h.cleanup(); }
 });
