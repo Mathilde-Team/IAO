@@ -466,8 +466,20 @@ msgid "Préférences de l'application, sauvegardées localement."
 msgstr "앱 환경설정, 로컬에 저장됩니다."
 
 #: index.html
-msgid "Taille de police de l'éditeur (px)"
-msgstr "편집기 글꼴 크기 (px)"
+msgid "Général"
+msgstr ""
+
+#: index.html
+msgid "Navigation"
+msgstr ""
+
+#: index.html
+msgid "Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Données"
+msgstr ""
 
 #: index.html
 msgid "Thème"
@@ -498,6 +510,48 @@ msgid "Appliquée au prochain démarrage"
 msgstr "다음 시작 시 적용"
 
 #: index.html
+msgid "Confirmer avant de fermer un onglet"
+msgstr "탭을 닫기 전에 확인"
+
+#: index.html
+msgid "Afficher les fenêtres d'automatisation"
+msgstr "자동화 창 표시"
+
+#: index.html
+msgid "Restaurer les onglets ouverts au démarrage"
+msgstr "시작 시 열린 탭 복원"
+
+#: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Réglages enregistrés"
+msgid "Réglages affichés"
+msgstr "설정 저장됨"
+
+#: index.html
+msgid "Onglet Navigation (onglet fixe, liens externes)"
+msgstr ""
+
+#: index.html
+msgid "Onglet Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Onglet Données (sauvegarde, identifiants)"
+msgstr ""
+
+#: index.html
+msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
+msgstr ""
+
+#: index.html
+msgid "Taille de police de l'éditeur (px)"
+msgstr "편집기 글꼴 크기 (px)"
+
+#: index.html
 msgid "Retour à la ligne (éditeur)"
 msgstr "줄 바꿈 (편집기)"
 
@@ -514,19 +568,35 @@ msgid "Colonne fixe"
 msgstr "고정 열"
 
 #: index.html
-msgid "Confirmer avant de fermer un onglet"
-msgstr "탭을 닫기 전에 확인"
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
 
 #: index.html
-msgid "Afficher les fenêtres d'automatisation"
-msgstr "자동화 창 표시"
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "웹메일 주소 (Roundcube)"
 
 #: index.html
-msgid "Restaurer les onglets ouverts au démarrage"
-msgstr "시작 시 열린 탭 복원"
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
 
 #: index.html
-msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés servent à s'y connecter."
+msgstr ""
+
+#: index.html
+msgid "Navigateur des liens externes"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système"
+msgstr "Navigateur du système"
+
+#: index.html
+msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
 msgstr ""
 
 #: index.html
@@ -576,38 +646,6 @@ msgstr "메일 API 키"
 #: index.html
 msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
 msgstr "암호화되어 금고에 저장됩니다. 현재 키를 유지하려면 비워 두세요"
-
-#: index.html
-msgid "Ouvrir un premier onglet fixe"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Adresse du webmail (Roundcube)"
-msgid "Adresse du premier onglet"
-msgstr "웹메일 주소 (Roundcube)"
-
-#: index.html
-msgid "https://github.com/Mathilde-Team"
-msgstr "https://github.com/Mathilde-Team"
-
-#: index.html
-msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
-msgstr ""
-
-#: index.html
-msgid "Navigateur des liens externes"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Langue du système (défaut)"
-msgid "Navigateur du système"
-msgstr "Navigateur du système"
-
-#: index.html
-msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
-msgstr ""
 
 #: index.html
 #, fuzzy

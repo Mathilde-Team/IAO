@@ -466,8 +466,20 @@ msgid "Préférences de l'application, sauvegardées localement."
 msgstr "Az alkalmazás beállításai, helyben mentve."
 
 #: index.html
-msgid "Taille de police de l'éditeur (px)"
-msgstr "A szerkesztő betűmérete (px)"
+msgid "Général"
+msgstr ""
+
+#: index.html
+msgid "Navigation"
+msgstr ""
+
+#: index.html
+msgid "Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Données"
+msgstr ""
 
 #: index.html
 msgid "Thème"
@@ -498,6 +510,48 @@ msgid "Appliquée au prochain démarrage"
 msgstr "A következő indításkor lép életbe"
 
 #: index.html
+msgid "Confirmer avant de fermer un onglet"
+msgstr "Megerősítés lap bezárása előtt"
+
+#: index.html
+msgid "Afficher les fenêtres d'automatisation"
+msgstr "Automatizálási ablakok megjelenítése"
+
+#: index.html
+msgid "Restaurer les onglets ouverts au démarrage"
+msgstr "Megnyitott lapok visszaállítása indításkor"
+
+#: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Réglages enregistrés"
+msgid "Réglages affichés"
+msgstr "Beállítások mentve"
+
+#: index.html
+msgid "Onglet Navigation (onglet fixe, liens externes)"
+msgstr ""
+
+#: index.html
+msgid "Onglet Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Onglet Données (sauvegarde, identifiants)"
+msgstr ""
+
+#: index.html
+msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
+msgstr ""
+
+#: index.html
+msgid "Taille de police de l'éditeur (px)"
+msgstr "A szerkesztő betűmérete (px)"
+
+#: index.html
 msgid "Retour à la ligne (éditeur)"
 msgstr "Sortörés (szerkesztő)"
 
@@ -514,19 +568,35 @@ msgid "Colonne fixe"
 msgstr "Rögzített oszlop"
 
 #: index.html
-msgid "Confirmer avant de fermer un onglet"
-msgstr "Megerősítés lap bezárása előtt"
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
 
 #: index.html
-msgid "Afficher les fenêtres d'automatisation"
-msgstr "Automatizálási ablakok megjelenítése"
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "Webmail címe (Roundcube)"
 
 #: index.html
-msgid "Restaurer les onglets ouverts au démarrage"
-msgstr "Megnyitott lapok visszaállítása indításkor"
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
 
 #: index.html
-msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés servent à s'y connecter."
+msgstr ""
+
+#: index.html
+msgid "Navigateur des liens externes"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système"
+msgstr "Navigateur du système"
+
+#: index.html
+msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
 msgstr ""
 
 #: index.html
@@ -576,38 +646,6 @@ msgstr "A levelező-API kulcsa"
 #: index.html
 msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
 msgstr "Titkosítva tárolva a széfben; hagyja üresen az aktuális kulcs megtartásához"
-
-#: index.html
-msgid "Ouvrir un premier onglet fixe"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Adresse du webmail (Roundcube)"
-msgid "Adresse du premier onglet"
-msgstr "Webmail címe (Roundcube)"
-
-#: index.html
-msgid "https://github.com/Mathilde-Team"
-msgstr "https://github.com/Mathilde-Team"
-
-#: index.html
-msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
-msgstr ""
-
-#: index.html
-msgid "Navigateur des liens externes"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Langue du système (défaut)"
-msgid "Navigateur du système"
-msgstr "Navigateur du système"
-
-#: index.html
-msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
-msgstr ""
 
 #: index.html
 #, fuzzy
