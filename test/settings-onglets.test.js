@@ -25,11 +25,12 @@ test('#375 : normaliserVisibilite — valeurs partielles et fausses', () => {
 });
 
 test('#375 : ongletsVisibles — ordre et filtrage', () => {
-  assert.deepEqual(O.ongletsVisibles(), ['general', 'editeur', 'navigation', 'messagerie', 'donnees']);
-  assert.deepEqual(O.ongletsVisibles({ navigation: false }), ['general', 'editeur', 'messagerie', 'donnees']);
-  assert.deepEqual(O.ongletsVisibles({ navigation: false, messagerie: false, donnees: false }), ['general', 'editeur']);
+  assert.deepEqual(O.ongletsVisibles(), ['general', 'services', 'editeur', 'navigation', 'messagerie', 'donnees']);
+  assert.deepEqual(O.ongletsVisibles({ navigation: false }), ['general', 'services', 'editeur', 'messagerie', 'donnees']);
+  assert.deepEqual(O.ongletsVisibles({ navigation: false, messagerie: false, donnees: false }), ['general', 'services', 'editeur']);
   // Les onglets de base ne peuvent pas être masqués par la visibilité.
-  assert.deepEqual(O.ongletsVisibles({ general: false, editeur: false }), ['general', 'editeur', 'navigation', 'messagerie', 'donnees']);
+  assert.deepEqual(O.ongletsVisibles({ general: false, services: false, editeur: false }), ['general', 'services', 'editeur', 'navigation', 'messagerie', 'donnees']);
+  assert.equal(O.ongletActifValide('services', { services: false }), 'services');
 });
 
 test('#375 : ongletActifValide — repli sur un onglet toujours visible', () => {
@@ -97,7 +98,7 @@ test('#375 : index.html — barre d’onglets, panes et cases « Réglages affic
   assert.ok(debut >= 0 && fin > debut, 'modale Réglages introuvable');
 
   assert.match(bloc, /<div class="settings-tabs"/, 'barre d’onglets manquante');
-  for (const id of ['general', 'editeur', 'navigation', 'messagerie', 'donnees']) {
+  for (const id of ['general', 'services', 'editeur', 'navigation', 'messagerie', 'donnees']) {
     assert.ok(bloc.includes('data-settings-tab="' + id + '"'), 'bouton d’onglet manquant : ' + id);
     assert.ok(bloc.includes('data-settings-pane="' + id + '"'), 'pane manquant : ' + id);
   }
@@ -112,6 +113,13 @@ test('#375 : index.html — barre d’onglets, panes et cases « Réglages affic
   }
   // Le script du module pur est chargé.
   assert.match(html, /<script src="lib\/settings-onglets\.js"><\/script>/, 'lib/settings-onglets.js non chargé');
+});
+
+test('#381 : le choix des IA vit uniquement dans le nouvel onglet des réglages', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf-8');
+  assert.doesNotMatch(html, /id="servicesModal"|data-action="ui-(?:open|close|save)ServicesModal"/);
+  assert.equal((html.match(/id="servicesList"/g) || []).length, 1);
+  assert.match(html, /data-settings-pane="services"[^>]*>[\s\S]*?Choisir mes IA à portée de main[\s\S]*?id="servicesList"/);
 });
 
 test('#375 : app.css — corps défilant et habillage des onglets', () => {

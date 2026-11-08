@@ -2017,10 +2017,10 @@
       if (e.target === e.currentTarget) closeHelpModal();
     });
 
-    // --- Issue #42 : Menu de sélection des services « à portée de main » ---
+    // --- Issues #42/#381 : sélection des IA dans l'onglet des réglages ---
     let pendingServices = null;
 
-    window.openServicesModal = function() {
+    function preparerServicesSettings() {
       const list = document.getElementById('servicesList');
       const activeIds = getActiveServices();
       pendingServices = new Set(activeIds);
@@ -2043,7 +2043,7 @@
       // Délégation : mettre à jour pendingServices + compter
       list.onchange = (e) => {
         const cb = e.target;
-        if (cb && cb.dataset && cb.dataset.svcId) {
+        if (pendingServices && cb && cb.dataset && cb.dataset.svcId) {
           if (cb.checked) {
             pendingServices.add(cb.dataset.svcId);
           } else {
@@ -2051,29 +2051,20 @@
           }
         }
       };
-
-      document.getElementById('servicesModal').classList.add('open');
-    };
-    window.closeServicesModal = function() { document.getElementById('servicesModal').classList.remove('open'); pendingServices = null; };
-    window.saveServicesModal = function() {
-      if (!pendingServices) return closeServicesModal();
-      const ids = Array.from(pendingServices);
-      if (ids.length === 0) { showToast(_('Sélectionnez au moins 1 service'), 'error'); return; }
+    }
+    function enregistrerServicesSettings(ids) {
+      if (!ids) return;
+      const actifs = getActiveServices();
+      // Enregistrer un autre réglage ne doit pas réécrire la sélection
+      // ni réaligner les comptes si les cases n'ont pas changé.
+      if (ids.length === actifs.length && ids.every(id => actifs.includes(id))) return;
       saveActiveServices(ids);
       // Issue #319 : les cartes reprennent tout de suite la nouvelle sélection
       // (avant, rien n'était appliqué aux comptes avant le redémarrage).
       const modifies = window.iaoServicesActifs.alignerTous(accounts, getActiveServices());
       if (modifies > 0) saveAccounts(accounts);
       dbg('services', 'sélection enregistrée', ids.length, 'services,', modifies, 'compte(s) alignés');
-      closeServicesModal();
-      // Mettre à jour ALL_SERVICES et re-rendre les comptes
-      showToast(_('IA à portée de main : {count}', { count: ids.length }));
-      // Recharger pour appliquer les changements partout
-      renderAccounts();
-    };
-    document.getElementById('servicesModal').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) closeServicesModal();
-    });
+    }
 
     // Suppression de compte
     window.openDeleteModal = function(accId) {
@@ -3531,12 +3522,14 @@
     });
 
     window.openSettingsModal = function() {
+      preparerServicesSettings();
       document.getElementById('settingsModal').classList.add('open');
-      loadSettings();
       rafraichirIdentifiants();
+      return loadSettings();
     }
     window.closeSettingsModal = function() {
       document.getElementById('settingsModal').classList.remove('open');
+      pendingServices = null;
     }
 
     // --- Onglets de la modale Réglages (issue #375) ---
@@ -3781,6 +3774,12 @@
     }
 
     async function saveSettings() {
+      // Capturer le brouillon au clic : les écritures IPC sont asynchrones.
+      const servicesChoisis = pendingServices ? Array.from(pendingServices) : null;
+      if (servicesChoisis && servicesChoisis.length === 0) {
+        showToast(_('Sélectionnez au moins 1 service'), 'error');
+        return;
+      }
       var raw = {
         editorFontSize: parseInt(document.getElementById('settingsEditorFontSize').value, 10),
         editorWordWrap: document.getElementById('settingsEditorWordWrap').value,
@@ -3807,6 +3806,7 @@
         var result = await ipcRenderer.invoke('settings:save', raw);
         if (result && result.ok) {
           applySettings(result.settings);
+          enregistrerServicesSettings(servicesChoisis);
           renderAccounts(); // bouton webmail selon le réglage (issue #201)
           appliquerOngletFixe(result.settings); // issue #338
           // Issue #357 : la clé de l'API saisie part au coffre chiffré (jamais
@@ -4400,9 +4400,6 @@ const UI_ACTIONS = {
   'ui-openPalette': 'openPalette',
   'ui-openModal': 'openModal',
   'ui-openHelpModal': 'openHelpModal',
-  'ui-openServicesModal': 'openServicesModal',
-  'ui-closeServicesModal': 'closeServicesModal',
-  'ui-saveServicesModal': 'saveServicesModal',
   'ui-openSchedulerModal': 'openSchedulerModal',
   'ui-openSettingsModal': 'openSettingsModal',
   'ui-openStatsModal': 'openStatsModal',
