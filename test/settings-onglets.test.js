@@ -62,6 +62,33 @@ test('#375 : le module s’expose au navigateur (window.IaoSettingsOnglets)', ()
   delete globalThis.window;
 });
 
+test('#375 : pas de collision de const EXPORTS avec lib/liens-contexte.js (scripts classiques)', () => {
+  // index.html charge les deux modules en <script src> : deux scripts
+  // classiques partagent l’environnement lexical global — deux `const EXPORTS`
+  // au sommet lèveraient SyntaxError et afficheraient le bandeau d’erreur du
+  // garde de démarrage (vu en CI sur la PR #378).
+  const fs = require('node:fs');
+  const vm = require('node:vm');
+  const racine = path.join(__dirname, '..');
+  globalThis.window = {};
+  try {
+    vm.runInThisContext(fs.readFileSync(path.join(racine, 'lib', 'liens-contexte.js'), 'utf8'), {
+      filename: 'lib/liens-contexte.js',
+    });
+    vm.runInThisContext(fs.readFileSync(path.join(racine, 'lib', 'settings-onglets.js'), 'utf8'), {
+      filename: 'lib/settings-onglets.js',
+    });
+    assert.equal(typeof globalThis.window.IaoLiens.estUrlWeb, 'function', 'liens-contexte.js cassé');
+    assert.equal(
+      typeof globalThis.window.IaoSettingsOnglets.ongletsVisibles,
+      'function',
+      'settings-onglets.js cassé'
+    );
+  } finally {
+    delete globalThis.window;
+  }
+});
+
 test('#375 : index.html — barre d’onglets, panes et cases « Réglages affichés »', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf-8');
   const debut = html.indexOf('<div class="modal-overlay" id="settingsModal">');
