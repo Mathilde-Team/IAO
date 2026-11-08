@@ -493,6 +493,12 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - `main.js` : `estOngletFixe()` reconnaît la session `persist:onglet-fixe` dans `did-attach-webview` ; `verrouillerOngletFixe()` bloque les navigations vers un autre site (`lib/onglet-fixe.js`, même hôte ou sous-domaine, https) et charge dans l'onglet les popups du même site.
 - Limites : les redirections HTTP vers un autre site (connexion par un fournisseur tiers) ne sont pas bloquées ; Ctrl+Tab et Alt+1..9 ne parcourent que les onglets de comptes.
 
+### Modale Réglages : barre d'entête et croix de fermeture (issue #376, 08/11/2026)
+
+- `index.html` : la modale `#settingsModal` ouvre par une barre d'entête (`.modal__header`, flex `space-between`) qui porte le titre, le sous-titre et une croix de fermeture en haut à droite (`.modal__close`, icône `times-circle`).
+- La croix réutilise l'action existante `ui-closeSettingsModal` (délégation `UI_ACTIONS`) : même comportement que le bouton « Annuler », fermeture sans enregistrement.
+- Habillage dans `assets/app.css` (`.modal__header`, `.modal__close`), séparation par un trait `var(--border)` ; vérifications statiques dans `test/settings-entete.test.js`.
+
 ### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
 
 - `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans

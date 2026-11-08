@@ -520,8 +520,14 @@
      settings:load/settings:save (main.js), normalisation via lib/settings.js. -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal modal--help">
-    <div class="modal__title">Réglages</div>
-    <div class="modal__subtitle">Préférences de l'application, sauvegardées localement.</div>
+    <!-- Issue #376 : barre d'entête avec croix de fermeture en haut à droite. -->
+    <div class="modal__header">
+      <div class="modal__header-text">
+        <div class="modal__title">Réglages</div>
+        <div class="modal__subtitle">Préférences de l'application, sauvegardées localement.</div>
+      </div>
+      <button type="button" class="btn btn--icon modal__close" data-action="ui-closeSettingsModal" title="Fermer" aria-label="Fermer"><span class="ic" data-icon="times-circle"></span></button>
+    </div>
 
     <div class="settings-body">
       <!-- Taille de police de l'éditeur -->
