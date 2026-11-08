@@ -612,6 +612,12 @@
   /* Modales : descriptions et sous-titres */
   .modal__desc { color: var(--fg-muted); font-size: 13px; margin-bottom: 8px; }
   .modal__subtitle { color: var(--fg-muted); font-size: 13px; margin-top: 4px; }
+  /* Issue #376 : barre d'entête des modales, croix de fermeture en haut à
+     droite. La barre sépare visuellement l'entête du contenu défilant. */
+  .modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: -6px 0 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); flex: none; }
+  .modal__header-text { min-width: 0; }
+  .modal__header .modal__title { margin-bottom: 0; }
+  .modal__close { flex: none; margin-top: -2px; }
   .modal__title--tight { margin-bottom: 2px; }
   .modal--confirm { width: 420px; max-width: calc(100vw - 48px); }
   .modal__actions--spaced { margin-top: 20px; }
