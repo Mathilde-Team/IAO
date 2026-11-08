@@ -466,8 +466,20 @@ msgid "Préférences de l'application, sauvegardées localement."
 msgstr "Preferensi aplikasi, disimpan secara lokal."
 
 #: index.html
-msgid "Taille de police de l'éditeur (px)"
-msgstr "Ukuran huruf editor (px)"
+msgid "Général"
+msgstr ""
+
+#: index.html
+msgid "Navigation"
+msgstr ""
+
+#: index.html
+msgid "Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Données"
+msgstr ""
 
 #: index.html
 msgid "Thème"
@@ -498,6 +510,48 @@ msgid "Appliquée au prochain démarrage"
 msgstr "Diterapkan pada saat mulai berikutnya"
 
 #: index.html
+msgid "Confirmer avant de fermer un onglet"
+msgstr "Konfirmasi sebelum menutup tab"
+
+#: index.html
+msgid "Afficher les fenêtres d'automatisation"
+msgstr "Tampilkan jendela otomatisasi"
+
+#: index.html
+msgid "Restaurer les onglets ouverts au démarrage"
+msgstr "Pulihkan tab yang terbuka saat mulai"
+
+#: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Réglages enregistrés"
+msgid "Réglages affichés"
+msgstr "Pengaturan disimpan"
+
+#: index.html
+msgid "Onglet Navigation (onglet fixe, liens externes)"
+msgstr ""
+
+#: index.html
+msgid "Onglet Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Onglet Données (sauvegarde, identifiants)"
+msgstr ""
+
+#: index.html
+msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
+msgstr ""
+
+#: index.html
+msgid "Taille de police de l'éditeur (px)"
+msgstr "Ukuran huruf editor (px)"
+
+#: index.html
 msgid "Retour à la ligne (éditeur)"
 msgstr "Bungkus baris (editor)"
 
@@ -514,19 +568,35 @@ msgid "Colonne fixe"
 msgstr "Kolom tetap"
 
 #: index.html
-msgid "Confirmer avant de fermer un onglet"
-msgstr "Konfirmasi sebelum menutup tab"
+msgid "Ouvrir un premier onglet fixe"
+msgstr ""
 
 #: index.html
-msgid "Afficher les fenêtres d'automatisation"
-msgstr "Tampilkan jendela otomatisasi"
+#, fuzzy
+#| msgid "Adresse du webmail (Roundcube)"
+msgid "Adresse du premier onglet"
+msgstr "Alamat webmail (Roundcube)"
 
 #: index.html
-msgid "Restaurer les onglets ouverts au démarrage"
-msgstr "Pulihkan tab yang terbuka saat mulai"
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
 
 #: index.html
-msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés servent à s'y connecter."
+msgstr ""
+
+#: index.html
+msgid "Navigateur des liens externes"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système"
+msgstr "Navigateur du système"
+
+#: index.html
+msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
 msgstr ""
 
 #: index.html
@@ -576,38 +646,6 @@ msgstr "Kunci API surat"
 #: index.html
 msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
 msgstr "Disimpan terenkripsi di brankas; biarkan kosong untuk mempertahankan kunci saat ini"
-
-#: index.html
-msgid "Ouvrir un premier onglet fixe"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Adresse du webmail (Roundcube)"
-msgid "Adresse du premier onglet"
-msgstr "Alamat webmail (Roundcube)"
-
-#: index.html
-msgid "https://github.com/Mathilde-Team"
-msgstr "https://github.com/Mathilde-Team"
-
-#: index.html
-msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
-msgstr ""
-
-#: index.html
-msgid "Navigateur des liens externes"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Langue du système (défaut)"
-msgid "Navigateur du système"
-msgstr "Navigateur du système"
-
-#: index.html
-msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
-msgstr ""
 
 #: index.html
 #, fuzzy

@@ -462,8 +462,20 @@ msgid "Préférences de l'application, sauvegardées localement."
 msgstr "Preferencias de la aplicación, guardadas localmente."
 
 #: index.html
-msgid "Taille de police de l'éditeur (px)"
-msgstr "Tamaño de letra del editor (px)"
+msgid "Général"
+msgstr ""
+
+#: index.html
+msgid "Navigation"
+msgstr ""
+
+#: index.html
+msgid "Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Données"
+msgstr ""
 
 #: index.html
 msgid "Thème"
@@ -494,6 +506,48 @@ msgid "Appliquée au prochain démarrage"
 msgstr "Se aplicará en el próximo inicio"
 
 #: index.html
+msgid "Confirmer avant de fermer un onglet"
+msgstr "Confirmar antes de cerrar una pestaña"
+
+#: index.html
+msgid "Afficher les fenêtres d'automatisation"
+msgstr "Mostrar las ventanas de automatización"
+
+#: index.html
+msgid "Restaurer les onglets ouverts au démarrage"
+msgstr "Restaurar las pestañas abiertas al iniciar"
+
+#: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Réglages enregistrés"
+msgid "Réglages affichés"
+msgstr "Ajustes guardados"
+
+#: index.html
+msgid "Onglet Navigation (onglet fixe, liens externes)"
+msgstr ""
+
+#: index.html
+msgid "Onglet Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Onglet Données (sauvegarde, identifiants)"
+msgstr ""
+
+#: index.html
+msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
+msgstr ""
+
+#: index.html
+msgid "Taille de police de l'éditeur (px)"
+msgstr "Tamaño de letra del editor (px)"
+
+#: index.html
 msgid "Retour à la ligne (éditeur)"
 msgstr "Salto de línea (editor)"
 
@@ -510,19 +564,35 @@ msgid "Colonne fixe"
 msgstr "Columna fija"
 
 #: index.html
-msgid "Confirmer avant de fermer un onglet"
-msgstr "Confirmar antes de cerrar una pestaña"
+msgid "Ouvrir un premier onglet fixe"
+msgstr "Abrir una primera pestaña fija"
 
 #: index.html
-msgid "Afficher les fenêtres d'automatisation"
-msgstr "Mostrar las ventanas de automatización"
+msgid "Adresse du premier onglet"
+msgstr "Dirección de la primera pestaña"
 
 #: index.html
-msgid "Restaurer les onglets ouverts au démarrage"
-msgstr "Restaurar las pestañas abiertas al iniciar"
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
 
 #: index.html
-msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+#, fuzzy
+#| msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés servent à s'y connecter."
+msgstr "Pestaña que no se puede cerrar ni mover; la navegación se queda en este sitio y un clic en la pestaña vuelve a esta dirección. Las credenciales compartidas de abajo sirven para iniciar sesión."
+
+#: index.html
+msgid "Navigateur des liens externes"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système"
+msgstr "Navigateur du système"
+
+#: index.html
+msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
 msgstr ""
 
 #: index.html
@@ -572,36 +642,6 @@ msgstr "Clave de la API de correo"
 #: index.html
 msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
 msgstr "Guardada cifrada en la caja fuerte; dejar vacío para conservar la clave actual"
-
-#: index.html
-msgid "Ouvrir un premier onglet fixe"
-msgstr "Abrir una primera pestaña fija"
-
-#: index.html
-msgid "Adresse du premier onglet"
-msgstr "Dirección de la primera pestaña"
-
-#: index.html
-msgid "https://github.com/Mathilde-Team"
-msgstr "https://github.com/Mathilde-Team"
-
-#: index.html
-msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
-msgstr "Pestaña que no se puede cerrar ni mover; la navegación se queda en este sitio y un clic en la pestaña vuelve a esta dirección. Las credenciales compartidas de abajo sirven para iniciar sesión."
-
-#: index.html
-msgid "Navigateur des liens externes"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Langue du système (défaut)"
-msgid "Navigateur du système"
-msgstr "Navigateur du système"
-
-#: index.html
-msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
-msgstr ""
 
 #: index.html
 #, fuzzy

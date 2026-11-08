@@ -462,8 +462,20 @@ msgid "Préférences de l'application, sauvegardées localement."
 msgstr "Anwendungseinstellungen, lokal gespeichert."
 
 #: index.html
-msgid "Taille de police de l'éditeur (px)"
-msgstr "Schriftgröße des Editors (px)"
+msgid "Général"
+msgstr ""
+
+#: index.html
+msgid "Navigation"
+msgstr ""
+
+#: index.html
+msgid "Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Données"
+msgstr ""
 
 #: index.html
 msgid "Thème"
@@ -494,6 +506,48 @@ msgid "Appliquée au prochain démarrage"
 msgstr "Wird beim nächsten Start angewendet"
 
 #: index.html
+msgid "Confirmer avant de fermer un onglet"
+msgstr "Vor dem Schließen eines Tabs bestätigen"
+
+#: index.html
+msgid "Afficher les fenêtres d'automatisation"
+msgstr "Automatisierungsfenster anzeigen"
+
+#: index.html
+msgid "Restaurer les onglets ouverts au démarrage"
+msgstr "Offene Tabs beim Start wiederherstellen"
+
+#: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Réglages enregistrés"
+msgid "Réglages affichés"
+msgstr "Einstellungen gespeichert"
+
+#: index.html
+msgid "Onglet Navigation (onglet fixe, liens externes)"
+msgstr ""
+
+#: index.html
+msgid "Onglet Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Onglet Données (sauvegarde, identifiants)"
+msgstr ""
+
+#: index.html
+msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
+msgstr ""
+
+#: index.html
+msgid "Taille de police de l'éditeur (px)"
+msgstr "Schriftgröße des Editors (px)"
+
+#: index.html
 msgid "Retour à la ligne (éditeur)"
 msgstr "Zeilenumbruch (Editor)"
 
@@ -510,19 +564,35 @@ msgid "Colonne fixe"
 msgstr "Feste Spalte"
 
 #: index.html
-msgid "Confirmer avant de fermer un onglet"
-msgstr "Vor dem Schließen eines Tabs bestätigen"
+msgid "Ouvrir un premier onglet fixe"
+msgstr "Festen ersten Tab öffnen"
 
 #: index.html
-msgid "Afficher les fenêtres d'automatisation"
-msgstr "Automatisierungsfenster anzeigen"
+msgid "Adresse du premier onglet"
+msgstr "Adresse des ersten Tabs"
 
 #: index.html
-msgid "Restaurer les onglets ouverts au démarrage"
-msgstr "Offene Tabs beim Start wiederherstellen"
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
 
 #: index.html
-msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+#, fuzzy
+#| msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés servent à s'y connecter."
+msgstr "Dieser Tab lässt sich weder schließen noch verschieben; die Navigation bleibt auf dieser Website, ein Klick auf den Tab führt zu dieser Adresse zurück. Die unten geteilten Zugangsdaten dienen zur Anmeldung."
+
+#: index.html
+msgid "Navigateur des liens externes"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système"
+msgstr "Navigateur du système"
+
+#: index.html
+msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
 msgstr ""
 
 #: index.html
@@ -572,36 +642,6 @@ msgstr "Schlüssel der Mail-API"
 #: index.html
 msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
 msgstr "Verschlüsselt im Tresor gespeichert; leer lassen, um den aktuellen Schlüssel zu behalten"
-
-#: index.html
-msgid "Ouvrir un premier onglet fixe"
-msgstr "Festen ersten Tab öffnen"
-
-#: index.html
-msgid "Adresse du premier onglet"
-msgstr "Adresse des ersten Tabs"
-
-#: index.html
-msgid "https://github.com/Mathilde-Team"
-msgstr "https://github.com/Mathilde-Team"
-
-#: index.html
-msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
-msgstr "Dieser Tab lässt sich weder schließen noch verschieben; die Navigation bleibt auf dieser Website, ein Klick auf den Tab führt zu dieser Adresse zurück. Die unten geteilten Zugangsdaten dienen zur Anmeldung."
-
-#: index.html
-msgid "Navigateur des liens externes"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Langue du système (défaut)"
-msgid "Navigateur du système"
-msgstr "Navigateur du système"
-
-#: index.html
-msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
-msgstr ""
 
 #: index.html
 #, fuzzy

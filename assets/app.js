@@ -3538,6 +3538,60 @@
     window.closeSettingsModal = function() {
       document.getElementById('settingsModal').classList.remove('open');
     }
+
+    // --- Onglets de la modale Réglages (issue #375) ---
+    // La liste des onglets et les replis sont des fonctions pures de
+    // lib/settings-onglets.js (window.IaoSettingsOnglets) ; ici, le dessin :
+    // bascule d'onglet au clic, visibilité des onglets optionnels par les
+    // cases « Réglages affichés », persistée dans preferences.json
+    // (lib/magasin-preferences.js, même modèle que la largeur de l'éditeur).
+    // var (et non const/let) : loadSettings() s'exécute au démarrage, avant
+    // cette ligne — la déclaration est hissée, sans zone morte temporelle.
+    var ONGLETS_KEY = 'settings_onglets';
+    function lireVisibiliteOnglets() {
+      let v = null;
+      try { v = JSON.parse(prefStore.getItem(ONGLETS_KEY) || ''); } catch (e) { /* valeur illisible : défaut */ }
+      return (window.IaoSettingsOnglets || {}).normaliserVisibilite
+        ? window.IaoSettingsOnglets.normaliserVisibilite(v)
+        : {};
+    }
+    function appliquerOngletsSettings(visibilite, actifSouhaite) {
+      const O = window.IaoSettingsOnglets || {};
+      const visibles = O.ongletsVisibles ? O.ongletsVisibles(visibilite) : [];
+      const actif = O.ongletActifValide ? O.ongletActifValide(actifSouhaite, visibilite) : 'general';
+      document.querySelectorAll('#settingsModal [data-settings-tab]').forEach((b) => {
+        const id = b.getAttribute('data-settings-tab');
+        b.classList.toggle('hidden', visibles.indexOf(id) < 0);
+        b.classList.toggle('settings-tab--active', id === actif);
+        b.setAttribute('aria-selected', id === actif ? 'true' : 'false');
+      });
+      document.querySelectorAll('#settingsModal [data-settings-pane]').forEach((p) => {
+        const id = p.getAttribute('data-settings-pane');
+        p.classList.toggle('hidden', visibles.indexOf(id) < 0);
+        p.classList.toggle('settings-pane--active', id === actif);
+      });
+      return actif;
+    }
+    var ongletSettingsActif = 'general';
+    document.querySelector('#settingsModal .settings-tabs').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-settings-tab]');
+      if (!b || b.classList.contains('hidden')) return;
+      ongletSettingsActif = appliquerOngletsSettings(lireVisibiliteOnglets(), b.getAttribute('data-settings-tab'));
+    });
+    // Cases « Réglages affichés » (onglet Général) : masquer/afficher les
+    // onglets optionnels immédiatement, et retenir le choix.
+    document.getElementById('settingsTabNavigation').addEventListener('change', () => majVisibiliteOnglets());
+    document.getElementById('settingsTabMessagerie').addEventListener('change', () => majVisibiliteOnglets());
+    document.getElementById('settingsTabDonnees').addEventListener('change', () => majVisibiliteOnglets());
+    function majVisibiliteOnglets() {
+      const v = {
+        navigation: document.getElementById('settingsTabNavigation').checked === true,
+        messagerie: document.getElementById('settingsTabMessagerie').checked === true,
+        donnees: document.getElementById('settingsTabDonnees').checked === true
+      };
+      try { prefStore.setItem(ONGLETS_KEY, JSON.stringify(v)); } catch (e) { /* non bloquant */ }
+      ongletSettingsActif = appliquerOngletsSettings(v, ongletSettingsActif);
+    }
     document.getElementById('settingsModal').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) closeSettingsModal();
     });
@@ -3715,6 +3769,12 @@
         if (langSelect && langSelect.querySelector('option[value="' + loadedLanguage + '"]')) langSelect.value = loadedLanguage;
         // Onglets de la session précédente (lot 18/09/2026, issues #317/#318).
         handleStartupTabs(settings.startWithLastSession === true);
+        // Issue #375 : cases « Réglages affichés » puis onglets effectifs.
+        const visibilite = lireVisibiliteOnglets();
+        document.getElementById('settingsTabNavigation').checked = visibilite.navigation === true;
+        document.getElementById('settingsTabMessagerie').checked = visibilite.messagerie === true;
+        document.getElementById('settingsTabDonnees').checked = visibilite.donnees === true;
+        ongletSettingsActif = appliquerOngletsSettings(visibilite, ongletSettingsActif);
       } catch (e) {
         showToast(_('Impossible de charger les réglages'), 'error');
       }
