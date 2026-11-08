@@ -42,19 +42,19 @@ test('#375 : ongletActifValide — repli sur un onglet toujours visible', () => 
 
 test('#375 : le module s’expose au navigateur (window.IaoSettingsOnglets)', () => {
   const chemin = require.resolve('../lib/settings-onglets.js');
-  // Sans window (Node pur) : pas d’exposition.
+  // Sans window (Node pur) : pas d’exposition, pas d’erreur.
   delete require.cache[chemin];
   delete globalThis.window;
   require(chemin);
   assert.equal(globalThis.window, undefined);
 
-  // window null : typeof null === 'object' mais !== null échoue.
+  // window null : aucun accès (sinon TypeError), aucune exposition.
   globalThis.window = null;
   delete require.cache[chemin];
   require(chemin);
   assert.equal(globalThis.window, null);
 
-  // window présent : exposé.
+  // window présent : exposé, et la même référence que module.exports.
   globalThis.window = {};
   delete require.cache[chemin];
   require(chemin);
