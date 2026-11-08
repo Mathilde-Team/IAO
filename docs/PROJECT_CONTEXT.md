@@ -506,6 +506,17 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - Onglets optionnels (`navigation`, `messagerie`, `donnees`) : l'onglet `Général` porte des cases « Réglages affichés » qui les retirent ou les remettent, choix persisté dans `preferences.json` (clé `settings_onglets`, `lib/magasin-preferences.js`). Défaut : tout affiché.
 - `assets/app.js` : bascule d'onglet au clic (`data-settings-tab`/`data-settings-pane`), synchronisation des cases à l'ouverture (`loadSettings`).
 
+### Mes IA dans les réglages (issue #381, 08/11/2026)
+
+- L'onglet permanent `Mes IA` (`services`) accueille « Choisir mes IA à portée de main » ;
+  le bouton de la barre du workspace et la modale séparée sont retirés.
+- Les cases sont préparées depuis `ai_active_services` à chaque ouverture des réglages.
+  Le brouillon survit aux changements d'onglet, mais pas à Annuler, à la croix ou
+  au clic sur le fond. Aucun format de stockage ni défaut de sélection ne change.
+- Enregistrer refuse une sélection vide avant tout IPC. Après une sauvegarde des
+  réglages réussie, une sélection modifiée remplace les services des cartes comme
+  auparavant (#319). Sans changement de cases, la préférence IA n'est pas réécrite.
+
 ### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
 
 - `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans

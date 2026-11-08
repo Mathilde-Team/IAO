@@ -377,13 +377,14 @@ async function run() {
       return cartes.map(c => [...c.querySelectorAll('[data-action="open-service"]')].map(b => b.dataset.svc).join(','));
     })()`);
     const avant = await lire();
-    await exec(`(() => {
-      openServicesModal();
+    await exec(`(async () => {
+      await openSettingsModal();
+      document.querySelector('[data-settings-tab="services"]').click();
       const cb = (id) => document.querySelector('#servicesList [data-svc-id="' + id + '"]');
       const list = document.getElementById('servicesList');
       cb('meshy').checked = false; list.onchange({ target: cb('meshy') });
       cb('deepseek').checked = true; list.onchange({ target: cb('deepseek') });
-      saveServicesModal();
+      await saveSettings();
       return 'ok';
     })()`);
     const attendu = 'claude,chatgpt,gemini,zeta,perplexity,grok,leonardo,suno,deepseek';
@@ -420,15 +421,16 @@ async function run() {
 
   // Issue #319 (suite) : de 1 à n IA, plus de plafond à 9.
   await test('C1.7 Choix des IA : 1 seule, puis toutes (plus de plafond à 9) (#319)', async () => {
-    const choisir = (ids) => exec(`(() => {
-      openServicesModal();
+    const choisir = (ids) => exec(`(async () => {
+      await openSettingsModal();
+      document.querySelector('[data-settings-tab="services"]').click();
       const list = document.getElementById('servicesList');
       const voulus = ${JSON.stringify(ids)};
       [...list.querySelectorAll('[data-svc-id]')].forEach((cb) => {
         const coche = voulus === 'tous' || voulus.includes(cb.dataset.svcId);
         if (cb.checked !== coche) { cb.checked = coche; list.onchange({ target: cb }); }
       });
-      saveServicesModal();
+      await saveSettings();
       const carte = document.querySelector('#accountsList .account-card');
       return { boutons: carte.querySelectorAll('[data-action="open-service"]').length,
         total: list.querySelectorAll('[data-svc-id]').length,
@@ -453,14 +455,15 @@ async function run() {
     const migre = JSON.parse(fs.readFileSync(fichierPrefs, 'utf-8'));
     assert(Array.isArray(migre.ai_starred_tabs) && migre.ai_starred_tabs.includes('migration|331'),
       'étoile du localStorage non recopiée : ' + JSON.stringify(migre.ai_starred_tabs));
-    const r = await exec(`(() => {
-      openServicesModal();
+    const r = await exec(`(async () => {
+      await openSettingsModal();
+      document.querySelector('[data-settings-tab="services"]').click();
       const list = document.getElementById('servicesList');
       [...list.querySelectorAll('[data-svc-id]')].forEach((cb) => {
         const coche = cb.dataset.svcId === 'claude';
         if (cb.checked !== coche) { cb.checked = coche; list.onchange({ target: cb }); }
       });
-      saveServicesModal();
+      await saveSettings();
       return ['ai_active_services', 'ai_starred_tabs', 'ai_account_order', 'collapsed_accounts', 'ide_w', 'explorer_w']
         .filter((k) => localStorage.getItem(k) !== null);
     })()`);
@@ -478,6 +481,53 @@ async function run() {
     win.webContents.reload();
     await sleep(300);
     await waitLoaded();
+  });
+
+  await test('C1.9 Mes IA dans les réglages : brouillon, annulations et sélection vide sans écriture (#381)', async () => {
+    const r = await exec(`(async () => {
+      const lire = () => JSON.stringify(window.iaoAPI.preferencesLire().preferences.ai_active_services);
+      const avant = lire();
+      const ouvrir = async () => {
+        await openSettingsModal();
+        document.querySelector('[data-settings-tab="services"]').click();
+      };
+      const annulations = [];
+      for (const fermer of [
+        () => document.querySelector('#settingsModal [data-action="ui-closeSettingsModal"]:not(.modal__close)').click(),
+        () => document.querySelector('#settingsModal .modal__close').click(),
+        () => document.getElementById('settingsModal').click()
+      ]) {
+        await ouvrir();
+        const cb = document.querySelector('#servicesList [data-svc-id="claude"]');
+        cb.click();
+        document.querySelector('[data-settings-tab="editeur"]').click();
+        document.querySelector('[data-settings-tab="services"]').click();
+        const brouillon = !cb.checked;
+        fermer();
+        await ouvrir();
+        annulations.push(brouillon && document.querySelector('#servicesList [data-svc-id="claude"]').checked && lire() === avant);
+        closeSettingsModal();
+      }
+      await ouvrir();
+      await saveSettings();
+      const inchange = lire() === avant;
+      await ouvrir();
+      const reglagesAvant = await window.iaoAPI.ipcInvoke('settings:load');
+      document.getElementById('settingsTheme').value = reglagesAvant.theme === 'dark' ? 'light' : 'dark';
+      document.querySelectorAll('#servicesList input:checked').forEach(cb => cb.click());
+      await saveSettings();
+      const videRefuse = document.getElementById('settingsModal').classList.contains('open') &&
+        document.body.textContent.includes('Sélectionnez au moins 1 service') &&
+        lire() === avant &&
+        (await window.iaoAPI.ipcInvoke('settings:load')).theme === reglagesAvant.theme;
+      closeSettingsModal();
+      return { annulations, inchange, videRefuse,
+        ancienneFenetre: !!document.getElementById('servicesModal'),
+        ancienBouton: !!document.querySelector('[data-action="ui-openServicesModal"]') };
+    })()`);
+    assert(r.annulations.length === 3 && r.annulations.every(Boolean), 'annulations : ' + JSON.stringify(r));
+    assert(r.inchange && r.videRefuse, 'écriture inattendue : ' + JSON.stringify(r));
+    assert(!r.ancienneFenetre && !r.ancienBouton, 'ancien accès encore présent');
   });
 
   // =========================================================================
@@ -604,14 +654,15 @@ async function run() {
   // Issue #324 : logos officiels devant le nom (boutons, aide, choix des IA),
   // boutons de couleur standard, onglet = logo + nom du compte.
   await test('C5.3 Logos des IA : boutons standard, onglet logo + compte, aide et choix des IA (#324)', async () => {
-    const r = await exec(`(() => {
+    const r = await exec(`(async () => {
       const boutons = [...document.querySelectorAll('#accountsList .svc-btn')];
       const onglets = [...document.querySelectorAll('#tabsBar .tab')];
       openHelpModal();
       const aide = [...document.querySelectorAll('#helpModal .help-entry__name')];
       const resAide = { n: aide.length, logos: aide.filter(e => e.querySelector('.svc-ic')).length };
       document.getElementById('helpModal').classList.remove('open');
-      openServicesModal();
+      await openSettingsModal();
+      document.querySelector('[data-settings-tab="services"]').click();
       const choix = [...document.querySelectorAll('#servicesList .service-select-item')];
       const resChoix = { n: choix.length, logos: choix.filter(e => e.querySelector('.svc-ic')).length };
       return {
@@ -628,12 +679,12 @@ async function run() {
     if (process.env.IAO_CAPTURES_DIR) {
       const dossier = require('./rtl-visuel').dossierCaptures(process.env.IAO_CAPTURES_DIR);
       fs.writeFileSync(path.join(dossier, 'logos-choix.png'), (await win.webContents.capturePage()).toPNG());
-      await exec(`closeServicesModal(); openHelpModal(); 'ok'`);
+      await exec(`closeSettingsModal(); openHelpModal(); 'ok'`);
       fs.writeFileSync(path.join(dossier, 'logos-aide.png'), (await win.webContents.capturePage()).toPNG());
       await exec(`document.getElementById('helpModal').classList.remove('open'); 'ok'`);
       fs.writeFileSync(path.join(dossier, 'logos-cartes.png'), (await win.webContents.capturePage()).toPNG());
     }
-    await exec(`closeServicesModal(); document.getElementById('helpModal').classList.remove('open'); 'ok'`);
+    await exec(`closeSettingsModal(); document.getElementById('helpModal').classList.remove('open'); 'ok'`);
     assert(r.boutons > 0 && r.avecLogo === r.boutons, 'boutons sans logo : ' + JSON.stringify(r));
     assert(r.colores === 0, 'boutons encore colorés par service : ' + r.colores);
     assert(r.fondClaude === r.fondGrok, 'fonds différents : ' + r.fondClaude + ' / ' + r.fondGrok);

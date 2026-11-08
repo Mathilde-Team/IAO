@@ -88,6 +88,10 @@ Objectif : détecter automatiquement les ZIP livrés par les services IA dans le
 
 ## Fait
 
+- [x] **Mes IA dans les réglages** (08/11/2026, issue #381) : sélection des IA
+  déplacée dans l'onglet permanent « Mes IA », ancien bouton et ancienne fenêtre
+  retirés. Validation commune, annulation sans écriture et conservation des choix.
+
 - **Création de comptes de messagerie via mail-accounts-api (issue #357, 31/10/2026)**
   `lib/mail-api.js` (client pur : POST `/accounts`, POST `/accounts/batch`, PATCH
   `/accounts/{email}`, Bearer) ; clé d'API dans le coffre chiffré (`mail_api`), réglages

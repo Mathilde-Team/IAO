@@ -86,10 +86,6 @@ msgid "Redémarrer IAO"
 msgstr ""
 
 #: index.html
-msgid "Choisir mes IA à portée de main"
-msgstr ""
-
-#: index.html
 msgid "Comprendre les IA disponibles"
 msgstr "Pahami AI yang tersedia"
 
@@ -220,10 +216,6 @@ msgstr "Kegunaan setiap layanan, dan kapan menggunakannya."
 #: index.html
 msgid "Fermer"
 msgstr "Tutup"
-
-#: index.html
-msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
-msgstr ""
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -470,6 +462,10 @@ msgid "Général"
 msgstr ""
 
 #: index.html
+msgid "Mes IA"
+msgstr ""
+
+#: index.html
 msgid "Navigation"
 msgstr ""
 
@@ -545,6 +541,14 @@ msgstr ""
 
 #: index.html
 msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
+
+#: index.html
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
 msgstr ""
 
 #: index.html
@@ -1089,14 +1093,6 @@ msgstr "Kapan digunakan?"
 #: assets/app.js
 msgid "Description à venir."
 msgstr "Deskripsi segera hadir."
-
-#: assets/app.js
-msgid "Sélectionnez au moins 1 service"
-msgstr "Pilih setidaknya 1 layanan"
-
-#: assets/app.js
-msgid "IA à portée de main : {count}"
-msgstr ""
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1901,6 +1897,10 @@ msgstr ""
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Tidak dapat memuat pengaturan"
+
+#: assets/app.js
+msgid "Sélectionnez au moins 1 service"
+msgstr "Pilih setidaknya 1 layanan"
 
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
