@@ -83,10 +83,6 @@ msgid "Redémarrer IAO"
 msgstr ""
 
 #: index.html
-msgid "Choisir mes IA à portée de main"
-msgstr ""
-
-#: index.html
 msgid "Comprendre les IA disponibles"
 msgstr ""
 
@@ -212,10 +208,6 @@ msgstr ""
 
 #: index.html
 msgid "Fermer"
-msgstr ""
-
-#: index.html
-msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
 msgstr ""
 
 #: index.html
@@ -463,6 +455,10 @@ msgid "Général"
 msgstr ""
 
 #: index.html
+msgid "Mes IA"
+msgstr ""
+
+#: index.html
 msgid "Navigation"
 msgstr ""
 
@@ -536,6 +532,14 @@ msgstr ""
 
 #: index.html
 msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
+msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr ""
+
+#: index.html
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
 msgstr ""
 
 #: index.html
@@ -1058,14 +1062,6 @@ msgstr ""
 
 #: assets/app.js
 msgid "Description à venir."
-msgstr ""
-
-#: assets/app.js
-msgid "Sélectionnez au moins 1 service"
-msgstr ""
-
-#: assets/app.js
-msgid "IA à portée de main : {count}"
 msgstr ""
 
 #: assets/app.js
@@ -1874,6 +1870,10 @@ msgstr ""
 
 #: assets/app.js
 msgid "Impossible de charger les réglages"
+msgstr ""
+
+#: assets/app.js
+msgid "Sélectionnez au moins 1 service"
 msgstr ""
 
 #: assets/app.js

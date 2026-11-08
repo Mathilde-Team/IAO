@@ -86,10 +86,6 @@ msgid "Redémarrer IAO"
 msgstr "IAO neu starten"
 
 #: index.html
-msgid "Choisir mes IA à portée de main"
-msgstr "Meine griffbereiten KIs auswählen"
-
-#: index.html
 msgid "Comprendre les IA disponibles"
 msgstr "Die verfügbaren KI-Dienste verstehen"
 
@@ -216,10 +212,6 @@ msgstr "Wozu jeder Dienst dient und wann man ihn verwendet."
 #: index.html
 msgid "Fermer"
 msgstr "Schließen"
-
-#: index.html
-msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
-msgstr "Wählen Sie die in der Oberfläche angezeigten KIs, so viele Sie möchten (mindestens eine). Die anderen bleiben in der Hilfe verfügbar."
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -466,6 +458,10 @@ msgid "Général"
 msgstr ""
 
 #: index.html
+msgid "Mes IA"
+msgstr ""
+
+#: index.html
 msgid "Navigation"
 msgstr ""
 
@@ -542,6 +538,14 @@ msgstr ""
 #: index.html
 msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
 msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr "Meine griffbereiten KIs auswählen"
+
+#: index.html
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr "Wählen Sie die in der Oberfläche angezeigten KIs, so viele Sie möchten (mindestens eine). Die anderen bleiben in der Hilfe verfügbar."
 
 #: index.html
 msgid "Taille de police de l'éditeur (px)"
@@ -1088,14 +1092,6 @@ msgstr "Wann verwenden?"
 #: assets/app.js
 msgid "Description à venir."
 msgstr "Beschreibung folgt."
-
-#: assets/app.js
-msgid "Sélectionnez au moins 1 service"
-msgstr "Wählen Sie mindestens 1 Dienst"
-
-#: assets/app.js
-msgid "IA à portée de main : {count}"
-msgstr "Griffbereite KIs: {count}"
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1914,6 +1910,10 @@ msgstr ""
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Einstellungen konnten nicht geladen werden"
+
+#: assets/app.js
+msgid "Sélectionnez au moins 1 service"
+msgstr "Wählen Sie mindestens 1 Dienst"
 
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"

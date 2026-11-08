@@ -86,10 +86,6 @@ msgid "Redémarrer IAO"
 msgstr "Riavvia IAO"
 
 #: index.html
-msgid "Choisir mes IA à portée de main"
-msgstr "Scegli le mie IA a portata di mano"
-
-#: index.html
 msgid "Comprendre les IA disponibles"
 msgstr "Capire le IA disponibili"
 
@@ -216,10 +212,6 @@ msgstr "A cosa serve ogni servizio e quando usarlo."
 #: index.html
 msgid "Fermer"
 msgstr "Chiudi"
-
-#: index.html
-msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
-msgstr "Seleziona le IA mostrate nell'interfaccia, quante vuoi (almeno una). Le altre restano disponibili nella guida."
 
 #: index.html
 msgid "Détection des ZIP livrés par les onglets IA, reprise par profil."
@@ -466,6 +458,10 @@ msgid "Général"
 msgstr ""
 
 #: index.html
+msgid "Mes IA"
+msgstr ""
+
+#: index.html
 msgid "Navigation"
 msgstr ""
 
@@ -542,6 +538,14 @@ msgstr ""
 #: index.html
 msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
 msgstr ""
+
+#: index.html
+msgid "Choisir mes IA à portée de main"
+msgstr "Scegli le mie IA a portata di mano"
+
+#: index.html
+msgid "Cochez les IA affichées dans l'interface, autant que vous voulez (au moins une). Les autres restent disponibles dans l'aide."
+msgstr "Seleziona le IA mostrate nell'interfaccia, quante vuoi (almeno una). Le altre restano disponibili nella guida."
 
 #: index.html
 msgid "Taille de police de l'éditeur (px)"
@@ -1088,14 +1092,6 @@ msgstr "Quando usarlo?"
 #: assets/app.js
 msgid "Description à venir."
 msgstr "Descrizione in arrivo."
-
-#: assets/app.js
-msgid "Sélectionnez au moins 1 service"
-msgstr "Seleziona almeno 1 servizio"
-
-#: assets/app.js
-msgid "IA à portée de main : {count}"
-msgstr "IA a portata di mano: {count}"
 
 #: assets/app.js
 msgid "Supprimer « {name} » ({email}) ? La session restera stockée sur le disque, mais le compte disparaîtra de la liste."
@@ -1914,6 +1910,10 @@ msgstr ""
 #: assets/app.js
 msgid "Impossible de charger les réglages"
 msgstr "Impossibile caricare le impostazioni"
+
+#: assets/app.js
+msgid "Sélectionnez au moins 1 service"
+msgstr "Seleziona almeno 1 servizio"
 
 #: assets/app.js
 msgid "Adresse du premier onglet invalide : une adresse https:// est attendue"
