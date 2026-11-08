@@ -462,8 +462,20 @@ msgid "Préférences de l'application, sauvegardées localement."
 msgstr "Preferenze dell'applicazione, salvate localmente."
 
 #: index.html
-msgid "Taille de police de l'éditeur (px)"
-msgstr "Dimensione del carattere dell'editor (px)"
+msgid "Général"
+msgstr ""
+
+#: index.html
+msgid "Navigation"
+msgstr ""
+
+#: index.html
+msgid "Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Données"
+msgstr ""
 
 #: index.html
 msgid "Thème"
@@ -494,6 +506,48 @@ msgid "Appliquée au prochain démarrage"
 msgstr "Applicata al prossimo avvio"
 
 #: index.html
+msgid "Confirmer avant de fermer un onglet"
+msgstr "Conferma prima di chiudere una scheda"
+
+#: index.html
+msgid "Afficher les fenêtres d'automatisation"
+msgstr "Mostra le finestre di automazione"
+
+#: index.html
+msgid "Restaurer les onglets ouverts au démarrage"
+msgstr "Ripristina le schede aperte all'avvio"
+
+#: index.html
+msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Réglages enregistrés"
+msgid "Réglages affichés"
+msgstr "Impostazioni salvate"
+
+#: index.html
+msgid "Onglet Navigation (onglet fixe, liens externes)"
+msgstr ""
+
+#: index.html
+msgid "Onglet Messagerie"
+msgstr ""
+
+#: index.html
+msgid "Onglet Données (sauvegarde, identifiants)"
+msgstr ""
+
+#: index.html
+msgid "Décochez un groupe pour retirer son onglet de cette fenêtre ; tout reste enregistré, seul l'affichage change."
+msgstr ""
+
+#: index.html
+msgid "Taille de police de l'éditeur (px)"
+msgstr "Dimensione del carattere dell'editor (px)"
+
+#: index.html
 msgid "Retour à la ligne (éditeur)"
 msgstr "A capo automatico (editor)"
 
@@ -510,19 +564,35 @@ msgid "Colonne fixe"
 msgstr "Colonna fissa"
 
 #: index.html
-msgid "Confirmer avant de fermer un onglet"
-msgstr "Conferma prima di chiudere una scheda"
+msgid "Ouvrir un premier onglet fixe"
+msgstr "Apri una prima scheda fissa"
 
 #: index.html
-msgid "Afficher les fenêtres d'automatisation"
-msgstr "Mostra le finestre di automazione"
+msgid "Adresse du premier onglet"
+msgstr "Indirizzo della prima scheda"
 
 #: index.html
-msgid "Restaurer les onglets ouverts au démarrage"
-msgstr "Ripristina le schede aperte all'avvio"
+msgid "https://github.com/Mathilde-Team"
+msgstr "https://github.com/Mathilde-Team"
 
 #: index.html
-msgid "Enregistrer en HAR les 15 premières minutes de chaque connexion"
+#, fuzzy
+#| msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
+msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés servent à s'y connecter."
+msgstr "Scheda che non si può chiudere né spostare; la navigazione resta su questo sito e un clic sulla scheda riporta a questo indirizzo. Le credenziali condivise qui sotto servono per accedere."
+
+#: index.html
+msgid "Navigateur des liens externes"
+msgstr ""
+
+#: index.html
+#, fuzzy
+#| msgid "Langue du système (défaut)"
+msgid "Navigateur du système"
+msgstr "Navigateur du système"
+
+#: index.html
+msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
 msgstr ""
 
 #: index.html
@@ -572,36 +642,6 @@ msgstr "Chiave dell'API di posta"
 #: index.html
 msgid "Enregistrée chiffrée dans le coffre ; laisser vide pour conserver la clé actuelle"
 msgstr "Salvata cifrata nella cassaforte; lasciare vuoto per conservare la chiave attuale"
-
-#: index.html
-msgid "Ouvrir un premier onglet fixe"
-msgstr "Apri una prima scheda fissa"
-
-#: index.html
-msgid "Adresse du premier onglet"
-msgstr "Indirizzo della prima scheda"
-
-#: index.html
-msgid "https://github.com/Mathilde-Team"
-msgstr "https://github.com/Mathilde-Team"
-
-#: index.html
-msgid "Onglet ni fermable ni déplaçable ; la navigation reste sur ce site, un clic sur l'onglet ramène à cette adresse. Les identifiants partagés ci-dessous servent à s'y connecter."
-msgstr "Scheda che non si può chiudere né spostare; la navigazione resta su questo sito e un clic sulla scheda riporta a questo indirizzo. Le credenziali condivise qui sotto servono per accedere."
-
-#: index.html
-msgid "Navigateur des liens externes"
-msgstr ""
-
-#: index.html
-#, fuzzy
-#| msgid "Langue du système (défaut)"
-msgid "Navigateur du système"
-msgstr "Navigateur du système"
-
-#: index.html
-msgid "Utilisé par « ouvrir avec un navigateur externe » du menu contextuel des liens ; la navigation privée y est aussi proposée"
-msgstr ""
 
 #: index.html
 #, fuzzy

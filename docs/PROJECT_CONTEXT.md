@@ -493,6 +493,19 @@ les comptes choisis, à une date donnée ou périodiquement (minutes → mois, i
 - `main.js` : `estOngletFixe()` reconnaît la session `persist:onglet-fixe` dans `did-attach-webview` ; `verrouillerOngletFixe()` bloque les navigations vers un autre site (`lib/onglet-fixe.js`, même hôte ou sous-domaine, https) et charge dans l'onglet les popups du même site.
 - Limites : les redirections HTTP vers un autre site (connexion par un fournisseur tiers) ne sont pas bloquées ; Ctrl+Tab et Alt+1..9 ne parcourent que les onglets de comptes.
 
+### Modale Réglages : barre d'entête et croix de fermeture (issue #376, 08/11/2026)
+
+- `index.html` : la modale `#settingsModal` ouvre par une barre d'entête (`.modal__header`, flex `space-between`) qui porte le titre, le sous-titre et une croix de fermeture en haut à droite (`.modal__close`, icône `times-circle`).
+- La croix réutilise l'action existante `ui-closeSettingsModal` (délégation `UI_ACTIONS`) : même comportement que le bouton « Annuler », fermeture sans enregistrement.
+- Habillage dans `assets/app.css` (`.modal__header`, `.modal__close`), séparation par un trait `var(--border)` ; vérifications statiques dans `test/settings-entete.test.js`.
+
+### Modale Réglages : onglets, ascenseur et réglages affichés (issue #375, 08/11/2026)
+
+- `index.html` : le corps de la modale devient une barre d'onglets (`Général`, `Éditeur`, `Navigation`, `Messagerie`, `Données`) au-dessus d'un panneau défilant (`.settings-body` en `overflow-y: auto`). Aucun champ n'a disparu : tous les identifiants sont conservés, regroupés par sujet.
+- `lib/settings-onglets.js` (pur) : liste des onglets, visibilité par groupe, repli de l'onglet actif masqué sur `general` ; testé par `test/settings-onglets.test.js`.
+- Onglets optionnels (`navigation`, `messagerie`, `donnees`) : l'onglet `Général` porte des cases « Réglages affichés » qui les retirent ou les remettent, choix persisté dans `preferences.json` (clé `settings_onglets`, `lib/magasin-preferences.js`). Défaut : tout affiché.
+- `assets/app.js` : bascule d'onglet au clic (`data-settings-tab`/`data-settings-pane`), synchronisation des cases à l'ouverture (`loadSettings`).
+
 ### Webmail : codes et liens de connexion relevés dans la fenêtre du compte (issue #310, 27/10/2026)
 
 - `lib/webmail-connexion.js` ouvre le webmail (Roundcube) dans une fenêtre IAO sans

@@ -1,3 +1,29 @@
+## Issue #375 — modale Réglages à onglets, corps défilant et réglages affichés (08/11/2026)
+
+### Ajouté
+- La modale Réglages est découpée en cinq onglets : Général, Éditeur,
+  Navigation, Messagerie, Données. Le corps défile verticalement, la barre
+  d'onglets et le bouton de fermeture restent visibles.
+- Cases « Réglages affichés » pour Navigation, Messagerie et Données : un
+  réglage décoché n'affiche plus son onglet dans la modale (défaut : tout
+  affiché), mémorisé dans prefStore (`settings_onglets`), synchronisé entre
+  fenêtres, remis à zéro par « Réinitialiser ».
+
+### Tests
+- `test/settings-onglets.test.js` (8 tests, dont un garde anti-collision de
+  `const` entre scripts classiques) ; harnais Electron (xvfb) : 98/98.
+
+## Issue #376 — barre d'entête et croix de fermeture pour la modale Réglages (08/11/2026)
+
+### Ajouté
+- Entête de la modale Réglages : titre « Réglages » et bouton de fermeture
+  (icône `times-circle`, action existante `ui-closeSettingsModal`) dans la
+  barre de titre, cliquable partout dans la modale (vieux Chromium inclus).
+
+### Tests
+- Extensions `test/main-harness.test.js` et `test/settings.test.js` ;
+  harnais Electron (xvfb).
+
 ## Issue #364 — boutons précédent / suivant dans la barre de l'onglet (01/11/2026)
 
 ### Ajouté
